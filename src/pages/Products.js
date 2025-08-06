@@ -2,42 +2,78 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineCheck, HiOutlineX } from 'react-icons/hi';
+import axios from "axios";
+
+const API_URL = `${process.env.REACT_APP_API_URL}/products`;
 
 const Products = () => {
-  const [products, setProducts] = useState([
-    { name: 'Tepung Terigu', price: 12000, stock: 10 },
-    { name: 'Gula Pasir', price: 15000, stock: 8 },
-    { name: 'Mentega', price: 20000, stock: 5 },
-    { name: 'Telur Ayam', price: 22000, stock: 12 },
-  ]);
+  const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({ name: '', price: '', stock: '' });
   const [editIdx, setEditIdx] = useState(null);
   const [editValue, setEditValue] = useState({ name: '', price: '', stock: '' });
   const [notif, setNotif] = useState('');
   const [showAdd, setShowAdd] = useState(false);
 
+  React.useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get(API_URL, {
+        headers: { "ngrok-skip-browser-warning": "true" },
+      });
+      const data = res.data?.data || res.data;
+      if (Array.isArray(data)) setProducts(data);
+    } catch (err) {
+      console.error("Gagal fetch produk:", err);
+    }
+  };
+
   const showNotif = (msg) => {
     setNotif(msg);
     setTimeout(() => setNotif(''), 2000);
   };
 
-  const handleAddProduct = (e) => {
+  const handleAddProduct = async (e) => {
     e.preventDefault();
     if (newProduct.name.trim() !== '' && newProduct.price && newProduct.stock) {
-      setProducts([...products, { ...newProduct, price: Number(newProduct.price), stock: Number(newProduct.stock) }]);
-      setNewProduct({ name: '', price: '', stock: '' });
-      setShowAdd(false);
-      showNotif('Produk berhasil ditambah!');
+      try {
+        await axios.post(API_URL, {
+          name: newProduct.name,
+          price: Number(newProduct.price),
+          stock: Number(newProduct.stock),
+        }, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
+        setNewProduct({ name: '', price: '', stock: '' });
+        setShowAdd(false);
+        showNotif('Produk berhasil ditambah!');
+        fetchProducts();
+      } catch (err) {
+        showNotif('Gagal tambah produk!');
+      }
     }
   };
 
-  const handleDeleteProduct = (idx) => {
-    setProducts(products.filter((_, i) => i !== idx));
+  const handleDeleteProduct = async (idx) => {
+    const product = products[idx];
+    if (!product.id) return;
+    if (window.confirm('Yakin hapus produk ini?')) {
+      try {
+        await axios.delete(`${API_URL}/${product.id}`, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
+        showNotif('Produk berhasil dihapus!');
+        fetchProducts();
+      } catch (err) {
+        showNotif('Gagal hapus produk!');
+      }
+    }
     if (editIdx === idx) {
       setEditIdx(null);
       setEditValue({ name: '', price: '', stock: '' });
     }
-    showNotif('Produk berhasil dihapus!');
   };
 
   const handleEditProduct = (idx) => {
@@ -45,12 +81,24 @@ const Products = () => {
     setEditValue(products[idx]);
   };
 
-  const handleSaveEdit = (idx) => {
+  const handleSaveEdit = async (idx) => {
+    const product = products[idx];
     if (editValue.name.trim() !== '' && editValue.price && editValue.stock) {
-      setProducts(products.map((p, i) => (i === idx ? { ...editValue, price: Number(editValue.price), stock: Number(editValue.stock) } : p)));
-      setEditIdx(null);
-      setEditValue({ name: '', price: '', stock: '' });
-      showNotif('Produk berhasil diubah!');
+      try {
+        await axios.put(`${API_URL}/${product.id}`, {
+          name: editValue.name,
+          price: Number(editValue.price),
+          stock: Number(editValue.stock),
+        }, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
+        setEditIdx(null);
+        setEditValue({ name: '', price: '', stock: '' });
+        showNotif('Produk berhasil diubah!');
+        fetchProducts();
+      } catch (err) {
+        showNotif('Gagal edit produk!');
+      }
     }
   };
 
@@ -69,7 +117,7 @@ const Products = () => {
         <main className="flex-1 overflow-y-auto p-8 min-w-0">
           <div className="w-full">
             <div className="flex items-center justify-between mb-8">
-              <h1 className="text-3xl font-extrabold text-gray-900 drop-shadow">Daftar Produk</h1> 
+              <h1 className="text-2xl font-bold text-gray-800">Daftar Produk</h1> 
               <button
                 onClick={() => setShowAdd(true)}
                 className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow font-semibold transition"

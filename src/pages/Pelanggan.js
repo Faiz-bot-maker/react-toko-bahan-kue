@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { HiOutlinePlus } from 'react-icons/hi';
+import axios from "axios";
 
 const statusColor = {
   Pending: 'bg-yellow-100 text-yellow-800',
@@ -11,14 +12,27 @@ const statusColor = {
 const formatRupiah = (angka) => 'Rp ' + angka.toLocaleString('id-ID');
 
 const Pelanggan = () => {
-  const [pelanggan, setPelanggan] = useState([
-    { nama: 'Budi', total: 150000, status: 'Pending' },
-    { nama: 'Agus', total: 175000, status: 'Pending' },
-    { nama: 'Dewi', total: 120000, status: 'Pending' },
-    { nama: 'Tono', total: 300000, status: 'Pending' },
-  ]);
+  const [pelanggan, setPelanggan] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', idx: null });
   const [form, setForm] = useState({ nama: '', total: '', status: 'Pending' });
+
+  const API_URL = `${process.env.REACT_APP_API_URL}/customers`;
+
+  React.useEffect(() => {
+    fetchPelanggan();
+  }, []);
+
+  const fetchPelanggan = async () => {
+    try {
+      const res = await axios.get(API_URL, {
+        headers: { "ngrok-skip-browser-warning": "true" },
+      });
+      const data = res.data?.data || res.data;
+      if (Array.isArray(data)) setPelanggan(data);
+    } catch (err) {
+      console.error("Gagal fetch pelanggan:", err);
+    }
+  };
 
   const openAdd = () => {
     setForm({ nama: '', total: '', status: 'Pending' });
@@ -30,19 +44,44 @@ const Pelanggan = () => {
   };
   const closeModal = () => setModal({ open: false, mode: 'add', idx: null });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.nama || !form.total) return;
-    if (modal.mode === 'add') {
-      setPelanggan([...pelanggan, { ...form, total: Number(form.total) }]);
-    } else {
-      setPelanggan(pelanggan.map((p, i) => i === modal.idx ? { ...form, total: Number(form.total) } : p));
+    try {
+      if (modal.mode === 'add') {
+        await axios.post(API_URL, {
+          nama: form.nama,
+          total: Number(form.total),
+          status: form.status,
+        }, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
+      } else {
+        await axios.put(`${API_URL}/${pelanggan[modal.idx].id}`, {
+          nama: form.nama,
+          total: Number(form.total),
+          status: form.status,
+        }, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
+      }
+      fetchPelanggan();
+      closeModal();
+    } catch (err) {
+      alert('Gagal simpan data pelanggan!');
     }
-    closeModal();
   };
-  const handleDelete = (idx) => {
+
+  const handleDelete = async (idx) => {
     if (window.confirm('Yakin hapus pelanggan ini?')) {
-      setPelanggan(pelanggan.filter((_, i) => i !== idx));
+      try {
+        await axios.delete(`${API_URL}/${pelanggan[idx].id}`, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
+        fetchPelanggan();
+      } catch (err) {
+        alert('Gagal hapus pelanggan!');
+      }
     }
   };
 

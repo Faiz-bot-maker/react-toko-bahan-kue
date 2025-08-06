@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { HiOutlineHome, HiOutlineCube, HiOutlineClipboardList, HiOutlineUser, HiOutlineShoppingBag, HiOutlineUsers, HiOutlineDocumentReport, HiOutlineCurrencyDollar, HiOutlineOfficeBuilding, HiOutlineTruck, HiOutlineIdentification } from 'react-icons/hi';
+import { HiOutlineHome, HiOutlineCube, HiOutlineClipboardList, HiOutlineUser, HiOutlineShoppingBag, HiOutlineUsers, HiOutlineDocumentReport, HiOutlineCurrencyDollar, HiOutlineOfficeBuilding, HiOutlineTruck, HiOutlineIdentification, HiOutlineShoppingCart } from 'react-icons/hi';
 
 const menuOperasional = [
   { name: 'Dashboard', path: '/dashboard', icon: <HiOutlineHome className="inline text-lg" /> },
   { name: 'Kelola Produk', path: '/products', icon: <HiOutlineCube className="inline text-lg" /> },
   { name: 'Pelanggan', path: '/pelanggan', icon: <HiOutlineUsers className="inline text-lg" /> },
+  { name: 'Kategori', path: '/categories', icon: <HiOutlineShoppingCart className="inline text-lg" /> },
   { name: 'Cabang', path: '/cabang', icon: <HiOutlineOfficeBuilding className="inline text-lg" /> },
   { name: 'Distributor', path: '/distributor', icon: <HiOutlineTruck className="inline text-lg" /> },
   { name: 'Role', path: '/role', icon: <HiOutlineIdentification className="inline text-lg" /> },

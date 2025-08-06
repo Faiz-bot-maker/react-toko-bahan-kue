@@ -1,42 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { HiEye, HiEyeOff, HiOutlinePlus } from 'react-icons/hi';
+import axios from "axios";
+
+const API_URL = `${process.env.REACT_APP_API_URL}/users`;
 
 const Users = () => {
-  const [users, setUsers] = useState([
-    { username: 'admin', password: 'admin123' },
-    { username: 'kasir', password: 'kasir123' },
-  ]);
+  const [users, setUsers] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', idx: null });
   const [form, setForm] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const getHeaders = () => ({
+    "Authorization": localStorage.getItem("authToken"),
+    "ngrok-skip-browser-warning": "true"
+  });
+
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get(API_URL, { headers: getHeaders() });
+      const data = res.data?.data || res.data;
+      if (Array.isArray(data)) setUsers(data);
+    } catch (err) {
+      console.error("Gagal fetch user:", err);
+    }
+  };
 
   const openAdd = () => {
     setForm({ username: '', password: '' });
     setModal({ open: true, mode: 'add', idx: null });
     setShowPassword(false);
   };
+
   const openEdit = (idx) => {
     setForm(users[idx]);
     setModal({ open: true, mode: 'edit', idx });
     setShowPassword(false);
   };
+
   const closeModal = () => setModal({ open: false, mode: 'add', idx: null });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.username || !form.password) return;
-    if (modal.mode === 'add') {
-      setUsers([...users, { ...form }]);
-    } else {
-      setUsers(users.map((u, i) => i === modal.idx ? { ...form } : u));
+    try {
+      if (modal.mode === 'add') {
+        await axios.post(API_URL, form, { headers: getHeaders() });
+      } else {
+        await axios.put(`${API_URL}/${users[modal.idx].id}`, form, { headers: getHeaders() });
+      }
+      fetchUsers();
+      closeModal();
+    } catch (err) {
+      alert('Gagal simpan data user!');
     }
-    closeModal();
   };
-  const handleDelete = (idx) => {
+
+  const handleDelete = async (idx) => {
     if (window.confirm('Yakin hapus user ini?')) {
-      setUsers(users.filter((_, i) => i !== idx));
+      try {
+        await axios.delete(`${API_URL}/${users[idx].id}`, { headers: getHeaders() });
+        fetchUsers();
+      } catch (err) {
+        alert('Gagal hapus user!');
+      }
     }
   };
 
@@ -51,7 +83,10 @@ const Users = () => {
           <div className="w-full">
             <div className="flex items-center justify-between mb-8">
               <h1 className="text-2xl font-bold text-gray-800">Daftar Pengguna</h1>
-              <button onClick={openAdd} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow font-semibold transition">
+              <button
+                onClick={openAdd}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow font-semibold transition"
+              >
                 <HiOutlinePlus className="text-lg" /> Tambah
               </button>
             </div>
@@ -83,14 +118,34 @@ const Users = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Modal */}
             {modal.open && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
                 <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 w-full max-w-xs flex flex-col gap-4">
                   <h2 className="font-bold text-lg mb-2">{modal.mode === 'add' ? 'Tambah' : 'Edit'} User</h2>
-                  <input type="text" className="border rounded px-3 py-2" placeholder="Username" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} required />
+                  <input
+                    type="text"
+                    className="border rounded px-3 py-2"
+                    placeholder="Username"
+                    value={form.username}
+                    onChange={e => setForm({ ...form, username: e.target.value })}
+                    required
+                  />
                   <div className="relative">
-                    <input type={showPassword ? 'text' : 'password'} className="border rounded px-3 py-2 w-full pr-10" placeholder="Password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
-                    <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-xl text-gray-600 px-1 py-1 rounded hover:bg-gray-100">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className="border rounded px-3 py-2 w-full pr-10"
+                      placeholder="Password"
+                      value={form.password}
+                      onChange={e => setForm({ ...form, password: e.target.value })}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xl text-gray-600 px-1 py-1 rounded hover:bg-gray-100"
+                    >
                       {showPassword ? <HiEyeOff /> : <HiEye />}
                     </button>
                   </div>
