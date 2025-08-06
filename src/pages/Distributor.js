@@ -115,13 +115,13 @@ const Distributor = () => {
               </button>
             </div>
 
-            <div className="overflow-x-auto rounded border border-gray-100 bg-white">
-              <table className="min-w-full text-sm">
-                <thead className="bg-green-50 border-b border-gray-200">
+            <div className="overflow-x-auto shadow-xl rounded-lg border border-gray-200 bg-white">
+              <table className="min-w-full text-sm text-gray-800">
+                <thead className="bg-gray-600 text-white text-sm uppercase tracking-wider">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Nama Distributor</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Alamat</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Aksi</th>
+                    <th className="px-4 py-3 text-left font-semibold text-white-700">Nama Distributor</th>
+                    <th className="px-4 py-3 text-left font-semibold text-white-700">Alamat</th>
+                    <th className="px-4 py-3 text-left font-semibold text-white-700">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>

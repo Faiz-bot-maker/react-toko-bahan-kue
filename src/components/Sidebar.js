@@ -4,7 +4,7 @@ import { HiOutlineHome, HiOutlineCube, HiOutlineClipboardList, HiOutlineUser, Hi
 
 const menuOperasional = [
   { name: 'Dashboard', path: '/dashboard', icon: <HiOutlineHome className="inline text-lg" /> },
-  { name: 'Kelola Produk', path: '/products', icon: <HiOutlineCube className="inline text-lg" /> },
+  { name: 'Produk', path: '/products', icon: <HiOutlineCube className="inline text-lg" /> },
   { name: 'Pelanggan', path: '/pelanggan', icon: <HiOutlineUsers className="inline text-lg" /> },
   { name: 'Kategori', path: '/categories', icon: <HiOutlineShoppingCart className="inline text-lg" /> },
   { name: 'Cabang', path: '/cabang', icon: <HiOutlineOfficeBuilding className="inline text-lg" /> },
@@ -25,7 +25,7 @@ const Sidebar = () => {
     <aside className="w-60 h-screen flex flex-col justify-between bg-[#11493E] shadow-xl">
       <div>
         <div className="flex flex-col items-center h-40 border-b border-[#11493E] mb-2 pt-6 select-none gap-2 bg-[#11493E]">
-          <div className="w-20 h-20 rounded-full bg-gray-300 mb-2" />
+          <div className="w-10 h-10 rounded-full bg-gray-300 mb-2" />
           <span className="text-lg font-bold text-white tracking-wide">AZKA SHOP</span>
         </div>
         <div className="px-6 text-xs text-[#B2C8BC] mb-2 mt-4">Operasional</div>

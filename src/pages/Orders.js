@@ -25,13 +25,13 @@ const Orders = () => {
             <div className="flex items-center justify-between mb-8">
               <h1 className="text-3xl font-extrabold text-gray-900 drop-shadow">Daftar Pesanan</h1>
             </div>
-            <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-lg">
-              <table className="min-w-full text-base">
-                <thead className="bg-gradient-to-r from-blue-100 to-jade-100 border-b border-gray-100">
+            <div className="overflow-x-auto shadow-xl rounded-lg border border-gray-200 bg-white">
+              <table className="min-w-full text-sm text-gray-800">
+                <thead className="bg-gray-600 text-white text-sm uppercase tracking-wider">
                   <tr>
-                    <th className="px-4 py-3 text-left font-bold text-gray-700 w-12">No</th>
-                    <th className="px-4 py-3 text-left font-bold text-gray-700">ID Pesanan</th>
-                    <th className="px-4 py-3 text-left font-bold text-gray-700">Status</th>
+                    <th className="px-4 py-3 text-left font-bold text-white-700 w-12">No</th>
+                    <th className="px-4 py-3 text-left font-bold text-white-700">ID Pesanan</th>
+                    <th className="px-4 py-3 text-left font-bold text-white-700">Status</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -9,7 +9,7 @@ const API_URL = `${process.env.REACT_APP_API_URL}/categories`;
 const Kategori = () => {
     const [categories, setCategories] = useState([]);
     const [modal, setModal] = useState({ open: false, mode: "add", idx: null });
-    const [form, setForm] = useState({id: "", name: "" });
+    const [form, setForm] = useState({ id: "", name: "" });
 
     useEffect(() => {
         fetchCategories();
@@ -129,12 +129,12 @@ const Kategori = () => {
                             </button>
                         </div>
 
-                        <div className="overflow-x-auto rounded border border-gray-100 bg-white">
-                            <table className="min-w-full text-sm">
-                                <thead className="bg-green-300 border-b border-gray-200 font-bold text-green-800">
+                        <div className="overflow-x-auto shadow-xl rounded-lg border border-gray-200 bg-white">
+                            <table className="min-w-full text-sm text-gray-800">
+                                <thead className="bg-gray-600 text-white text-sm uppercase tracking-wider">
                                     <tr>
-                                        <th className="px-4 py-3 text-left font-semibold text-gray-700">Nama</th>
-                                        <th className="px-4 py-3 text-left font-semibold text-gray-700">Aksi</th>
+                                        <th className="px-4 py-3 text-left font-semibold text-white-700">Nama</th>
+                                        <th className="px-4 py-3 text-left font-semibold text-white-700">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>

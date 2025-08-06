@@ -19,8 +19,8 @@ const Role = () => {
     try {
       const res = await axios.get(API_URL, {
         headers: {
-          "Authorization": localStorage.getItem('authToken'),
-          "ngrok-skip-browser-warning": 'true',
+          Authorization: localStorage.getItem('authToken'),
+          'ngrok-skip-browser-warning': 'true',
         },
       });
       const data = res.data?.data || res.data;
@@ -96,7 +96,7 @@ const Role = () => {
         <main className="flex-1 overflow-y-auto p-8 min-w-0">
           <div className="w-full">
             <div className="flex items-center justify-between mb-8">
-              <h1 className="text-2xl font-bold text-gray-800">Data Role</h1>
+              <h1 className="text-2xl font-bold text-gray-800">Jabatan</h1>
               <button
                 onClick={openAdd}
                 className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow font-semibold transition"
@@ -105,31 +105,46 @@ const Role = () => {
               </button>
             </div>
 
-            <div className="overflow-x-auto rounded border border-gray-100 bg-white">
-              <table className="min-w-full text-sm">
-                <thead className="bg-green-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Nama Role</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Aksi</th>
+            <div className="overflow-x-auto shadow-xl rounded-lg border border-gray-200 bg-white">
+              <table className="min-w-full text-sm text-gray-800 border border-gray-300 rounded-lg">
+                <thead className="bg-gray-500 text-white text-sm uppercase tracking-wider">
+                  <tr className="h-12">
+                    <th className="px-6 border-t border-b border-gray-300 text-left align-middle">
+                      <div className="flex items-center h-12">Jabatan</div>
+                    </th>
+                    <th className="px-6 border-t border-b border-gray-300 text-right align-middle">
+                      <div className="flex items-center justify-end">Aksi</div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {roles.map((r, idx) => (
-                    <tr key={r.id || idx} className="border-b border-gray-100 hover:bg-green-50/50">
-                      <td className="px-4 py-2">{r.name}</td>
-                      <td className="px-4 py-2 flex gap-2">
-                        <button
-                          onClick={() => openEdit(idx)}
-                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(idx)}
-                          className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
-                        >
-                          Hapus
-                        </button>
+                    <tr
+                      key={r.id || idx}
+                      className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-green-50/50`}
+                    >
+                      <td className="px-6 h-12 align-middle border-b border-gray-300">
+                        {r.name}
+                      </td>
+                      <td className="px-6 h-12 align-middle text-right border-b border-gray-300">
+                        <div className="inline-flex gap-3">
+                          <button
+                            onClick={() => openEdit(idx)}
+                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm shadow-sm transition"
+                            type="button"
+                            aria-label={`Edit role ${r.name}`}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(idx)}
+                            className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm shadow-sm transition"
+                            type="button"
+                            aria-label={`Delete role ${r.name}`}
+                          >
+                            Hapus
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -148,14 +163,18 @@ const Role = () => {
                   </h2>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-700">Nama Role</label>
+                    <label htmlFor="role_name" className="text-sm font-medium text-gray-700">
+                      Nama Role
+                    </label>
                     <input
+                      id="role_name"
                       type="text"
                       className="border rounded px-3 py-2"
                       placeholder="Nama Role"
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                       required
+                      autoFocus
                     />
                   </div>
 
@@ -184,4 +203,4 @@ const Role = () => {
   );
 };
 
-export default Role;
+export default Role;  

@@ -82,10 +82,9 @@ const Users = () => {
     try {
       const dataToSend = { ...form };
       if (modal.mode === 'edit' && !form.password) {
-        delete dataToSend.password; // Do not send password if not updated
+        delete dataToSend.password;
       }
 
-      // Convert role_id and branch_id to integers
       dataToSend.role_id = parseInt(dataToSend.role_id, 10);
       dataToSend.branch_id = parseInt(dataToSend.branch_id, 10);
 
@@ -129,49 +128,59 @@ const Users = () => {
               <h1 className="text-2xl font-bold text-gray-800">Daftar Pengguna</h1>
               <button
                 onClick={openAdd}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow font-semibold transition"
+                className="flex items-center gap-2 bg-[#11493E] hover:bg-green-700 text-white px-4 py-2 rounded shadow font-semibold transition"
               >
                 <HiOutlinePlus className="text-lg" /> Tambah
               </button>
             </div>
-            <div className="overflow-x-auto rounded border border-gray-100 bg-white">
-              <table className="min-w-full text-sm">
-                <thead className="bg-green-50 border-b border-gray-200">
+            <div className="overflow-x-auto shadow-xl rounded-lg border border-gray-200 bg-white">
+              <table className="min-w-full text-sm text-gray-800 border border-gray-300 rounded-lg">
+                <thead className="bg-gray-500 text-white text-sm uppercase tracking-wider">
                   <tr>
-                    {/* <th className="px-4 py-3 text-left font-semibold text-gray-700 w-12">No</th> */}
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Username</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Nama</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Alamat</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Role</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Cabang</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Aksi</th>
+                    <th className="px-6 py-3 text-left border-t border-b border-white-300">Username</th>
+                    <th className="px-6 py-3 text-left border-t border-b border-white-300">Nama</th>
+                    <th className="px-6 py-3 text-left border-t border-b border-white-300">Alamat</th>
+                    <th className="px-6 py-3 text-left border-t border-b border-white-300">Jabatan</th>
+                    <th className="px-6 py-3 text-left border-t border-b border-white-300">Cabang</th>
+                    <th className="px-6 py-3 text-left border-t border-b border-white-300">Aksi</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {users.length === 0 && (
+                <tbody className="divide-y divide-gray-200">
+                  {users.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-6 text-center text-gray-400">Belum ada pengguna.</td>
+                      <td colSpan={6} className="px-6 py-6 text-center text-gray-400 border border-gray-300">Belum ada pengguna.</td>
                     </tr>
+                  ) : (
+                    users.map((user, idx) => (
+                      <tr key={user.username} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition`}>
+                        <td className="px-6 py-3 border-b border-gray-300">{user.username}</td>
+                        <td className="px-6 py-3 border-b border-gray-300">{user.name}</td>
+                        <td className="px-6 py-3 border-b border-gray-300">{user.address}</td>
+                        <td className="px-6 py-3 border-b border-gray-300">{user.role.name}</td>
+                        <td className="px-6 py-3 border-b border-gray-300">{user.branch.name}</td>
+                        <td className="px-6 py-3 border-b border-gray-300">
+                          <div className="flex gap-2"> 
+                            <button
+                              onClick={() => openEdit(idx)}
+                              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm shadow-sm"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(idx)}
+                              className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm shadow-sm"
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
-                  {users.map((user, idx) => (
-                    <tr key={user.username} className="border-b border-gray-100 hover:bg-green-50/50">
-                      <td className="px-4 py-2">{idx + 1}</td>
-                      <td className="px-4 py-2">{user.username}</td>
-                      <td className="px-4 py-2">{user.name}</td>
-                      <td className="px-4 py-2">{user.address}</td>
-                      <td className="px-4 py-2">{user.role.name}</td>
-                      <td className="px-4 py-2">{user.branch.name}</td>
-                      <td className="px-4 py-2 flex gap-2">
-                        <button onClick={() => openEdit(idx)} className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs">Edit</button>
-                        <button onClick={() => handleDelete(idx)} className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">Hapus</button>
-                      </td>
-                    </tr>
-                  ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Modal */}
             {modal.open && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
                 <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md flex flex-col gap-4">
@@ -187,7 +196,7 @@ const Users = () => {
                       value={form.password}
                       onChange={e => setForm({ ...form, password: e.target.value })}
                       className="border px-3 py-2 w-full rounded pr-10"
-                      required={modal.mode === 'add'} // only required when adding
+                      required={modal.mode === 'add'}
                     />
                     <button type="button" onClick={() => setShowPassword(v => !v)}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-xl text-gray-600">
