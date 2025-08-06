@@ -35,16 +35,16 @@ const Header = () => {
           {user?.name || 'Admin'}
         </span>
         <div className="relative" ref={dropdownRef}>
-          <div 
+          <div
             className="w-11 h-11 rounded-full bg-gradient-to-tr from-jade-100 to-blue-100 flex items-center justify-center border-2 border-jade-300 shadow hover:scale-110 hover:border-jade-500 transition-all cursor-pointer"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
             <HiOutlineUserCircle className="text-jade-500 text-2xl" />
           </div>
-          
+
           {/* Dropdown Menu */}
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-[9999]">
               <div className="px-4 py-2 border-b border-gray-100">
                 <p className="text-sm font-medium text-gray-900">{user?.name || 'Admin'}</p>
                 <p className="text-xs text-gray-500">{user?.email || 'admin@toko.com'}</p>
@@ -60,6 +60,7 @@ const Header = () => {
               </div>
             </div>
           )}
+
         </div>
       </div>
     </header>
