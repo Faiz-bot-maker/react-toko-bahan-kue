@@ -1,7 +1,9 @@
+// 
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { HiOutlinePlus } from 'react-icons/hi';
+import { FiEdit, FiTrash } from 'react-icons/fi';
 import axios from 'axios';
 
 const API_URL = `${process.env.REACT_APP_API_URL}/roles`;
@@ -95,54 +97,35 @@ const Role = () => {
         </div>
         <main className="flex-1 overflow-y-auto p-8 min-w-0">
           <div className="w-full">
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-2xl font-bold text-gray-800">Jabatan</h1>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-xl font-bold text-gray-800">Jabatan</h1>
               <button
                 onClick={openAdd}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow font-semibold transition"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded shadow font-semibold transition text-sm"
               >
-                <HiOutlinePlus className="text-lg" /> Tambah
+                <HiOutlinePlus className="text-base" /> Tambah
               </button>
             </div>
 
-            <div className="overflow-x-auto shadow-xl rounded-lg border border-gray-200 bg-white">
-              <table className="min-w-full text-sm text-gray-800 border border-gray-300 rounded-lg">
-                <thead className="bg-gray-500 text-white text-sm uppercase tracking-wider">
-                  <tr className="h-12">
-                    <th className="px-6 border-t border-b border-gray-300 text-left align-middle">
-                      <div className="flex items-center h-12">Jabatan</div>
-                    </th>
-                    <th className="px-6 border-t border-b border-gray-300 text-right align-middle">
-                      <div className="flex items-center justify-end">Aksi</div>
-                    </th>
+            <div className="overflow-x-auto shadow-lg border border-gray-200 bg-white">
+              <table className="min-w-full text-xs text-gray-800 table-fixed">
+                <thead className="bg-gray-600 text-white text-xs uppercase tracking-wider">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold">Jabatan</th>
+                    <th className="px-4 py-2 text-right font-semibold"></th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="text-slate-700">
                   {roles.map((r, idx) => (
-                    <tr
-                      key={r.id || idx}
-                      className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-green-50/50`}
-                    >
-                      <td className="px-6 h-12 align-middle border-b border-gray-300">
-                        {r.name}
-                      </td>
-                      <td className="px-6 h-12 align-middle text-right border-b border-gray-300">
-                        <div className="inline-flex gap-3">
-                          <button
-                            onClick={() => openEdit(idx)}
-                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm shadow-sm transition"
-                            type="button"
-                            aria-label={`Edit role ${r.name}`}
-                          >
-                            Edit
+                    <tr key={r.id || idx} className="border-t hover:bg-slate-50">
+                      <td className="px-4 py-3 font-medium">{r.name}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-2 items-center">
+                          <button onClick={() => openEdit(idx)} className="text-yellow-500 hover:text-yellow-600" title="Edit">
+                            <FiEdit size={16} />
                           </button>
-                          <button
-                            onClick={() => handleDelete(idx)}
-                            className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm shadow-sm transition"
-                            type="button"
-                            aria-label={`Delete role ${r.name}`}
-                          >
-                            Hapus
+                          <button onClick={() => handleDelete(idx)} className="text-red-500 hover:text-red-600" title="Hapus">
+                            <FiTrash size={16} />
                           </button>
                         </div>
                       </td>
@@ -154,23 +137,17 @@ const Role = () => {
 
             {modal.open && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-                <form
-                  onSubmit={handleSubmit}
-                  className="bg-white rounded-xl shadow-lg p-8 w-full max-w-xs flex flex-col gap-4"
-                >
-                  <h2 className="font-bold text-lg mb-2">
+                <div className="bg-white p-6 shadow-2xl w-full max-w-md border border-gray-200">
+                  <h2 className="text-xl font-bold mb-4 text-slate-800 border-b border-gray-200 pb-3">
                     {modal.mode === 'add' ? 'Tambah' : 'Edit'} Role
                   </h2>
 
-                  <div className="flex flex-col gap-1">
-                    <label htmlFor="role_name" className="text-sm font-medium text-gray-700">
-                      Nama Role
-                    </label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Nama Role</label>
                     <input
-                      id="role_name"
                       type="text"
-                      className="border rounded px-3 py-2"
-                      placeholder="Nama Role"
+                      className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                      placeholder="Masukkan nama role"
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                       required
@@ -178,22 +155,22 @@ const Role = () => {
                     />
                   </div>
 
-                  <div className="flex gap-2 mt-4">
+                  <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-200">
                     <button
                       type="submit"
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold"
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 font-medium transition-colors"
                     >
                       Simpan
                     </button>
                     <button
                       type="button"
                       onClick={closeModal}
-                      className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded font-semibold"
+                      className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 font-medium transition-colors"
                     >
                       Batal
                     </button>
                   </div>
-                </form>
+                </div>
               </div>
             )}
           </div>
@@ -203,4 +180,4 @@ const Role = () => {
   );
 };
 
-export default Role;  
+export default Role;

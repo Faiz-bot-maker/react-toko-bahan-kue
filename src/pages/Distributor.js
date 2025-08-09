@@ -3,6 +3,7 @@ import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { HiOutlinePlus } from "react-icons/hi";
+import { FiEdit, FiTrash } from 'react-icons/fi';
 
 const API_URL = `${process.env.REACT_APP_API_URL}/distributors`;
 
@@ -105,43 +106,39 @@ const Distributor = () => {
         </div>
         <main className="flex-1 overflow-y-auto p-8 min-w-0">
           <div className="w-full">
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-2xl font-bold text-gray-800">Data Distributor</h1>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-xl font-bold text-gray-800">Data Distributor</h1>
               <button
                 onClick={openAdd}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow font-semibold transition"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded shadow font-semibold transition text-sm"
               >
-                <HiOutlinePlus className="text-lg" /> Tambah
+                <HiOutlinePlus className="text-base" /> Tambah
               </button>
             </div>
 
-            <div className="overflow-x-auto shadow-xl rounded-lg border border-gray-200 bg-white">
-              <table className="min-w-full text-sm text-gray-800">
-                <thead className="bg-gray-600 text-white text-sm uppercase tracking-wider">
+            <div className="overflow-x-auto shadow-lg border border-gray-200 bg-white">
+              <table className="min-w-full text-xs text-gray-800 table-fixed">
+                <thead className="bg-gray-600 text-white text-xs uppercase tracking-wider">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-white-700">Nama Distributor</th>
-                    <th className="px-4 py-3 text-left font-semibold text-white-700">Alamat</th>
-                    <th className="px-4 py-3 text-left font-semibold text-white-700">Aksi</th>
+                    <th className="px-4 py-2 text-left font-semibold">Nama Distributor</th>
+                    <th className="px-4 py-2 text-left font-semibold">Alamat</th>
+                    <th className="px-4 py-2 text-right font-semibold">Aksi</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="text-slate-700">
                   {distributors.map((d, idx) => (
-                    <tr key={d.id || idx} className="border-b border-gray-100 hover:bg-green-50/50">
-                      <td className="px-4 py-2">{d.name}</td>
-                      <td className="px-4 py-2">{d.address}</td>
-                      <td className="px-4 py-2 flex gap-2">
-                        <button
-                          onClick={() => openEdit(idx)}
-                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
-                        >
-                          Edit
+                    <tr key={d.id || idx} className="border-t hover:bg-slate-50">
+                      <td className="px-4 py-3 font-medium">{d.name}</td>
+                      <td className="px-4 py-3">{d.address}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-2 items-center">
+                          <button onClick={() => openEdit(idx)} className="text-yellow-500 hover:text-yellow-600" title="Edit">
+                            <FiEdit size={16} />
                         </button>
-                        <button
-                          onClick={() => handleDelete(idx)}
-                          className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
-                        >
-                          Hapus
+                          <button onClick={() => handleDelete(idx)} className="text-red-500 hover:text-red-600" title="Hapus">
+                            <FiTrash size={16} />
                         </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -151,45 +148,50 @@ const Distributor = () => {
 
             {modal.open && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-                <form
-                  onSubmit={handleSubmit}
-                  className="bg-white rounded-xl shadow-lg p-8 w-full max-w-xs flex flex-col gap-4"
-                >
-                  <h2 className="font-bold text-lg mb-2">
+                <div className="bg-white p-6 shadow-2xl w-full max-w-md border border-gray-200">
+                  <h2 className="text-xl font-bold mb-4 text-slate-800 border-b border-gray-200 pb-3">
                     {modal.mode === "add" ? "Tambah" : "Edit"} Distributor
                   </h2>
-                  <input
-                    type="text"
-                    className="border rounded px-3 py-2"
-                    placeholder="Nama Distributor"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    required
-                  />
-                  <input
-                    type="text"
-                    className="border rounded px-3 py-2"
-                    placeholder="Alamat"
-                    value={form.address}
-                    onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    required
-                  />
-                  <div className="flex gap-2 mt-2">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Nama Distributor</label>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                        placeholder="Masukkan nama distributor"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+                      <textarea
+                        className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-none"
+                        placeholder="Masukkan alamat lengkap distributor"
+                        value={form.address}
+                        onChange={(e) => setForm({ ...form, address: e.target.value })}
+                        rows="4"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-200">
                     <button
                       type="submit"
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold"
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 font-medium transition-colors"
                     >
                       Simpan
                     </button>
                     <button
                       type="button"
                       onClick={closeModal}
-                      className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded font-semibold"
+                      className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 font-medium transition-colors"
                     >
                       Batal
                     </button>
                   </div>
-                </form>
+                </div>
               </div>
             )}
           </div>

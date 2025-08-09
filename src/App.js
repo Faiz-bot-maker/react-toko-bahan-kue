@@ -7,14 +7,15 @@ import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Orders from './pages/Orders';
 import Users from './pages/Users';
-import Pelanggan from './pages/Pelanggan';
 import LaporanPenjualan from './pages/LaporanPenjualan';
 import Keuangan from './pages/Keuangan';
 import Cabang from './pages/Cabang';
 import Distributor from './pages/Distributor';
 import Role from './pages/Role';
 import LaporanTerlaris from './pages/LaporanTerlaris';
+import LaporanPiutang from './pages/LaporanPiutang';
 import Categories from './pages/Kategori';
+import SizeProduct from './pages/SizeProduct';
 
 function App() {
   return (
@@ -23,7 +24,7 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          
+
           {/* Protected Routes */}
           <Route path="/dashboard" element={
             <LoginCheck>
@@ -48,11 +49,6 @@ function App() {
           <Route path="/categories" element={
             <LoginCheck>
               <Categories />
-            </LoginCheck>
-          } />
-          <Route path="/pelanggan" element={
-            <LoginCheck>
-              <Pelanggan />
             </LoginCheck>
           } />
           <Route path="/laporan-penjualan" element={
@@ -85,7 +81,18 @@ function App() {
               <LaporanTerlaris />
             </LoginCheck>
           } />
-          
+          <Route path="/laporan-piutang" element={
+            <LoginCheck>
+              <LaporanPiutang />
+            </LoginCheck>
+          } />
+
+          <Route path="/pages/sizeproduct" element={
+            <LoginCheck>
+              <SizeProduct />
+            </LoginCheck>
+          } />
+
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
