@@ -7,7 +7,6 @@ import { FiEdit, FiTrash } from "react-icons/fi";
 
 const API_URL = `${process.env.REACT_APP_API_URL}/branches`;
 
-
 const Cabang = () => {
   const [branches, setBranches] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: "add", idx: null });

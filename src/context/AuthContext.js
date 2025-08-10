@@ -47,6 +47,10 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         // setUser(userData);
         localStorage.setItem('authToken', response.data.data.token);
+        // Save minimal user info so UI (e.g., Header) can display username
+        const loggedInUser = { username };
+        setUser(loggedInUser);
+        localStorage.setItem('user', JSON.stringify(loggedInUser));
         // console.log('Login successful for user:', userData.name);
         return { success: true };
       } else {

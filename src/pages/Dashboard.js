@@ -23,6 +23,18 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+
+    // Refresh periodically for near real-time updates
+    const intervalId = setInterval(fetchDashboardData, 15000); // 15s
+
+    // Refresh on window focus
+    const onFocus = () => fetchDashboardData();
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   const fetchDashboardData = async () => {

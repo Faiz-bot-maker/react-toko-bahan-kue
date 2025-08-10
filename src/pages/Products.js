@@ -19,8 +19,8 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', data: null });
-  const [newProduct, setNewProduct] = useState({ name: '', category_id: '', sku: '', sizes: [{ size: '', stock: '' }] });
-  const [editValue, setEditValue] = useState({ name: '', category_id: '', sku: '', sizes: [{ size: '', stock: '' }] });
+  const [newProduct, setNewProduct] = useState({ name: '', category_id: '', sku: '', sizes: [{ name: '', buy_price: '', sell_price: '' }] });
+  const [editValue, setEditValue] = useState({ name: '', category_id: '', sku: '', sizes: [{ name: '', buy_price: '', sell_price: '' }] });
 
   useEffect(() => {
     fetchProducts();
@@ -49,12 +49,18 @@ const Products = () => {
 
   const handleAddProduct = async () => {
     try {
+      const sanitizedSizes = (newProduct.sizes || []).map((s) => ({
+        name: s.name,
+        buy_price: parseInt(s.buy_price) || 0,
+        sell_price: parseInt(s.sell_price) || 0,
+      }));
       const productData = {
         ...newProduct,
-        sku: `TKAZ-${newProduct.sku}`
+        sku: `TKAZ-${newProduct.sku}`,
+        sizes: sanitizedSizes,
       };
       await axios.post(API_URL, productData, { headers: getHeaders() });
-      setNewProduct({ name: '', category_id: '', sku: '', sizes: [{ size: '', stock: '' }] });
+      setNewProduct({ name: '', category_id: '', sku: '', sizes: [{ name: '', buy_price: '', sell_price: '' }] });
       setModal({ open: false, mode: 'add', data: null });
       fetchProducts();
     } catch (err) {
@@ -64,9 +70,15 @@ const Products = () => {
 
   const handleEditProduct = async (sku) => {
     try {
+      const sanitizedSizes = (editValue.sizes || []).map((s) => ({
+        name: s.name,
+        buy_price: parseInt(s.buy_price) || 0,
+        sell_price: parseInt(s.sell_price) || 0,
+      }));
       const productData = {
         ...editValue,
-        sku: `TKAZ-${editValue.sku}`
+        sku: `TKAZ-${editValue.sku}`,
+        sizes: sanitizedSizes,
       };
       await axios.put(`${API_URL}/${sku}`, productData, { headers: getHeaders() });
       setModal({ open: false, mode: 'add', data: null });
@@ -87,7 +99,7 @@ const Products = () => {
 
   const openAdd = () => {
     setModal({ open: true, mode: 'add', data: null });
-    setNewProduct({ name: '', category_id: '', sku: '', sizes: [{ size: '', stock: '' }] });
+    setNewProduct({ name: '', category_id: '', sku: '', sizes: [{ name: '', buy_price: '', sell_price: '' }] });
   };
 
   return (
@@ -141,7 +153,13 @@ const Products = () => {
                                 name: product.name,
                                 category_id: product.category.id,
                                 sku: product.sku.replace('TKAZ-', ''),
-                                sizes: product.sizes || [{ size: '', stock: '' }]
+                                sizes: (product.sizes && product.sizes.length
+                                  ? product.sizes.map(s => ({
+                                      name: s.name || s.size || '',
+                                      buy_price: s.buy_price ?? '',
+                                      sell_price: s.sell_price ?? '',
+                                    }))
+                                  : [{ name: '', buy_price: '', sell_price: '' }])
                               });
                             }}
                             className="text-yellow-500 hover:text-yellow-600"
@@ -232,10 +250,10 @@ const Products = () => {
                       </div>
                     </div>
 
-                    {/* Ukuran & Stok */}
+                    {/* Ukuran & Harga */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-gray-700">Ukuran & Stok</label>
+                        <label className="block text-sm font-medium text-gray-700">Ukuran & Harga</label>
                         {modal.mode === 'add'
                           ? (newProduct.sizes || []).length < 5 && (
                               <button
@@ -243,7 +261,7 @@ const Products = () => {
                                 onClick={() =>
                                   setNewProduct({
                                     ...newProduct,
-                                    sizes: [...(newProduct.sizes || []), { size: '', stock: '' }]
+                                    sizes: [...(newProduct.sizes || []), { name: '', buy_price: '', sell_price: '' }]
                                   })
                                 }
                                 className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
@@ -257,7 +275,7 @@ const Products = () => {
                                 onClick={() =>
                                   setEditValue({
                                     ...editValue,
-                                    sizes: [...(editValue.sizes || []), { size: '', stock: '' }]
+                                    sizes: [...(editValue.sizes || []), { name: '', buy_price: '', sell_price: '' }]
                                   })
                                 }
                                 className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
@@ -268,34 +286,52 @@ const Products = () => {
                       </div>
 
                       {(modal.mode === 'add' ? newProduct.sizes : editValue.sizes).map((item, idx) => (
-                        <div key={idx} className="flex gap-2 mb-2 items-center">
+                        <div key={idx} className="mb-3 p-3 border border-gray-200 rounded">
+                          <div className="mb-2">
                           <input
                             type="text"
                             placeholder="Ukuran"
-                            value={item.size}
+                              value={item.name}
+                              onChange={(e) => {
+                                const updated = [...(modal.mode === 'add' ? newProduct.sizes : editValue.sizes)];
+                                updated[idx] = { ...updated[idx], name: e.target.value };
+                                modal.mode === 'add'
+                                  ? setNewProduct({ ...newProduct, sizes: updated })
+                                  : setEditValue({ ...editValue, sizes: updated });
+                              }}
+                              className="w-full border border-gray-300 px-4 py-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <input
+                              type="number"
+                              placeholder="Harga Beli"
+                              value={item.buy_price}
                             onChange={(e) => {
                               const updated = [...(modal.mode === 'add' ? newProduct.sizes : editValue.sizes)];
-                              updated[idx].size = e.target.value;
+                                updated[idx] = { ...updated[idx], buy_price: e.target.value };
                               modal.mode === 'add'
                                 ? setNewProduct({ ...newProduct, sizes: updated })
                                 : setEditValue({ ...editValue, sizes: updated });
                             }}
-                            className="w-1/2 border border-gray-300 px-4 py-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              className="w-full border border-gray-300 px-4 py-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                           <input
                             type="number"
-                            placeholder="Stok"
-                            value={item.stock}
+                              placeholder="Harga Jual"
+                              value={item.sell_price}
                             onChange={(e) => {
                               const updated = [...(modal.mode === 'add' ? newProduct.sizes : editValue.sizes)];
-                              updated[idx].stock = e.target.value;
+                                updated[idx] = { ...updated[idx], sell_price: e.target.value };
                               modal.mode === 'add'
                                 ? setNewProduct({ ...newProduct, sizes: updated })
                                 : setEditValue({ ...editValue, sizes: updated });
                             }}
-                            className="w-1/2 border border-gray-300 px-4 py-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              className="w-full border border-gray-300 px-4 py-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
+                          </div>
                           {(modal.mode === 'add' ? newProduct.sizes.length : editValue.sizes.length) > 1 && (
+                            <div className="mt-2 flex justify-end">
                             <button
                               type="button"
                               onClick={() => {
@@ -305,10 +341,11 @@ const Products = () => {
                                   ? setNewProduct({ ...newProduct, sizes: updated })
                                   : setEditValue({ ...editValue, sizes: updated });
                               }}
-                              className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm"
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
                             >
-                              _
+                                −
                             </button>
+                            </div>
                           )}
                         </div>
                       ))}
