@@ -41,24 +41,28 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // Fetch data dari berbagai endpoint
-      const [ordersRes, productsRes, categoriesRes, branchesRes] = await Promise.all([
+      // Fetch data dari endpoint dashboard yang baru
+      const [ordersRes, productsRes, categoriesRes, branchesRes, salesRes] = await Promise.all([
         axios.get(`${process.env.REACT_APP_API_URL}/orders`, { headers: getHeaders() }),
         axios.get(`${process.env.REACT_APP_API_URL}/products`, { headers: getHeaders() }),
         axios.get(`${process.env.REACT_APP_API_URL}/categories`, { headers: getHeaders() }),
-        axios.get(`${process.env.REACT_APP_API_URL}/branches`, { headers: getHeaders() })
+        axios.get(`${process.env.REACT_APP_API_URL}/branches`, { headers: getHeaders() }),
+        axios.get(`${process.env.REACT_APP_API_URL}/sales-and-product-reports/sales`, { headers: getHeaders() })
       ]);
 
       const orders = ordersRes.data?.data || ordersRes.data || [];
       const products = productsRes.data?.data || productsRes.data || [];
       const categories = categoriesRes.data?.data || categoriesRes.data || [];
       const branches = branchesRes.data?.data || branchesRes.data || [];
+      const sales = salesRes.data?.data || salesRes.data || {};
 
       setStats({
         totalOrders: orders.length,
         totalProducts: products.length,
         totalCategories: categories.length,
-        totalBranches: branches.length
+        totalBranches: branches.length,
+        totalSales: sales.total_sales || 0,
+        totalRevenue: sales.total_revenue || 0
       });
     } catch (err) {
       console.error('Gagal mengambil data dashboard:', err);

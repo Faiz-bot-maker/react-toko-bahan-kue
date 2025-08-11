@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import { HiOutlinePlus } from 'react-icons/hi';
 import { FiEdit, FiTrash } from 'react-icons/fi';
 import { TbRulerMeasure } from 'react-icons/tb';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_URL = `${process.env.REACT_APP_API_URL}/products`;
@@ -19,8 +19,19 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', data: null });
-  const [newProduct, setNewProduct] = useState({ name: '', category_id: '', sku: '', sizes: [{ name: '', buy_price: '', sell_price: '' }] });
-  const [editValue, setEditValue] = useState({ name: '', category_id: '', sku: '', sizes: [{ name: '', buy_price: '', sell_price: '' }] });
+  const [newProduct, setNewProduct] = useState({ 
+    name: '', 
+    category_id: '', 
+    sku: '', 
+    sizes: [{ name: '', buy_price: '', sell_price: '' }] 
+  });
+  const [editValue, setEditValue] = useState({ 
+    name: '', 
+    category_id: '', 
+    sku: '' 
+  });
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
@@ -29,11 +40,14 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(API_URL, { headers: getHeaders() });
+      const res = await axios.get(API_URL, { 
+        headers: getHeaders(),
+        params: { exclude_sizes: true }
+      });
       const data = res.data?.data || res.data;
       if (Array.isArray(data)) setProducts(data);
     } catch (err) {
-      console.error('Gagal mengambil produk:', err);
+      console.error('Failed to fetch products:', err);
     }
   };
 
@@ -43,57 +57,83 @@ const Products = () => {
       const data = res.data?.data || res.data;
       if (Array.isArray(data)) setCategories(data);
     } catch (err) {
-      console.error('Gagal mengambil kategori:', err);
+      console.error('Failed to fetch categories:', err);
     }
   };
 
   const handleAddProduct = async () => {
     try {
-      const sanitizedSizes = (newProduct.sizes || []).map((s) => ({
-        name: s.name,
-        buy_price: parseInt(s.buy_price) || 0,
-        sell_price: parseInt(s.sell_price) || 0,
-      }));
+      // Only send basic product data first
       const productData = {
-        ...newProduct,
-        sku: `TKAZ-${newProduct.sku}`,
-        sizes: sanitizedSizes,
+        name: newProduct.name,
+        category_id: newProduct.category_id,
+        sku: `TKAZ-${newProduct.sku}`
       };
-      await axios.post(API_URL, productData, { headers: getHeaders() });
-      setNewProduct({ name: '', category_id: '', sku: '', sizes: [{ name: '', buy_price: '', sell_price: '' }] });
+
+      const response = await axios.post(API_URL, productData, { 
+        headers: getHeaders() 
+      });
+      
+      const createdProduct = response.data.data;
+
+      // Now handle sizes separately
+      if (newProduct.sizes && newProduct.sizes.length > 0) {
+        const sizesToCreate = newProduct.sizes
+          .filter(s => s.name.trim() !== '')
+          .map(s => ({
+            product_id: createdProduct.id,
+            name: s.name,
+            buy_price: parseInt(s.buy_price) || 0,
+            sell_price: parseInt(s.sell_price) || 0
+          }));
+
+        if (sizesToCreate.length > 0) {
+          await axios.post(`${API_URL}/${createdProduct.sku}/sizes`, sizesToCreate, { 
+            headers: getHeaders() 
+          });
+        }
+      }
+
+      setNewProduct({ 
+        name: '', 
+        category_id: '', 
+        sku: '', 
+        sizes: [{ name: '', buy_price: '', sell_price: '' }] 
+      });
       setModal({ open: false, mode: 'add', data: null });
-      fetchProducts();
+      
+      // Redirect to size management page
+      navigate(`/pages/sizeproduct?sku=${createdProduct.sku}`);
     } catch (err) {
-      console.error('Gagal menambah produk:', err);
+      console.error('Failed to add product:', err);
     }
   };
 
   const handleEditProduct = async (sku) => {
     try {
-      const sanitizedSizes = (editValue.sizes || []).map((s) => ({
-        name: s.name,
-        buy_price: parseInt(s.buy_price) || 0,
-        sell_price: parseInt(s.sell_price) || 0,
-      }));
       const productData = {
-        ...editValue,
-        sku: `TKAZ-${editValue.sku}`,
-        sizes: sanitizedSizes,
+        name: editValue.name,
+        category_id: editValue.category_id,
+        sku: `TKAZ-${editValue.sku}`
       };
-      await axios.put(`${API_URL}/${sku}`, productData, { headers: getHeaders() });
+      await axios.put(`${API_URL}/${sku}`, productData, { 
+        headers: getHeaders() 
+      });
       setModal({ open: false, mode: 'add', data: null });
       fetchProducts();
     } catch (err) {
-      console.error('Gagal mengedit produk:', err);
+      console.error('Failed to edit product:', err);
     }
   };
 
   const handleDeleteProduct = async (sku) => {
     try {
-      await axios.delete(`${API_URL}/${sku}`, { headers: getHeaders() });
+      await axios.delete(`${API_URL}/${sku}`, { 
+        headers: getHeaders() 
+      });
       fetchProducts();
     } catch (err) {
-      console.error('Gagal menghapus produk:', err);
+      console.error('Failed to delete product:', err);
     }
   };
 
@@ -112,67 +152,60 @@ const Products = () => {
         <main className="flex-1 overflow-y-auto p-8 min-w-0">
           <div className="w-full">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-xl font-bold text-gray-800">Data Produk</h1>
+              <h1 className="text-xl font-bold text-gray-800">Product Data</h1>
               <button
                 onClick={openAdd}
                 className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded shadow font-semibold transition text-sm"
               >
-                <HiOutlinePlus className="text-base" /> Tambah
+                <HiOutlinePlus className="text-base" /> Add
               </button>
             </div>
 
             <div className="overflow-x-auto shadow-lg border border-gray-200 bg-white">
-              <table className="min-w-full text-xs text-gray-800 table-fixed">
-                <thead className="bg-gray-600 text-white text-xs uppercase tracking-wider">
+              <table className="min-w-full text-sm text-gray-800">
+                <thead className="bg-gray-600 text-white uppercase tracking-wider">
                   <tr>
-                    <th className="px-4 py-2 text-left font-semibold w-1/3">Nama Produk</th>
-                    <th className="px-4 py-2 text-left font-semibold w-1/4">Kategori</th>
-                    <th className="px-4 py-2 text-left font-semibold w-1/4">SKU</th>
-                    <th className="px-4 py-2 text-right font-semibold w-32">Aksi</th>
+                    <th className="px-6 py-3 text-left font-medium">Product Name</th>
+                    <th className="px-6 py-3 text-left font-medium">Category</th>
+                    <th className="px-6 py-3 text-left font-medium">SKU</th>
+                    <th className="px-6 py-3 text-right font-medium">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="text-slate-700">
-                  {products.map(product => (
-                    <tr key={product.sku} className="border-t hover:bg-slate-50">
-                      <td className="px-4 py-3 font-medium">{product.name}</td>
-                      <td className="px-4 py-3">{product.category.name}</td>
-                      <td className="px-4 py-3">{product.sku}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2 items-center">
+                <tbody className="divide-y divide-gray-200">
+                  {products.map((product) => (
+                    <tr key={product.sku} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">{product.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{product.category?.name || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{product.sku}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="flex justify-end space-x-2">
                           <Link
                             to={`/pages/sizeproduct?sku=${product.sku}`}
-                            className="text-blue-600 hover:text-blue-700 flex items-center gap-1 font-medium"
-                            title="Kelola Ukuran Produk"
+                            className="text-blue-600 hover:text-blue-800"
+                            title="Manage Sizes"
                           >
-                            <TbRulerMeasure size={16} />
+                            <TbRulerMeasure size={18} />
                           </Link>
                           <button
                             onClick={() => {
                               setModal({ open: true, mode: 'edit', data: product });
                               setEditValue({
                                 name: product.name,
-                                category_id: product.category.id,
+                                category_id: product.category?.id || '',
                                 sku: product.sku.replace('TKAZ-', ''),
-                                sizes: (product.sizes && product.sizes.length
-                                  ? product.sizes.map(s => ({
-                                      name: s.name || s.size || '',
-                                      buy_price: s.buy_price ?? '',
-                                      sell_price: s.sell_price ?? '',
-                                    }))
-                                  : [{ name: '', buy_price: '', sell_price: '' }])
                               });
                             }}
-                            className="text-yellow-500 hover:text-yellow-600"
-                            title="Edit Produk"
+                            className="text-yellow-600 hover:text-yellow-800"
+                            title="Edit Product"
                           >
-                            <FiEdit size={16} />
+                            <FiEdit size={18} />
                           </button>
                           <button
                             onClick={() => handleDeleteProduct(product.sku)}
-                            className="text-red-500 hover:text-red-600"
-                            title="Hapus Produk"
+                            className="text-red-600 hover:text-red-800"
+                            title="Delete Product"
                           >
-                            <FiTrash size={16} />
+                            <FiTrash size={18} />
                           </button>
                         </div>
                       </td>
@@ -182,190 +215,181 @@ const Products = () => {
               </table>
             </div>
 
-            {/* Modal */}
+            {/* Add/Edit Product Modal */}
             {modal.open && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-                <div className="bg-white p-6 shadow-2xl w-full max-w-md border border-gray-200 max-h-[90vh] flex flex-col rounded-lg">
-                  <h2 className="text-xl font-bold mb-4 text-slate-800 border-b border-gray-200 pb-3">
-                    {modal.mode === 'add' ? 'Tambah Produk' : 'Edit Produk'}
-                  </h2>
-
-                  {/* Isi Form Scrollable */}
-                  <div className="flex-1 overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                    {/* Nama Produk */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nama Produk</label>
-                      <input
-                        type="text"
-                        placeholder="Masukkan nama produk"
-                        value={modal.mode === 'add' ? newProduct.name : editValue.name}
-                        onChange={e =>
-                          modal.mode === 'add'
-                            ? setNewProduct({ ...newProduct, name: e.target.value })
-                            : setEditValue({ ...editValue, name: e.target.value })
-                        }
-                        className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                      />
-                    </div>
-
-                    {/* Kategori */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
-                      <select
-                        value={modal.mode === 'add' ? newProduct.category_id : editValue.category_id}
-                        onChange={e =>
-                          modal.mode === 'add'
-                            ? setNewProduct({ ...newProduct, category_id: parseInt(e.target.value) })
-                            : setEditValue({ ...editValue, category_id: parseInt(e.target.value) })
-                        }
-                        className="w-full border border-gray-300 px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                      >
-                        <option value="">Pilih Kategori</option>
-                        {categories.map(cat => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* SKU */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">SKU</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm pr-1">
-                          TKAZ-
-                        </span>
+              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                  <div className="p-6">
+                    <h2 className="text-xl font-semibold mb-4">
+                      {modal.mode === 'add' ? 'Add Product' : 'Edit Product'}
+                    </h2>
+                    
+                    {/* Product Form */}
+                    <div className="space-y-4">
+                      {/* Name Field */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Product Name
+                        </label>
                         <input
-                          type="number"
-                          placeholder="Masukkan nomor SKU"
-                          value={modal.mode === 'add' ? newProduct.sku : editValue.sku}
-                          onChange={e =>
+                          type="text"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          value={modal.mode === 'add' ? newProduct.name : editValue.name}
+                          onChange={(e) =>
                             modal.mode === 'add'
-                              ? setNewProduct({ ...newProduct, sku: e.target.value })
-                              : setEditValue({ ...editValue, sku: e.target.value })
+                              ? setNewProduct({ ...newProduct, name: e.target.value })
+                              : setEditValue({ ...editValue, name: e.target.value })
                           }
-                          className="w-full border border-gray-300 px-4 py-3 pl-16 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                         />
                       </div>
-                    </div>
-
-                    {/* Ukuran & Harga */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-gray-700">Ukuran & Harga</label>
-                        {modal.mode === 'add'
-                          ? (newProduct.sizes || []).length < 5 && (
+                      
+                      {/* Category Field */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Category
+                        </label>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          value={modal.mode === 'add' ? newProduct.category_id : editValue.category_id}
+                          onChange={(e) =>
+                            modal.mode === 'add'
+                              ? setNewProduct({ ...newProduct, category_id: e.target.value })
+                              : setEditValue({ ...editValue, category_id: e.target.value })
+                          }
+                        >
+                          <option value="">Select Category</option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {/* SKU Field */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          SKU
+                        </label>
+                        <div className="relative">
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            TKAZ-
+                          </span>
+                          <input
+                            type="text"
+                            className="pl-12 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Enter SKU number"
+                            value={modal.mode === 'add' ? newProduct.sku : editValue.sku}
+                            onChange={(e) =>
+                              modal.mode === 'add'
+                                ? setNewProduct({ ...newProduct, sku: e.target.value })
+                                : setEditValue({ ...editValue, sku: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Sizes Section - Only for Add Mode */}
+                      {modal.mode === 'add' && (
+                        <div className="border-t pt-4 mt-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-sm font-medium text-gray-700">
+                              Product Sizes
+                            </h3>
+                            {newProduct.sizes.length < 5 && (
                               <button
                                 type="button"
                                 onClick={() =>
                                   setNewProduct({
                                     ...newProduct,
-                                    sizes: [...(newProduct.sizes || []), { name: '', buy_price: '', sell_price: '' }]
+                                    sizes: [...newProduct.sizes, { name: '', buy_price: '', sell_price: '' }]
                                   })
                                 }
-                                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
+                                className="text-sm text-indigo-600 hover:text-indigo-800"
                               >
-                                +
-                              </button>
-                            )
-                          : (editValue.sizes || []).length < 5 && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setEditValue({
-                                    ...editValue,
-                                    sizes: [...(editValue.sizes || []), { name: '', buy_price: '', sell_price: '' }]
-                                  })
-                                }
-                                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
-                              >
-                                +
+                                + Add Size
                               </button>
                             )}
-                      </div>
-
-                      {(modal.mode === 'add' ? newProduct.sizes : editValue.sizes).map((item, idx) => (
-                        <div key={idx} className="mb-3 p-3 border border-gray-200 rounded">
-                          <div className="mb-2">
-                          <input
-                            type="text"
-                            placeholder="Ukuran"
-                              value={item.name}
-                              onChange={(e) => {
-                                const updated = [...(modal.mode === 'add' ? newProduct.sizes : editValue.sizes)];
-                                updated[idx] = { ...updated[idx], name: e.target.value };
-                                modal.mode === 'add'
-                                  ? setNewProduct({ ...newProduct, sizes: updated })
-                                  : setEditValue({ ...editValue, sizes: updated });
-                              }}
-                              className="w-full border border-gray-300 px-4 py-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <input
-                              type="number"
-                              placeholder="Harga Beli"
-                              value={item.buy_price}
-                            onChange={(e) => {
-                              const updated = [...(modal.mode === 'add' ? newProduct.sizes : editValue.sizes)];
-                                updated[idx] = { ...updated[idx], buy_price: e.target.value };
-                              modal.mode === 'add'
-                                ? setNewProduct({ ...newProduct, sizes: updated })
-                                : setEditValue({ ...editValue, sizes: updated });
-                            }}
-                              className="w-full border border-gray-300 px-4 py-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                          <input
-                            type="number"
-                              placeholder="Harga Jual"
-                              value={item.sell_price}
-                            onChange={(e) => {
-                              const updated = [...(modal.mode === 'add' ? newProduct.sizes : editValue.sizes)];
-                                updated[idx] = { ...updated[idx], sell_price: e.target.value };
-                              modal.mode === 'add'
-                                ? setNewProduct({ ...newProduct, sizes: updated })
-                                : setEditValue({ ...editValue, sizes: updated });
-                            }}
-                              className="w-full border border-gray-300 px-4 py-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                          </div>
-                          {(modal.mode === 'add' ? newProduct.sizes.length : editValue.sizes.length) > 1 && (
-                            <div className="mt-2 flex justify-end">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const updated = [...(modal.mode === 'add' ? newProduct.sizes : editValue.sizes)];
-                                updated.splice(idx, 1);
-                                modal.mode === 'add'
-                                  ? setNewProduct({ ...newProduct, sizes: updated })
-                                  : setEditValue({ ...editValue, sizes: updated });
-                              }}
-                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-                            >
-                                −
-                            </button>
+                          
+                          {newProduct.sizes.map((size, index) => (
+                            <div key={index} className="border p-3 rounded-md mb-2 bg-gray-50">
+                              <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                  <label className="text-xs text-gray-500">Size Name</label>
+                                  <input
+                                    type="text"
+                                    className="w-full p-1 border border-gray-300 rounded text-sm"
+                                    value={size.name}
+                                    onChange={(e) => {
+                                      const updatedSizes = [...newProduct.sizes];
+                                      updatedSizes[index].name = e.target.value;
+                                      setNewProduct({ ...newProduct, sizes: updatedSizes });
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-xs text-gray-500">Buy Price</label>
+                                  <input
+                                    type="number"
+                                    className="w-full p-1 border border-gray-300 rounded text-sm"
+                                    value={size.buy_price}
+                                    onChange={(e) => {
+                                      const updatedSizes = [...newProduct.sizes];
+                                      updatedSizes[index].buy_price = e.target.value;
+                                      setNewProduct({ ...newProduct, sizes: updatedSizes });
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-xs text-gray-500">Sell Price</label>
+                                  <input
+                                    type="number"
+                                    className="w-full p-1 border border-gray-300 rounded text-sm"
+                                    value={size.sell_price}
+                                    onChange={(e) => {
+                                      const updatedSizes = [...newProduct.sizes];
+                                      updatedSizes[index].sell_price = e.target.value;
+                                      setNewProduct({ ...newProduct, sizes: updatedSizes });
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              {newProduct.sizes.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updatedSizes = newProduct.sizes.filter((_, i) => i !== index);
+                                    setNewProduct({ ...newProduct, sizes: updatedSizes });
+                                  }}
+                                  className="mt-2 text-xs text-red-600 hover:text-red-800"
+                                >
+                                  Remove Size
+                                </button>
+                              )}
                             </div>
-                          )}
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </div>
-
-                  {/* Tombol Aksi */}
-                  <div className="mt-4 flex justify-end gap-3 pt-4 border-t border-gray-200">
-                    <button
-                      onClick={() => setModal({ open: false, mode: 'add', data: null })}
-                      className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded font-medium transition-colors"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      onClick={modal.mode === 'add' ? handleAddProduct : () => handleEditProduct(modal.data.sku)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded font-medium transition-colors"
-                    >
-                      {modal.mode === 'add' ? 'Tambah' : 'Simpan'}
-                    </button>
+                    
+                    {/* Form Actions */}
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setModal({ open: false, mode: 'add', data: null })}
+                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={modal.mode === 'add' ? handleAddProduct : () => handleEditProduct(modal.data.sku)}
+                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        {modal.mode === 'add' ? 'Add Product' : 'Save Changes'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

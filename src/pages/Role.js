@@ -1,4 +1,3 @@
-// 
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
@@ -142,34 +141,38 @@ const Role = () => {
                     {modal.mode === 'add' ? 'Tambah' : 'Edit'} Role
                   </h2>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Nama Role</label>
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                      placeholder="Masukkan nama role"
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      required
-                      autoFocus
-                    />
-                  </div>
+                  {/* FORM */}
+                  <form onSubmit={handleSubmit}>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Nama Role</label>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                        placeholder="Masukkan nama role"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        required
+                        autoFocus
+                      />
+                    </div>
 
-                  <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-200">
-                    <button
-                      type="submit"
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 font-medium transition-colors"
-                    >
-                      Simpan
-                    </button>
-                    <button
-                      type="button"
-                      onClick={closeModal}
-                      className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 font-medium transition-colors"
-                    >
-                      Batal
-                    </button>
-                  </div>
+                    <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-200">
+                      <button
+                        type="submit"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 font-medium transition-colors"
+                      >
+                        Simpan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={closeModal}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 font-medium transition-colors"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                  </form>
+                  {/* END FORM */}
                 </div>
               </div>
             )}

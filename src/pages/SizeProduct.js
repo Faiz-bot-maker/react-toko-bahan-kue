@@ -120,7 +120,7 @@ const SizeProduct = () => {
                                         <th className="px-5 py-3 text-left font-semibold w-1/3">Nama Ukuran</th>
                                         <th className="px-5 py-3 text-left font-semibold w-1/4">Harga Beli</th>
                                         <th className="px-5 py-3 text-left font-semibold w-1/4">Harga Jual</th>
-                                        <th className="px-5 py-3 text-right font-semibold w-24"></th>
+                                        <th className="px-5 py-3 text-right font-semibold w-24">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-slate-700">
