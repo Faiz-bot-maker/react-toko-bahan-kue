@@ -5,7 +5,7 @@ import LoginCheck from './components/LoginCheck';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
-import Orders from './pages/Orders';
+// import Orders from './pages/Orders';
 import Users from './pages/Users';
 import LaporanPenjualan from './pages/LaporanPenjualan';
 import Keuangan from './pages/Keuangan';
@@ -36,11 +36,11 @@ function App() {
               <Products />
             </LoginCheck>
           } />
-          <Route path="/orders" element={
+          {/* <Route path="/orders" element={
             <LoginCheck>
               <Orders />
             </LoginCheck>
-          } />
+          } /> */}
           <Route path="/users" element={
             <LoginCheck>
               <Users />

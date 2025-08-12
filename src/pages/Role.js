@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { HiOutlinePlus } from 'react-icons/hi';
 import { FiEdit, FiTrash } from 'react-icons/fi';
+import { MdWork } from 'react-icons/md';
 import axios from 'axios';
 
 const API_URL = `${process.env.REACT_APP_API_URL}/roles`;
@@ -11,6 +12,7 @@ const Role = () => {
   const [roles, setRoles] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', idx: null });
   const [form, setForm] = useState({ id: null, name: "" });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchRoles();
@@ -18,6 +20,7 @@ const Role = () => {
 
   const fetchRoles = async () => {
     try {
+      setLoading(true);
       const res = await axios.get(API_URL, {
         headers: {
           Authorization: localStorage.getItem('authToken'),
@@ -28,6 +31,8 @@ const Role = () => {
       if (Array.isArray(data)) setRoles(data);
     } catch (err) {
       console.error('Gagal fetch role:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,84 +100,145 @@ const Role = () => {
           <Header />
         </div>
         <main className="flex-1 overflow-y-auto p-8 min-w-0">
-          <div className="w-full">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-xl font-bold text-gray-800">Jabatan</h1>
+          <div className="w-full max-w-7xl mx-auto">
+            {/* Header Section */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-indigo-100 rounded-lg">
+                  <MdWork className="text-2xl text-indigo-600" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-800">Data Jabatan</h1>
+                  <p className="text-sm text-gray-600">Kelola jabatan dan peran pengguna</p>
+                </div>
+              </div>
               <button
                 onClick={openAdd}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded shadow font-semibold transition text-sm"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all duration-200 hover:shadow-xl"
               >
-                <HiOutlinePlus className="text-base" /> Tambah
+                <HiOutlinePlus className="text-lg" /> Tambah Jabatan
               </button>
             </div>
 
-            <div className="overflow-x-auto shadow-lg border border-gray-200 bg-white">
-              <table className="min-w-full text-xs text-gray-800 table-fixed">
-                <thead className="bg-gray-600 text-white text-xs uppercase tracking-wider">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-semibold">Jabatan</th>
-                    <th className="px-4 py-2 text-right font-semibold"></th>
-                  </tr>
-                </thead>
-                <tbody className="text-slate-700">
-                  {roles.map((r, idx) => (
-                    <tr key={r.id || idx} className="border-t hover:bg-slate-50">
-                      <td className="px-4 py-3 font-medium">{r.name}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2 items-center">
-                          <button onClick={() => openEdit(idx)} className="text-yellow-500 hover:text-yellow-600" title="Edit">
-                            <FiEdit size={16} />
-                          </button>
-                          <button onClick={() => handleDelete(idx)} className="text-red-500 hover:text-red-600" title="Hapus">
-                            <FiTrash size={16} />
-                          </button>
-                        </div>
-                      </td>
+            {/* Table Section */}
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
+                    <tr>
+                      <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wider">
+                        Nama Jabatan
+                      </th>
+                      <th className="px-6 py-4 text-right font-semibold text-sm uppercase tracking-wider">
+                        Aksi
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={2} className="px-6 py-12 text-center">
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                            <span className="ml-3 text-gray-600">Memuat data...</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : roles.length === 0 ? (
+                      <tr>
+                        <td colSpan={2} className="px-6 py-16 text-center">
+                          <div className="flex flex-col items-center">
+                            <MdWork className="text-6xl text-gray-300 mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada data jabatan</h3>
+                            <p className="text-gray-500 mb-4">Mulai dengan menambahkan jabatan pertama Anda</p>
+                            <button
+                              onClick={openAdd}
+                              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                            >
+                              <HiOutlinePlus className="text-base" /> Tambah Jabatan Pertama
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      roles.map((r, idx) => (
+                        <tr key={r.id || idx} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-gray-900">{r.name}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                onClick={() => openEdit(idx)} 
+                                className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Edit"
+                              >
+                                <FiEdit size={18} />
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(idx)} 
+                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Hapus"
+                              >
+                                <FiTrash size={18} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
+            {/* Modal */}
             {modal.open && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-                <div className="bg-white p-6 shadow-2xl w-full max-w-md border border-gray-200">
-                  <h2 className="text-xl font-bold mb-4 text-slate-800 border-b border-gray-200 pb-3">
-                    {modal.mode === 'add' ? 'Tambah' : 'Edit'} Role
-                  </h2>
-
-                  {/* FORM */}
-                  <form onSubmit={handleSubmit}>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nama Role</label>
-                      <input
-                        type="text"
-                        className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                        placeholder="Masukkan nama role"
-                        value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        required
-                        autoFocus
-                      />
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-gray-200">
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 bg-indigo-100 rounded-lg">
+                        <MdWork className="text-xl text-indigo-600" />
+                      </div>
+                      <h2 className="text-xl font-bold text-gray-800">
+                        {modal.mode === 'add' ? 'Tambah' : 'Edit'} Jabatan
+                      </h2>
                     </div>
 
-                    <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-200">
-                      <button
-                        type="submit"
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 font-medium transition-colors"
-                      >
-                        Simpan
-                      </button>
-                      <button
-                        type="button"
-                        onClick={closeModal}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 font-medium transition-colors"
-                      >
-                        Batal
-                      </button>
-                    </div>
-                  </form>
-                  {/* END FORM */}
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Nama Jabatan
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-colors"
+                          placeholder="Masukkan nama jabatan"
+                          value={form.name}
+                          onChange={(e) => setForm({ ...form, name: e.target.value })}
+                          required
+                          autoFocus
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                        <button
+                          type="button"
+                          onClick={closeModal}
+                          className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+                        >
+                          Simpan
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
               </div>
             )}

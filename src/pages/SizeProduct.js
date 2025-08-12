@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { HiOutlinePlus } from 'react-icons/hi';
 import { FiEdit, FiTrash } from 'react-icons/fi';
+import { TbRulerMeasure } from 'react-icons/tb';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
@@ -16,6 +17,7 @@ const SizeProduct = () => {
     const [modal, setModal] = useState({ open: false, mode: 'add', data: null });
     const [formData, setFormData] = useState({ name: '', buy_price: '', sell_price: '' });
     const [searchParams] = useSearchParams();
+    const [loading, setLoading] = useState(true);
     const sku = searchParams.get('sku');
 
     useEffect(() => {
@@ -24,12 +26,15 @@ const SizeProduct = () => {
 
     const fetchSizes = async () => {
         try {
+            setLoading(true);
             const res = await axios.get(`${process.env.REACT_APP_API_URL}/products/${sku}/sizes`, {
                 headers: getHeaders(),
             });
             setSizes(res.data.data || []);
         } catch (err) {
             console.error('Gagal mengambil ukuran:', err);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -62,14 +67,16 @@ const SizeProduct = () => {
     };
 
     const handleDeleteSize = async (id) => {
-        try {
-            await axios.delete(
-                `${process.env.REACT_APP_API_URL}/products/${sku}/sizes/${id}`,
-                { headers: getHeaders() }
-            );
-            fetchSizes();
-        } catch (err) {
-            console.error('Gagal menghapus ukuran:', err);
+        if (window.confirm('Yakin ingin menghapus ukuran ini?')) {
+            try {
+                await axios.delete(
+                    `${process.env.REACT_APP_API_URL}/products/${sku}/sizes/${id}`,
+                    { headers: getHeaders() }
+                );
+                fetchSizes();
+            } catch (err) {
+                console.error('Gagal menghapus ukuran:', err);
+            }
         }
     };
 
@@ -100,107 +107,187 @@ const SizeProduct = () => {
                     <Header />
                 </div>
                 <main className="flex-1 overflow-y-auto p-8 min-w-0">
-                    <div className="w-full">
+                    <div className="w-full max-w-7xl mx-auto">
+                        {/* Header Section */}
                         <div className="flex items-center justify-between mb-8">
-                            <h1 className="text-2xl font-bold text-gray-800">
-                                Ukuran Produk (SKU: {sku})
-                            </h1>
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-teal-100 rounded-lg">
+                                    <TbRulerMeasure className="text-2xl text-teal-600" />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-800">
+                                        Ukuran Produk
+                                    </h1>
+                                    <p className="text-sm text-gray-600">SKU: {sku}</p>
+                                </div>
+                            </div>
                             <button
                                 onClick={openAdd}
-                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow font-semibold transition"
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all duration-200 hover:shadow-xl"
                             >
-                                <HiOutlinePlus className="text-lg" /> Tambah
+                                <HiOutlinePlus className="text-lg" /> Tambah Ukuran
                             </button>
                         </div>
 
-                        <div className="overflow-x-auto shadow-xl border border-gray-200 bg-white rounded">
-                            <table className="min-w-full text-sm text-gray-800 table-fixed">
-                                <thead className="bg-gray-600 text-white text-sm uppercase tracking-wider">
-                                    <tr>
-                                        <th className="px-5 py-3 text-left font-semibold w-1/3">Nama Ukuran</th>
-                                        <th className="px-5 py-3 text-left font-semibold w-1/4">Harga Beli</th>
-                                        <th className="px-5 py-3 text-left font-semibold w-1/4">Harga Jual</th>
-                                        <th className="px-5 py-3 text-right font-semibold w-24">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-slate-700">
-                                    {sizes.map((size) => (
-                                        <tr key={size.id} className="border-t hover:bg-slate-50">
-                                            <td className="px-5 py-4 font-medium">{size.name}</td>
-                                            <td className="px-5 py-4">Rp {size.buy_price?.toLocaleString()}</td>
-                                            <td className="px-5 py-4">Rp {size.sell_price?.toLocaleString()}</td>
-                                            <td className="px-5 py-4">
-                                                <div className="flex justify-end gap-2">
-                                                    <button
-                                                        onClick={() => openEdit(size)}
-                                                        className="text-yellow-500 hover:text-yellow-600"
-                                                        title="Edit Ukuran"
-                                                    >
-                                                        <FiEdit size={18} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteSize(size.id)}
-                                                        className="text-red-500 hover:text-red-600"
-                                                        title="Hapus Ukuran"
-                                                    >
-                                                        <FiTrash size={18} />
-                                                    </button>
-                                                </div>
-                                            </td>
+                        {/* Table Section */}
+                        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full">
+                                    <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
+                                        <tr>
+                                            <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wider">
+                                                Nama Ukuran
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wider">
+                                                Harga Beli
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wider">
+                                                Harga Jual
+                                            </th>
+                                            <th className="px-6 py-4 text-right font-semibold text-sm uppercase tracking-wider">
+                                                Aksi
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {loading ? (
+                                            <tr>
+                                                <td colSpan={4} className="px-6 py-12 text-center">
+                                                    <div className="flex items-center justify-center">
+                                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+                                                        <span className="ml-3 text-gray-600">Memuat data...</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : sizes.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={4} className="px-6 py-16 text-center">
+                                                    <div className="flex flex-col items-center">
+                                                        <TbRulerMeasure className="text-6xl text-gray-300 mb-4" />
+                                                        <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada data ukuran</h3>
+                                                        <p className="text-gray-500 mb-4">Mulai dengan menambahkan ukuran pertama untuk produk ini</p>
+                                                        <button
+                                                            onClick={openAdd}
+                                                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                                                        >
+                                                            <HiOutlinePlus className="text-base" /> Tambah Ukuran Pertama
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            sizes.map((size) => (
+                                                <tr key={size.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-medium text-gray-900">{size.name}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-gray-700">Rp {size.buy_price?.toLocaleString()}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-gray-700">Rp {size.sell_price?.toLocaleString()}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex justify-end gap-2">
+                                                            <button
+                                                                onClick={() => openEdit(size)}
+                                                                className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                title="Edit Ukuran"
+                                                            >
+                                                                <FiEdit size={18} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteSize(size.id)}
+                                                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                                                title="Hapus Ukuran"
+                                                            >
+                                                                <FiTrash size={18} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
+                        {/* Modal */}
                         {modal.open && (
-                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-                                <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
-                                    <h2 className="text-xl font-bold mb-4 text-slate-800">
-                                        {modal.mode === 'add' ? 'Tambah Ukuran' : 'Edit Ukuran'}
-                                    </h2>
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-gray-200">
+                                    <div className="p-6">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <div className="p-2 bg-teal-100 rounded-lg">
+                                                <TbRulerMeasure className="text-xl text-teal-600" />
+                                            </div>
+                                            <h2 className="text-xl font-bold text-gray-800">
+                                                {modal.mode === 'add' ? 'Tambah' : 'Edit'} Ukuran
+                                            </h2>
+                                        </div>
 
-                                    <div className="space-y-4">
-                                        <input
-                                            type="text"
-                                            placeholder="Nama Ukuran"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        />
-                                        <input
-                                            type="number"
-                                            placeholder="Harga Beli"
-                                            value={formData.buy_price}
-                                            onChange={(e) => setFormData({ ...formData, buy_price: parseInt(e.target.value) })}
-                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        />
-                                        <input
-                                            type="number"
-                                            placeholder="Harga Jual"
-                                            value={formData.sell_price}
-                                            onChange={(e) => setFormData({ ...formData, sell_price: parseInt(e.target.value) })}
-                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        />
-                                    </div>
+                                        <form onSubmit={(e) => {
+                                            e.preventDefault();
+                                            modal.mode === 'add' ? handleAddSize() : handleEditSize(modal.data.id);
+                                        }} className="space-y-6">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Nama Ukuran
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Contoh: S, M, L, XL"
+                                                    value={formData.name}
+                                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                    className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm transition-colors"
+                                                    required
+                                                    autoFocus
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Harga Beli
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Masukkan harga beli"
+                                                    value={formData.buy_price}
+                                                    onChange={(e) => setFormData({ ...formData, buy_price: parseInt(e.target.value) || '' })}
+                                                    className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm transition-colors"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Harga Jual
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Masukkan harga jual"
+                                                    value={formData.sell_price}
+                                                    onChange={(e) => setFormData({ ...formData, sell_price: parseInt(e.target.value) || '' })}
+                                                    className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm transition-colors"
+                                                    required
+                                                />
+                                            </div>
 
-                                    <div className="mt-6 flex justify-end gap-2">
-                                        <button
-                                            onClick={closeModal}
-                                            className="bg-slate-300 px-4 py-2 rounded-lg hover:bg-slate-400"
-                                        >
-                                            Batal
-                                        </button>
-                                        <button
-                                            onClick={
-                                                modal.mode === 'add'
-                                                    ? handleAddSize
-                                                    : () => handleEditSize(modal.data.id)
-                                            }
-                                            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-                                        >
-                                            {modal.mode === 'add' ? 'Tambah' : 'Simpan'}
-                                        </button>
+                                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                                                <button
+                                                    type="button"
+                                                    onClick={closeModal}
+                                                    className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                                                >
+                                                    Batal
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                                                >
+                                                    {modal.mode === 'add' ? 'Tambah' : 'Simpan'}
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>

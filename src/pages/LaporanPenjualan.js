@@ -5,7 +5,7 @@ import { HiOutlineDocumentReport, HiOutlineTrendingUp, HiOutlineCurrencyDollar }
 import axios from 'axios';
 
 const getHeaders = () => ({
-  Authorization: localStorage.getItem('authToken'),
+  'Authorization': localStorage.getItem('authToken'),
   'ngrok-skip-browser-warning': 'true',
 });
 

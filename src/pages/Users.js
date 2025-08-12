@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { HiEye, HiEyeOff, HiOutlinePlus } from 'react-icons/hi';
 import { FiEdit, FiTrash } from 'react-icons/fi';
+import { MdPeople } from 'react-icons/md';
 import axios from "axios";
 
 const API_URL = `${process.env.REACT_APP_API_URL}/users`;
@@ -16,6 +17,7 @@ const Users = () => {
   const [modal, setModal] = useState({ open: false, mode: 'add', idx: null });
   const [form, setForm] = useState({ username: '', password: '', name: '', address: '', role_id: '', branch_id: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchUsers();
@@ -30,11 +32,14 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       const res = await axios.get(API_URL, { headers: getHeaders() });
       const data = res.data?.data || res.data;
       if (Array.isArray(data)) setUsers(data);
     } catch (err) {
       console.error("Gagal fetch user:", err.response ? err.response.data : err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -124,166 +129,250 @@ const Users = () => {
           <Header />
         </div>
         <main className="flex-1 overflow-y-auto p-8 min-w-0">
-          <div className="w-full">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-xl font-bold text-gray-800">Daftar Pengguna</h1>
+          <div className="w-full max-w-7xl mx-auto">
+            {/* Header Section */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <MdPeople className="text-2xl text-green-600" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-800">Daftar Pengguna</h1>
+                  <p className="text-sm text-gray-600">Kelola data pengguna sistem</p>
+                </div>
+              </div>
               <button
                 onClick={openAdd}
-                className="flex items-center gap-2 bg-[#11493E] hover:bg-green-700 text-white px-3 py-1.5 rounded shadow font-semibold transition text-sm"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all duration-200 hover:shadow-xl"
               >
-                <HiOutlinePlus className="text-base" /> Tambah
+                <HiOutlinePlus className="text-lg" /> Tambah Pengguna
               </button>
             </div>
-            <div className="overflow-x-auto shadow-lg border border-gray-200 bg-white">
-              <table className="min-w-full text-xs text-gray-800 table-fixed">
-                <thead className="bg-gray-600 text-white text-xs uppercase tracking-wider">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-semibold">Username</th>
-                    <th className="px-4 py-2 text-left font-semibold">Nama</th>
-                    <th className="px-4 py-2 text-left font-semibold">Alamat</th>
-                    <th className="px-4 py-2 text-left font-semibold">Jabatan</th>
-                    <th className="px-4 py-2 text-left font-semibold">Cabang</th>
-                    <th className="px-4 py-2 text-right font-semibold">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="text-slate-700">
-                  {users.length === 0 ? (
+
+            {/* Table Section */}
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
                     <tr>
-                      <td colSpan={6} className="px-4 py-4 text-center text-gray-400 border">Belum ada pengguna.</td>
+                      <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wider">
+                        Username
+                      </th>
+                      <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wider">
+                        Nama
+                      </th>
+                      <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wider">
+                        Alamat
+                      </th>
+                      <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wider">
+                        Jabatan
+                      </th>
+                      <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wider">
+                        Cabang
+                      </th>
+                      <th className="px-6 py-4 text-right font-semibold text-sm uppercase tracking-wider">
+                        Aksi
+                      </th>
                     </tr>
-                  ) : (
-                    users.map((user, idx) => (
-                      <tr key={user.username} className="border-t hover:bg-slate-50">
-                        <td className="px-4 py-3 font-medium">{user.username}</td>
-                        <td className="px-4 py-3">{user.name}</td>
-                        <td className="px-4 py-3">{user.address}</td>
-                        <td className="px-4 py-3">{user.role.name}</td>
-                        <td className="px-4 py-3">{user.branch.name}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex justify-end gap-2 items-center">
-                            <button onClick={() => openEdit(idx)} className="text-yellow-500 hover:text-yellow-600" title="Edit">
-                              <FiEdit size={16} />
-                            </button>
-                            <button onClick={() => handleDelete(idx)} className="text-red-500 hover:text-red-600" title="Hapus">
-                              <FiTrash size={16} />
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-12 text-center">
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                            <span className="ml-3 text-gray-600">Memuat data...</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : users.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-16 text-center">
+                          <div className="flex flex-col items-center">
+                            <MdPeople className="text-6xl text-gray-300 mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada data pengguna</h3>
+                            <p className="text-gray-500 mb-4">Mulai dengan menambahkan pengguna pertama Anda</p>
+                            <button
+                              onClick={openAdd}
+                              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                            >
+                              <HiOutlinePlus className="text-base" /> Tambah Pengguna Pertama
                             </button>
                           </div>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      users.map((user, idx) => (
+                        <tr key={user.username} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-gray-900">{user.username}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-gray-700">{user.name}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-gray-700 max-w-xs truncate">{user.address}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-gray-700">{user.role?.name || '-'}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-gray-700">{user.branch?.name || '-'}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                onClick={() => openEdit(idx)} 
+                                className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Edit"
+                              >
+                                <FiEdit size={18} />
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(idx)} 
+                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Hapus"
+                              >
+                                <FiTrash size={18} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
+            {/* Modal */}
             {modal.open && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-                <div className="bg-white p-6 shadow-2xl w-full max-w-md border border-gray-200 max-h-[90vh] overflow-y-auto">
-                  <h2 className="text-xl font-bold mb-4 text-slate-800 border-b border-gray-200 pb-3 sticky top-0 bg-white">
-                    {modal.mode === 'add' ? 'Tambah' : 'Edit'} User
-                  </h2>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                      <input 
-                        type="text" 
-                        placeholder="Masukkan username" 
-                        value={form.username}
-                        onChange={e => setForm({ ...form, username: e.target.value })} 
-                        className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" 
-                        required 
-                      />
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-gray-200 max-h-[90vh] overflow-y-auto">
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-6 sticky top-0 bg-white">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <MdPeople className="text-xl text-green-600" />
+                      </div>
+                      <h2 className="text-xl font-bold text-gray-800">
+                        {modal.mode === 'add' ? 'Tambah' : 'Edit'} Pengguna
+                      </h2>
                     </div>
 
-                  <div className="relative">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                        placeholder="Masukkan password"
-                      value={form.password}
-                      onChange={e => setForm({ ...form, password: e.target.value })}
-                        className="w-full border border-gray-300 px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                      required={modal.mode === 'add'}
-                    />
-                      <button 
-                        type="button" 
-                        onClick={() => setShowPassword(v => !v)}
-                        className="absolute right-3 top-8 text-lg text-gray-600"
-                      >
-                      {showPassword ? <HiEyeOff /> : <HiEye />}
-                    </button>
-                  </div>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Username
+                        </label>
+                        <input 
+                          type="text" 
+                          placeholder="Masukkan username" 
+                          value={form.username}
+                          onChange={e => setForm({ ...form, username: e.target.value })} 
+                          className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-colors" 
+                          required 
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
-                      <input 
-                        type="text" 
-                        placeholder="Masukkan nama lengkap" 
-                        value={form.name}
-                        onChange={e => setForm({ ...form, name: e.target.value })} 
-                        className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" 
-                        required 
-                      />
-                    </div>
+                      <div className="relative">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Password
+                        </label>
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Masukkan password"
+                          value={form.password}
+                          onChange={e => setForm({ ...form, password: e.target.value })}
+                          className="w-full border border-gray-300 px-4 py-3 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-colors"
+                          required={modal.mode === 'add'}
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => setShowPassword(v => !v)}
+                          className="absolute right-3 top-8 text-lg text-gray-600 hover:text-gray-800"
+                        >
+                          {showPassword ? <HiEyeOff /> : <HiEye />}
+                        </button>
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
-                      <textarea
-                        placeholder="Masukkan alamat lengkap"
-                        value={form.address}
-                        onChange={e => setForm({ ...form, address: e.target.value })}
-                        className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-none"
-                        rows="3"
-                        required
-                      />
-                    </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Nama Lengkap
+                        </label>
+                        <input 
+                          type="text" 
+                          placeholder="Masukkan nama lengkap" 
+                          value={form.name}
+                          onChange={e => setForm({ ...form, name: e.target.value })} 
+                          className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-colors" 
+                          required 
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Jabatan</label>
-                      <select 
-                        value={form.role_id} 
-                        onChange={e => setForm({ ...form, role_id: parseInt(e.target.value, 10) })}
-                        className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" 
-                        required
-                      >
-                    <option value="">Pilih Role</option>
-                    {roles.map(role => (
-                          <option key={role.name} value={role.id}>{role.name}</option>
-                    ))}
-                  </select>
-                    </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Alamat
+                        </label>
+                        <textarea
+                          placeholder="Masukkan alamat lengkap"
+                          value={form.address}
+                          onChange={e => setForm({ ...form, address: e.target.value })}
+                          className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm resize-none transition-colors"
+                          rows="3"
+                          required
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Cabang</label>
-                      <select 
-                        value={form.branch_id} 
-                        onChange={e => setForm({ ...form, branch_id: parseInt(e.target.value, 10) })}
-                        className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" 
-                        required
-                      >
-                    <option value="">Pilih Cabang</option>
-                    {branches.map(branch => (
-                          <option key={branch.name} value={branch.id}>{branch.name}</option>
-                    ))}
-                  </select>
-                    </div>
-                  </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Jabatan
+                        </label>
+                        <select 
+                          value={form.role_id} 
+                          onChange={e => setForm({ ...form, role_id: parseInt(e.target.value, 10) })}
+                          className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-colors" 
+                          required
+                        >
+                          <option value="">Pilih Jabatan</option>
+                          {roles.map(role => (
+                            <option key={role.name} value={role.id}>{role.name}</option>
+                          ))}
+                        </select>
+                      </div>
 
-                  <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-200 sticky bottom-0 bg-white">
-                    <button 
-                      type="submit" 
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 font-medium transition-colors"
-                    >
-                      Simpan
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={closeModal} 
-                      className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 font-medium transition-colors"
-                    >
-                      Batal
-                    </button>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Cabang
+                        </label>
+                        <select 
+                          value={form.branch_id} 
+                          onChange={e => setForm({ ...form, branch_id: parseInt(e.target.value, 10) })}
+                          className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-colors" 
+                          required
+                        >
+                          <option value="">Pilih Cabang</option>
+                          {branches.map(branch => (
+                            <option key={branch.name} value={branch.id}>{branch.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 sticky bottom-0 bg-white">
+                        <button 
+                          type="button" 
+                          onClick={closeModal} 
+                          className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                        >
+                          Batal
+                        </button>
+                        <button 
+                          type="submit" 
+                          className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                        >
+                          Simpan
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 </div>
               </div>
