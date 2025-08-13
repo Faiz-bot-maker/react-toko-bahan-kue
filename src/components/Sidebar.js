@@ -3,15 +3,15 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   HiOutlineHome,
   HiOutlineCube,
-  HiOutlineClipboardList,
-  HiOutlineUser,
-  HiOutlineUsers,
+  // HiOutlineClipboardList,
+  // HiOutlineUser,
+  // HiOutlineUsers,
   HiOutlineDocumentReport,
   HiOutlineCurrencyDollar,
   HiOutlineOfficeBuilding,
-  HiOutlineTruck,
+  // HiOutlineTruck,
   HiOutlineIdentification,
-  HiOutlineShoppingCart,
+  // HiOutlineShoppingCart,
   HiChevronDown,
   HiChevronUp,
 } from 'react-icons/hi';
@@ -19,37 +19,42 @@ import {
 const menus = [
   {
     section: 'Produk & Kategori',
+    icon: <HiOutlineCube className="text-xs" />,
     items: [
-      { name: 'Produk', path: '/products', icon: <HiOutlineCube className="text-xs" /> },
-      { name: 'Kategori', path: '/categories', icon: <HiOutlineShoppingCart className="text-xs" /> },
+      { name: 'Produk', path: '/products' },
+      { name: 'Kategori', path: '/categories' },
     ],
   },
   {
     section: 'Manajemen Relasi',
+    icon: <HiOutlineOfficeBuilding className="text-xs" />,
     items: [
-      { name: 'Cabang', path: '/cabang', icon: <HiOutlineOfficeBuilding className="text-xs" /> },
-      { name: 'Distributor', path: '/distributor', icon: <HiOutlineTruck className="text-xs" /> },
+      { name: 'Cabang', path: '/cabang' },
+      { name: 'Distributor', path: '/distributor' },
     ],
   },
   {
     section: 'Akun & Akses',
+    icon: <HiOutlineIdentification className="text-xs" />,
     items: [
-      { name: 'Role', path: '/role', icon: <HiOutlineIdentification className="text-xs" /> },
-      { name: 'User', path: '/users', icon: <HiOutlineUser className="text-xs" /> },
+      { name: 'Role', path: '/role' },
+      { name: 'User', path: '/users' },
     ],
   },
   {
     section: 'Laporan',
+    icon: <HiOutlineDocumentReport className="text-xs" />,
     items: [
-      { name: 'Laporan Piutang', path: '/laporan-piutang', icon: <HiOutlineUsers className="text-xs" /> },
-      { name: 'Laporan Penjualan', path: '/laporan-penjualan', icon: <HiOutlineDocumentReport className="text-xs" /> },
-      { name: 'Laporan Terlaris', path: '/laporan-terlaris', icon: <HiOutlineClipboardList className="text-xs" /> },
+      { name: 'Laporan Piutang', path: '/laporan-piutang' },
+      { name: 'Laporan Penjualan', path: '/laporan-penjualan' },
+      { name: 'Laporan Terlaris', path: '/laporan-terlaris' },
     ],
   },
   {
     section: 'Keuangan',
+    icon: <HiOutlineCurrencyDollar className="text-xs" />,
     items: [
-      { name: 'Keuangan', path: '/keuangan', icon: <HiOutlineCurrencyDollar className="text-xs" /> },
+      { name: 'Keuangan', path: '/keuangan' },
     ],
   },
 ];
@@ -91,7 +96,6 @@ const Sidebar = () => {
     <aside className="w-48 h-screen bg-[#11493E] shadow-xl flex flex-col overflow-hidden">
       {/* Logo */}
       <div className="px-6 py-4 text-white text-[18px] font-bold tracking-wide flex justify-center items-center gap-1">
-        {/* <span className="text-base">🛒</span> */}
         <span>AZKA SHOP</span>
       </div>
 
@@ -100,10 +104,11 @@ const Sidebar = () => {
         {/* Dashboard */}
         <Link
           to="/dashboard"
-          className={`flex items-center px-6 py-1.5 rounded-md font-medium text-xs gap-2 transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${location.pathname === '/dashboard'
+          className={`flex items-center px-6 py-1.5 rounded-md font-medium text-xs gap-2 transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
+            location.pathname === '/dashboard'
               ? 'bg-[#1B5E4B] text-white font-semibold'
               : 'text-[#E6F2ED]'
-            }`}
+          }`}
         >
           <HiOutlineHome className="text-xs" />
           <span>Beranda</span>
@@ -112,12 +117,15 @@ const Sidebar = () => {
         {/* Dropdown menus */}
         {menus.map((menuSection, index) => (
           <div key={index} className="mt-2">
-            {/* Section Title */}
+            {/* Section Title dengan icon */}
             <button
               onClick={() => toggleSection(menuSection.section)}
               className="flex justify-between items-center w-full px-6 py-1 text-[10px] text-[#B2C8BC] hover:text-white transition-all"
             >
-              <span>{menuSection.section}</span>
+              <span className="flex items-center gap-2">
+                {menuSection.icon}
+                {menuSection.section}
+              </span>
               {openSections.includes(menuSection.section) ? (
                 <HiChevronUp className="text-white text-xs" />
               ) : (
@@ -125,20 +133,20 @@ const Sidebar = () => {
               )}
             </button>
 
-            {/* Section Items */}
+            {/* Section Items tanpa icon */}
             {openSections.includes(menuSection.section) && (
               <ul className="flex flex-col gap-[2px] mt-1">
                 {menuSection.items.map((item) => (
                   <li key={item.path}>
                     <Link
                       to={item.path}
-                      className={`flex items-center px-8 py-1.5 rounded-md font-normal text-xs gap-2 transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${location.pathname === item.path
+                      className={`flex items-center px-8 py-1.5 rounded-md font-normal text-xs transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
+                        location.pathname === item.path
                           ? 'bg-[#1B5E4B] text-white font-semibold'
                           : 'text-[#E6F2ED]'
-                        }`}
+                      }`}
                     >
-                      {item.icon}
-                      <span>{item.name}</span>
+                      {item.name}
                     </Link>
                   </li>
                 ))}

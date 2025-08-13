@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { HiOutlineDocumentReport, HiOutlineTrendingUp, HiOutlineCurrencyDollar } from 'react-icons/hi';
+import { MdAnalytics } from 'react-icons/md';
 import axios from 'axios';
 
 const getHeaders = () => ({
@@ -43,61 +44,72 @@ const LaporanPenjualan = () => {
           <Header />
         </div>
         <main className="flex-1 overflow-y-auto p-8 min-w-0">
-          <div className="w-full">
-            <div className="flex items-center gap-3 mb-6">
-              <HiOutlineDocumentReport className="text-2xl text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-800">Laporan Penjualan</h1>
+          <div className="w-full max-w-7xl mx-auto">
+            {/* Header Section */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <MdAnalytics className="text-2xl text-blue-600" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-800">Laporan Penjualan</h1>
+                  <p className="text-sm text-gray-600">Analisis data penjualan perusahaan</p>
+                </div>
+              </div>
             </div>
 
             {loading ? (
               <div className="flex items-center justify-center h-64">
-                <div className="text-gray-500">Memuat data...</div>
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600">Memuat data...</span>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Total Penjualan */}
-                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
                   <div className="flex items-center justify-between mb-4">
                     <div className="bg-blue-100 p-3 rounded-lg">
                       <HiOutlineTrendingUp className="text-2xl text-blue-600" />
                     </div>
-                    <span className="text-sm text-gray-500">Total Penjualan</span>
+                    <span className="text-xs text-gray-500 font-medium">Total Penjualan</span>
                   </div>
-                  <div className="text-3xl font-bold text-gray-900 mb-2">
+                  <div className="text-2xl font-bold text-gray-900 mb-2">
                     {salesData.total_sales || 0}
                   </div>
-                  <p className="text-sm text-gray-600">Transaksi</p>
+                  <p className="text-xs text-gray-600">Transaksi</p>
                 </div>
 
                 {/* Total Pendapatan */}
-                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
                   <div className="flex items-center justify-between mb-4">
                     <div className="bg-green-100 p-3 rounded-lg">
                       <HiOutlineCurrencyDollar className="text-2xl text-green-600" />
                     </div>
-                    <span className="text-sm text-gray-500">Total Pendapatan</span>
+                    <span className="text-xs text-gray-500 font-medium">Total Pendapatan</span>
                   </div>
-                  <div className="text-3xl font-bold text-gray-900 mb-2">
+                  <div className="text-2xl font-bold text-gray-900 mb-2">
                     {formatRupiah(salesData.total_revenue || 0)}
                   </div>
-                  <p className="text-sm text-gray-600">Rupiah</p>
+                  <p className="text-xs text-gray-600">Rupiah</p>
                 </div>
 
                 {/* Rata-rata Per Transaksi */}
-                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
                   <div className="flex items-center justify-between mb-4">
                     <div className="bg-purple-100 p-3 rounded-lg">
                       <HiOutlineCurrencyDollar className="text-2xl text-purple-600" />
                     </div>
-                    <span className="text-sm text-gray-500">Rata-rata/Transaksi</span>
+                    <span className="text-xs text-gray-500 font-medium">Rata-rata/Transaksi</span>
                   </div>
-                  <div className="text-3xl font-bold text-gray-900 mb-2">
+                  <div className="text-2xl font-bold text-gray-900 mb-2">
                     {salesData.total_sales > 0 
                       ? formatRupiah(Math.round((salesData.total_revenue || 0) / salesData.total_sales))
                       : formatRupiah(0)
                     }
                   </div>
-                  <p className="text-sm text-gray-600">Per transaksi</p>
+                  <p className="text-xs text-gray-600">Per transaksi</p>
                 </div>
               </div>
             )}

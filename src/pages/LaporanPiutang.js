@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { HiOutlinePlus } from 'react-icons/hi';
-import axios from "axios";
 import { FiEdit, FiTrash } from 'react-icons/fi';
+import axios from "axios";
 
 const statusColor = {
     Pending: 'bg-yellow-100 text-yellow-800',
@@ -16,15 +16,17 @@ const LaporanPiutang = () => {
     const [pelanggan, setPelanggan] = useState([]);
     const [modal, setModal] = useState({ open: false, mode: 'add', idx: null });
     const [form, setForm] = useState({ nama: '', total: '', status: 'Pending' });
+    const [loading, setLoading] = useState(true);
 
     const API_URL = `${process.env.REACT_APP_API_URL}/customers`;
 
-    React.useEffect(() => {
+    useEffect(() => {
         fetchPelanggan();
     }, []);
 
     const fetchPelanggan = async () => {
         try {
+            setLoading(true);
             const res = await axios.get(API_URL, {
                 headers: { "ngrok-skip-browser-warning": "true" },
             });
@@ -32,6 +34,8 @@ const LaporanPiutang = () => {
             if (Array.isArray(data)) setPelanggan(data);
         } catch (err) {
             console.error("Gagal fetch data piutang:", err);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -104,88 +108,222 @@ const LaporanPiutang = () => {
                     <Header />
                 </div>
                 <main className="flex-1 overflow-y-auto p-8 min-w-0">
-                    <div className="w-full">
-                        <div className="flex items-center justify-between mb-6">
-                            <h1 className="text-xl font-bold text-gray-800">Laporan Piutang</h1>
-                            <button onClick={openAdd} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded shadow font-semibold transition text-sm">
-                                <HiOutlinePlus className="text-base" /> Tambah
+                    <div className="w-full max-w-7xl mx-auto">
+                        {/* Header Section */}
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-red-100 rounded-lg">
+                                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-800">Laporan Piutang</h1>
+                                    <p className="text-sm text-gray-600">Kelola data piutang pelanggan</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={openAdd} 
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all duration-200 hover:shadow-xl"
+                            >
+                                <HiOutlinePlus className="text-lg" /> Tambah Piutang
                             </button>
                         </div>
 
                         {/* Summary Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs text-gray-600 font-medium">Total Piutang</p>
-                                        <p className="text-lg font-bold text-red-600">{formatRupiah(totalPiutang)}</p>
+                                        <p className="text-xs text-gray-600 font-medium mb-1">Total Piutang</p>
+                                        <p className="text-2xl font-bold text-red-600">{formatRupiah(totalPiutang)}</p>
+                                        <p className="text-xs text-gray-500 mt-1">Belum dibayar</p>
                                     </div>
-                                    <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                                        <span className="text-red-600 text-xl">₿</span>
+                                    <div className="w-14 h-14 bg-red-100 rounded-lg flex items-center justify-center">
+                                        <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                        </svg>
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                            <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs text-gray-600 font-medium">Total Lunas</p>
-                                        <p className="text-lg font-bold text-green-600">{formatRupiah(totalLunas)}</p>
+                                        <p className="text-xs text-gray-600 font-medium mb-1">Total Lunas</p>
+                                        <p className="text-2xl font-bold text-green-600">{formatRupiah(totalLunas)}</p>
+                                        <p className="text-xs text-gray-500 mt-1">Sudah dibayar</p>
                                     </div>
-                                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                        <span className="text-green-600 text-xl">✓</span>
+                                    <div className="w-14 h-14 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto shadow-lg border border-gray-200 bg-white">
-                            <table className="min-w-full text-xs text-gray-800 table-fixed">
-                                <thead className="bg-gray-600 text-white text-xs uppercase tracking-wider">
-                                    <tr>
-                                        <th className="px-4 py-2 text-left font-semibold">Nama Pelanggan</th>
-                                        <th className="px-4 py-2 text-left font-semibold">Jumlah Piutang</th>
-                                        <th className="px-4 py-2 text-left font-semibold">Status Pembayaran</th>
-                                        <th className="px-4 py-2 text-right font-semibold">Aksi</th>
+                        {/* Table Section */}
+                        <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full">
+                                    <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
+                                        <tr>
+                                            <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
+                                                Nama Pelanggan
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
+                                                Jumlah Piutang
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
+                                                Status Pembayaran
+                                            </th>
+                                            <th className="px-6 py-4 text-right font-semibold text-xs uppercase tracking-wider">
+                                                Aksi
+                                            </th>
                                     </tr>
                                 </thead>
-                                <tbody className="text-slate-700">
-                                    {pelanggan.map((p, idx) => (
-                                        <tr key={idx} className="border-t hover:bg-slate-50">
-                                            <td className="px-4 py-3 font-medium">{p.nama}</td>
-                                            <td className="px-4 py-3">{formatRupiah(p.total)}</td>
-                                            <td className="px-4 py-3">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusColor[p.status]}`}>{p.status}</span>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {loading ? (
+                                            <tr>
+                                                <td colSpan={4} className="px-6 py-12 text-center">
+                                                    <div className="flex items-center justify-center">
+                                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                                                        <span className="ml-3 text-gray-600">Memuat data...</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : pelanggan.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={4} className="px-6 py-16 text-center">
+                                                    <div className="flex flex-col items-center">
+                                                        <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                        </svg>
+                                                        <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada data piutang</h3>
+                                                        <p className="text-gray-500 mb-4">Mulai dengan menambahkan data piutang pertama</p>
+                                                        <button
+                                                            onClick={openAdd}
+                                                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                                                        >
+                                                            <HiOutlinePlus className="text-base" /> Tambah Piutang Pertama
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            pelanggan.map((p, idx) => (
+                                                <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-medium text-gray-900">{p.nama}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-gray-700 font-semibold">{formatRupiah(p.total)}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor[p.status]}`}>
+                                                            {p.status}
+                                                        </span>
                                             </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex justify-end gap-2 items-center">
-                                                    <button onClick={() => openEdit(idx)} className="text-yellow-500 hover:text-yellow-600" title="Edit">
-                                                        <FiEdit size={16} />
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex justify-end gap-2">
+                                                            <button 
+                                                                onClick={() => openEdit(idx)} 
+                                                                className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                title="Edit"
+                                                            >
+                                                                <FiEdit size={18} />
                                                     </button>
-                                                    <button onClick={() => handleDelete(idx)} className="text-red-500 hover:text-red-600" title="Hapus">
-                                                        <FiTrash size={16} />
+                                                            <button 
+                                                                onClick={() => handleDelete(idx)} 
+                                                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                                                title="Hapus"
+                                                            >
+                                                                <FiTrash size={18} />
                                                     </button>
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))}
+                                            ))
+                                        )}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                         {modal.open && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-                                <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-4 w-full max-w-sm flex flex-col gap-3">
-                                    <h2 className="font-bold text-base mb-2">{modal.mode === 'add' ? 'Tambah' : 'Edit'} Data Piutang</h2>
-                                    <input type="text" className="border rounded px-3 py-2 text-sm" placeholder="Nama Pelanggan" value={form.nama} onChange={e => setForm({ ...form, nama: e.target.value })} required />
-                                    <input type="number" className="border rounded px-3 py-2 text-sm" placeholder="Jumlah Piutang" value={form.total} onChange={e => setForm({ ...form, total: e.target.value })} required />
-                                    <select className="border rounded px-3 py-2 text-sm" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                                <div className="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4 border border-gray-200">
+                                    <div className="p-6">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <div className="p-2 bg-red-100 rounded-lg">
+                                                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                </svg>
+                                            </div>
+                                            <h2 className="text-xl font-bold text-gray-800">
+                                                {modal.mode === 'add' ? 'Tambah' : 'Edit'} Data Piutang
+                                            </h2>
+                                        </div>
+
+                                        <form onSubmit={handleSubmit} className="space-y-6">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Nama Pelanggan
+                                                </label>
+                                                <input 
+                                                    type="text" 
+                                                    className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-colors" 
+                                                    placeholder="Masukkan nama pelanggan" 
+                                                    value={form.nama} 
+                                                    onChange={e => setForm({ ...form, nama: e.target.value })} 
+                                                    required 
+                                                    autoFocus
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Jumlah Piutang
+                                                </label>
+                                                <input 
+                                                    type="number" 
+                                                    className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-colors" 
+                                                    placeholder="Masukkan jumlah piutang" 
+                                                    value={form.total} 
+                                                    onChange={e => setForm({ ...form, total: e.target.value })} 
+                                                    required 
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                    Status Pembayaran
+                                                </label>
+                                                <select 
+                                                    className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-colors" 
+                                                    value={form.status} 
+                                                    onChange={e => setForm({ ...form, status: e.target.value })}
+                                                >
                                         <option value="Pending">Belum Lunas</option>
                                         <option value="Lunas">Lunas</option>
                                     </select>
-                                    <div className="flex gap-2 mt-2">
-                                        <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white py-1.5 rounded font-semibold text-sm">Simpan</button>
-                                        <button type="button" onClick={closeModal} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-1.5 rounded font-semibold text-sm">Batal</button>
+                                            </div>
+                                            
+                                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                                                <button 
+                                                    type="button" 
+                                                    onClick={closeModal} 
+                                                    className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                                                >
+                                                    Batal
+                                                </button>
+                                                <button 
+                                                    type="submit" 
+                                                    className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                                                >
+                                                    Simpan
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
-                                </form>
+                                </div>
                             </div>
                         )}
                     </div>
