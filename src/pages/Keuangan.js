@@ -10,22 +10,22 @@ import 'jspdf-autotable';
 // Data dummy keuangan per bulan
 const dataKeuangan = [
   {
-    bulan: 'Juni', tahun: 2024,
+    bulan: 'April', tahun: 2024,
     modal: 2000000, penjualan: 5000000, pendapatanLain: 500000,
     pengeluaranOperasional: 2000000, gajiPegawai: 1000000, pengeluaranLain: 300000, piutang: 745000,
   },
   {
-    bulan: 'Mei', tahun: 2024,
+    bulan: 'Maret', tahun: 2024,
     modal: 2000000, penjualan: 4500000, pendapatanLain: 200000,
     pengeluaranOperasional: 1800000, gajiPegawai: 1000000, pengeluaranLain: 150000, piutang: 295000,
   },
   {
-    bulan: 'April', tahun: 2024,
+    bulan: 'Februari', tahun: 2024,
     modal: 2000000, penjualan: 4200000, pendapatanLain: 0,
     pengeluaranOperasional: 1500000, gajiPegawai: 1000000, pengeluaranLain: 100000, piutang: 0,
   },
   {
-    bulan: 'Maret', tahun: 2024,
+    bulan: 'Januari', tahun: 2024,
     modal: 2000000, penjualan: 3800000, pendapatanLain: 0,
     pengeluaranOperasional: 1200000, gajiPegawai: 1000000, pengeluaranLain: 50000, piutang: 0,
   },

@@ -24,10 +24,10 @@ const LaporanTerlaris = () => {
   const fetchBestSellers = async () => {
     try {
       setLoading(true);
-      const url = selectedBranch 
+      const url = selectedBranch
         ? `${process.env.REACT_APP_API_URL}/sales-and-product-reports/best-selling-product?branch_id=${selectedBranch}`
         : `${process.env.REACT_APP_API_URL}/sales-and-product-reports/best-selling-product`;
-      
+
       const response = await axios.get(url, { headers: getHeaders() });
       const data = response.data?.data || response.data || [];
       setBestSellers(Array.isArray(data) ? data : []);
@@ -62,7 +62,7 @@ const LaporanTerlaris = () => {
                   <MdTrendingUp className="text-2xl text-yellow-600" />
                 </div>
                 <div>
-              <h1 className="text-2xl font-bold text-gray-800">Produk Terlaris</h1>
+                  <h1 className="text-2xl font-bold text-gray-800">Produk Terlaris</h1>
                   <p className="text-sm text-gray-600">Analisis produk dengan penjualan tertinggi</p>
                 </div>
               </div>
@@ -87,29 +87,27 @@ const LaporanTerlaris = () => {
 
             {/* Table Section */}
             <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full">
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
                   <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
-                      <tr>
+                    <tr>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                          Ranking
-                        </th>
+                        Ranking
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                          Produk
-                        </th>
-                        {!selectedBranch && (
-                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Cabang
-                          </th>
-                        )}
+                        Produk
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                          Total Terjual
-                        </th>
+                        Cabang
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                          Omset
-                        </th>
-                      </tr>
-                    </thead>
+                        Total Terjual
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                        Omset
+                      </th>
+                    </tr>
+                  </thead>
                   <tbody className="divide-y divide-gray-200">
                     {loading ? (
                       <tr>
@@ -135,12 +133,11 @@ const LaporanTerlaris = () => {
                         <tr key={index} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center">
-                              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${
-                                index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-800' :
                                 index === 1 ? 'bg-gray-100 text-gray-800' :
-                                index === 2 ? 'bg-orange-100 text-orange-800' :
-                                'bg-blue-100 text-blue-800'
-                              }`}>
+                                  index === 2 ? 'bg-orange-100 text-orange-800' :
+                                    'bg-blue-100 text-blue-800'
+                                }`}>
                                 {index + 1}
                               </span>
                             </div>
@@ -162,13 +159,11 @@ const LaporanTerlaris = () => {
                               </div>
                             </div>
                           </td>
-                          {!selectedBranch && (
-                            <td className="px-6 py-4">
-                              <div className="text-sm text-gray-900">
-                              {product.branch || product.branch_name || '-'}
-                              </div>
-                            </td>
-                          )}
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900">
+                              {product.branch || product.branch_name}
+                            </div>
+                          </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center">
                               <HiOutlineTrendingUp className="h-4 w-4 text-green-500 mr-1" />
@@ -177,16 +172,16 @@ const LaporanTerlaris = () => {
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm font-semibold text-gray-900">
-                            {formatRupiah(product.total_sales || product.total_revenue || 0)}
+                              {formatRupiah(product.total_sales || product.total_revenue || 0)}
                             </div>
                           </td>
                         </tr>
                       ))
                     )}
-                    </tbody>
-                  </table>
-                </div>
+                  </tbody>
+                </table>
               </div>
+            </div>
           </div>
         </main>
       </div>
