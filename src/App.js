@@ -16,6 +16,7 @@ import LaporanTerlaris from './pages/LaporanTerlaris';
 import LaporanPiutang from './pages/LaporanPiutang';
 import Categories from './pages/Kategori';
 import SizeProduct from './pages/SizeProduct';
+import CategoryReport from './pages/CategoryReport';
 
 function App() {
   return (
@@ -76,7 +77,7 @@ function App() {
               <Role />
             </LoginCheck>
           } />
-          <Route path="/laporan-terlaris" element={
+          <Route path="/laporan-produk-terlaris" element={
             <LoginCheck>
               <LaporanTerlaris />
             </LoginCheck>
@@ -86,10 +87,14 @@ function App() {
               <LaporanPiutang />
             </LoginCheck>
           } />
-
           <Route path="/pages/sizeproduct" element={
             <LoginCheck>
               <SizeProduct />
+            </LoginCheck>
+          } />
+          <Route path="/pages/laporan-kategori-terlaris" element={
+            <LoginCheck>
+              <CategoryReport />
             </LoginCheck>
           } />
 

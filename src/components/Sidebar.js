@@ -45,9 +45,10 @@ const menus = [
     section: 'Laporan',
     icon: <HiOutlineDocumentReport className="text-xs" />,
     items: [
+      { name: 'Laporan Barang Terlaris', path: '/laporan-produk-terlaris' },
+      { name: 'Laporan Kategori Terlaris', path: '/pages/laporan-kategori-terlaris' },
       { name: 'Laporan Piutang', path: '/laporan-piutang' },
       { name: 'Laporan Penjualan', path: '/laporan-penjualan' },
-      { name: 'Laporan Terlaris', path: '/laporan-terlaris' },
     ],
   },
   {
@@ -140,7 +141,7 @@ const Sidebar = () => {
                   <li key={item.path}>
                     <Link
                       to={item.path}
-                      className={`flex items-center px-8 py-1.5 rounded-md font-normal text-xs transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
+                      className={`flex items-center px-12 py-1.5 rounded-md font-normal text-[10px] transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
                         location.pathname === item.path
                           ? 'bg-[#1B5E4B] text-white font-semibold'
                           : 'text-[#E6F2ED]'

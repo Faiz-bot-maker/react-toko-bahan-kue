@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import { HiOutlineStar, HiOutlineTrendingUp, HiOutlineCube } from 'react-icons/hi';
-import { MdTrendingUp } from 'react-icons/md';
+import { HiOutlineTrendingUp, HiOutlineCube } from 'react-icons/hi';
+import { MdCategory } from 'react-icons/md';
 import axios from 'axios';
 
 const getHeaders = () => ({
@@ -12,24 +12,24 @@ const getHeaders = () => ({
 
 const formatRupiah = (angka) => 'Rp ' + angka.toLocaleString('id-ID');
 
-const LaporanTerlaris = () => {
-  const [bestSellers, setBestSellers] = useState([]);
+const CategoryReport = () => {
+  const [categoryData, setCategoryData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchBestSellers();
+    fetchCategoryReport();
   }, []);
 
-  const fetchBestSellers = async () => {
+  const fetchCategoryReport = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/sales-and-product-reports/top-seller`, { 
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/sales-and-product-reports/categories`, { 
         headers: getHeaders() 
       });
       const data = response.data?.data || [];
-      setBestSellers(Array.isArray(data) ? data : []);
+      setCategoryData(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Gagal mengambil data produk terlaris:', err);
+      console.error('Gagal mengambil data laporan kategori:', err);
     } finally {
       setLoading(false);
     }
@@ -47,12 +47,12 @@ const LaporanTerlaris = () => {
             {/* Header Section */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <MdTrendingUp className="text-2xl text-yellow-600" />
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <MdCategory className="text-2xl text-purple-600" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800">Produk Terlaris</h1>
-                  <p className="text-sm text-gray-600">Analisis produk dengan penjualan tertinggi</p>
+                  <h1 className="text-2xl font-bold text-gray-800">Kategori Terlaris</h1>
+                  <p className="text-sm text-gray-600">Analisis penjualan berdasarkan kategori produk</p>
                 </div>
               </div>
             </div>
@@ -67,7 +67,7 @@ const LaporanTerlaris = () => {
                         Ranking
                       </th>
                       <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                        Produk
+                        Kategori
                       </th>
                       <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
                         Total Terjual
@@ -82,23 +82,23 @@ const LaporanTerlaris = () => {
                       <tr>
                         <td colSpan={4} className="px-6 py-12 text-center">
                           <div className="flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                             <span className="ml-3 text-gray-600">Memuat data...</span>
                           </div>
                         </td>
                       </tr>
-                    ) : bestSellers.length === 0 ? (
+                    ) : categoryData.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="px-6 py-16 text-center">
                           <div className="flex flex-col items-center">
-                            <MdTrendingUp className="text-6xl text-gray-300 mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada data produk terlaris</h3>
+                            <MdCategory className="text-6xl text-gray-300 mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada data laporan kategori</h3>
                             <p className="text-gray-500">Data akan muncul setelah ada transaksi penjualan</p>
                           </div>
                         </td>
                       </tr>
                     ) : (
-                      bestSellers.map((product, index) => (
+                      categoryData.map((category, index) => (
                         <tr key={index} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center">
@@ -120,10 +120,10 @@ const LaporanTerlaris = () => {
                               </div>
                               <div className="ml-4">
                                 <div className="text-sm font-medium text-gray-900">
-                                  {product.product_name}
+                                  {category.category_name}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  SKU: {product.product_sku}
+                                  ID: {category.category_id}
                                 </div>
                               </div>
                             </div>
@@ -131,12 +131,12 @@ const LaporanTerlaris = () => {
                           <td className="px-6 py-4">
                             <div className="flex items-center">
                               <HiOutlineTrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                              <span className="text-sm text-gray-900">{product.total_qty}</span>
+                              <span className="text-sm text-gray-900">{category.total_qty}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm font-semibold text-gray-900">
-                              {formatRupiah(product.total_omzet)}
+                              {formatRupiah(category.total_omzet)}
                             </div>
                           </td>
                         </tr>
@@ -153,4 +153,4 @@ const LaporanTerlaris = () => {
   );
 };
 
-export default LaporanTerlaris;
+export default CategoryReport;
