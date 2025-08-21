@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import Layout from '../components/Layout';
 import { HiOutlineHome, HiOutlineCube, HiOutlineClipboardList, HiOutlineTruck, HiOutlineUsers, HiOutlineCurrencyDollar, HiOutlineTag, HiOutlineOfficeBuilding } from 'react-icons/hi';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
@@ -112,11 +113,7 @@ const chartData = [
 ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-white via-blue-50 to-jade-50 flex flex-col md:flex-row">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 p-4 md:p-8">
+    <Layout outerClassName="min-h-screen bg-gradient-to-tr from-white via-blue-50 to-jade-50 flex flex-col md:flex-row" mainClassName="flex-1 p-4 md:p-8">
           <div className="w-full">
             <div className="flex items-center gap-3 mb-6">
               <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight drop-shadow"></h1>
@@ -155,9 +152,7 @@ const chartData = [
               </ResponsiveContainer>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </Layout>
   );
 };
 

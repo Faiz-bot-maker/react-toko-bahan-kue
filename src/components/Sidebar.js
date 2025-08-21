@@ -46,16 +46,18 @@ const menus = [
     icon: <HiOutlineDocumentReport className="text-xs" />,
     items: [
       { name: 'Laporan Barang Terlaris', path: '/laporan-produk-terlaris' },
-      { name: 'Laporan Kategori Terlaris', path: '/pages/laporan-kategori-terlaris' },
       { name: 'Laporan Piutang', path: '/laporan-piutang' },
       { name: 'Laporan Penjualan', path: '/laporan-penjualan' },
+      { name: 'Laporan Pengeluaran', path: '/laporan-pengeluaran' },
     ],
   },
   {
     section: 'Keuangan',
     icon: <HiOutlineCurrencyDollar className="text-xs" />,
     items: [
+      { name: 'Modal', path: '/Modal' },
       { name: 'Keuangan', path: '/keuangan' },
+      // { name: 'Pengeluaran', path: '/pengeluaran' },
     ],
   },
 ];

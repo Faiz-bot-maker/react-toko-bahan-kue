@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
+// import Sidebar from "../components/Sidebar";
+// import Header from "../components/Header";
 import { HiOutlinePlus } from "react-icons/hi";
 import { FiEdit, FiTrash } from 'react-icons/fi';
 import { MdCategory } from "react-icons/md";
+import Layout from "../components/Layout";
 
 const API_URL = `${process.env.REACT_APP_API_URL}/categories`;
 
@@ -117,13 +118,7 @@ const Kategori = () => {
     };
 
     return (
-        <div className="flex h-screen bg-gradient-to-tr from-white via-blue-50 to-jade-50">
-            <Sidebar />
-            <div className="flex-1 flex flex-col min-w-0">
-                <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md shadow-sm">
-                    <Header />
-                </div>
-                <main className="flex-1 overflow-y-auto p-8 min-w-0">
+        <Layout>
                     <div className="w-full max-w-7xl mx-auto">
                         {/* Header Section */}
                         <div className="flex items-center justify-between mb-8">
@@ -267,9 +262,7 @@ const Kategori = () => {
                             </div>
                         )}
                     </div>
-                </main>
-            </div>
-        </div>
+        </Layout>
     );
 };
 

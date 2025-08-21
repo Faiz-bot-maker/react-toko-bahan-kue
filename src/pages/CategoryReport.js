@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+// import Sidebar from '../components/Sidebar';
+// import Header from '../components/Header';
+import Layout from '../components/Layout';
 import { HiOutlineTrendingUp, HiOutlineCube } from 'react-icons/hi';
 import { MdCategory } from 'react-icons/md';
 import axios from 'axios';
@@ -36,13 +37,7 @@ const CategoryReport = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-tr from-white via-blue-50 to-jade-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md shadow-sm">
-          <Header />
-        </div>
-        <main className="flex-1 overflow-y-auto p-8 min-w-0">
+    <Layout>
           <div className="w-full max-w-7xl mx-auto">
             {/* Header Section */}
             <div className="flex items-center justify-between mb-8">
@@ -128,17 +123,8 @@ const CategoryReport = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center">
-                              <HiOutlineTrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                              <span className="text-sm text-gray-900">{category.total_qty}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm font-semibold text-gray-900">
-                              {formatRupiah(category.total_omzet)}
-                            </div>
-                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">{category.total_qty}</td>
+                          <td className="px-6 py-4 text-sm text-gray-700">{formatRupiah(category.total_omzet)}</td>
                         </tr>
                       ))
                     )}
@@ -147,9 +133,7 @@ const CategoryReport = () => {
               </div>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </Layout>
   );
 };
 

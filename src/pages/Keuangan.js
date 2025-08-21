@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+// import Sidebar from '../components/Sidebar';
+// import Header from '../components/Header';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import Layout from '../components/Layout';
 
 // Data dummy keuangan per bulan
 const dataKeuangan = [
@@ -162,13 +163,7 @@ const Keuangan = () => {
     }, 0);
 
   return (
-    <div className="flex h-screen bg-gradient-to-tr from-white via-blue-50 to-jade-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md shadow-sm">
-          <Header />
-        </div>
-        <main className="flex-1 overflow-y-auto p-8 min-w-0">
+    <Layout>
           <div className="w-full">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
               <h1 className="text-2xl font-bold text-gray-800">Laporan Keuangan Profesional</h1>
@@ -362,9 +357,7 @@ const Keuangan = () => {
               </ul>
             </div> */}
           </div>
-        </main>
-      </div>
-    </div>
+    </Layout>
   );
 };
 

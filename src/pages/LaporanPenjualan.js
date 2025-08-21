@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+// import Sidebar from '../components/Sidebar';
+// import Header from '../components/Header';
 import { HiOutlineDocumentReport, HiOutlineTrendingUp, HiOutlineCurrencyDollar, HiOutlineShoppingBag } from 'react-icons/hi';
 import { MdAnalytics } from 'react-icons/md';
 import axios from 'axios';
+import Layout from '../components/Layout';
 
 const getHeaders = () => ({
   'Authorization': localStorage.getItem('authToken'),
@@ -42,13 +43,7 @@ const LaporanPenjualan = () => {
   const totalRevenue = salesData.reduce((sum, item) => sum + (item.total_revenue || 0), 0);
 
   return (
-    <div className="flex h-screen bg-gradient-to-tr from-white via-blue-50 to-jade-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md shadow-sm">
-          <Header />
-        </div>
-        <main className="flex-1 overflow-y-auto p-8 min-w-0">
+    <Layout>
           <div className="w-full max-w-7xl mx-auto">
             {/* Header Section */}
             <div className="flex items-center justify-between mb-8">
@@ -63,52 +58,44 @@ const LaporanPenjualan = () => {
               </div>
             </div>
 
-            {loading ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-3 text-gray-600">Memuat data...</span>
+            <>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {/* Total Transaksi */}
+              <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-blue-100 p-3 rounded-lg">
+                    <HiOutlineTrendingUp className="text-2xl text-blue-600" />
+                  </div>
+                    <span className="text-xs text-gray-500 font-medium">Total Transaksi</span>
                 </div>
+                <div className="text-2xl font-bold text-gray-900 mb-2">
+                    {totalTransactions}
+                </div>
+                <p className="text-xs text-gray-600">Transaksi</p>
               </div>
-            ) : (
-              <>
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                  {/* Total Transaksi */}
-                <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="bg-blue-100 p-3 rounded-lg">
-                      <HiOutlineTrendingUp className="text-2xl text-blue-600" />
+
+                {/* Total Produk Terjual */}
+              <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-green-100 p-3 rounded-lg">
+                      <HiOutlineShoppingBag className="text-2xl text-green-600" />
                     </div>
-                      <span className="text-xs text-gray-500 font-medium">Total Transaksi</span>
+                    <span className="text-xs text-gray-500 font-medium">Total Produk Terjual</span>
                   </div>
                   <div className="text-2xl font-bold text-gray-900 mb-2">
-                      {totalTransactions}
-                  </div>
-                  <p className="text-xs text-gray-600">Transaksi</p>
+                    {totalProductsSold}
                 </div>
+                  <p className="text-xs text-gray-600">Unit</p>
+              </div>
 
-                  {/* Total Produk Terjual */}
-                <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="bg-green-100 p-3 rounded-lg">
-                        <HiOutlineShoppingBag className="text-2xl text-green-600" />
-                      </div>
-                      <span className="text-xs text-gray-500 font-medium">Total Produk Terjual</span>
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900 mb-2">
-                      {totalProductsSold}
+                {/* Total Pendapatan */}
+              <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-purple-100 p-3 rounded-lg">
+                    <HiOutlineCurrencyDollar className="text-2xl text-purple-600" />
                   </div>
-                    <p className="text-xs text-gray-600">Unit</p>
-                </div>
-
-                  {/* Total Pendapatan */}
-                <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="bg-purple-100 p-3 rounded-lg">
-                      <HiOutlineCurrencyDollar className="text-2xl text-purple-600" />
-                    </div>
-                      <span className="text-xs text-gray-500 font-medium">Total Pendapatan</span>
+                    <span className="text-xs text-gray-500 font-medium">Total Pendapatan</span>
                   </div>
                   <div className="text-2xl font-bold text-gray-900 mb-2">
                       {formatRupiah(totalRevenue)}
@@ -118,48 +105,50 @@ const LaporanPenjualan = () => {
                 </div>
 
                 {/* Detail Data Table */}
-                {salesData.length > 0 && (
-                  <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="min-w-full">
                         <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
                         <tr>
-                            <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                            Tanggal
-                          </th>
-                            <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                              Cabang
-                            </th>
-                            <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                              Total Transaksi
-                          </th>
-                            <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                              Produk Terjual
-                          </th>
-                            <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                              Total Pendapatan
-                          </th>
-                            <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                              Metode Pembayaran
-                          </th>
+                          <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Tanggal</th>
+                          <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Cabang</th>
+                          <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Total Transaksi</th>
+                          <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Produk Terjual</th>
+                          <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Total Pendapatan</th>
                         </tr>
                       </thead>
                         <tbody className="divide-y divide-gray-200">
                           {loading ? (
                             <tr>
-                              <td colSpan={6} className="px-6 py-12 text-center">
-                                <div className="flex items-center justify-center">
-                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                                  <span className="ml-3 text-gray-600 text-sm">Memuat data...</span>
+                              <td colSpan={5} className="px-6 py-6">
+                                <div className="animate-pulse space-y-3">
+                                  {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="grid grid-cols-5 gap-4">
+                                      <div className="h-4 bg-gray-200 rounded"></div>
+                                      <div className="h-4 bg-gray-200 rounded"></div>
+                                      <div className="h-4 bg-gray-200 rounded"></div>
+                                      <div className="h-4 bg-gray-200 rounded"></div>
+                                      <div className="h-4 bg-gray-200 rounded"></div>
+                                    </div>
+                                  ))}
                                 </div>
                               </td>
                             </tr>
                           ) : salesData.length === 0 ? (
-                            <tr>
-                              <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                Tidak ada data penjualan
-                              </td>
-                            </tr>
+                            <>
+                              {[...Array(5)].map((_, i) => (
+                                <tr key={`placeholder-${i}`}>
+                                  <td className="px-6 py-3"><div className="h-4 bg-gray-100 rounded"></div></td>
+                                  <td className="px-6 py-3"><div className="h-4 bg-gray-100 rounded"></div></td>
+                                  <td className="px-6 py-3"><div className="h-4 bg-gray-100 rounded"></div></td>
+                                  <td className="px-6 py-3"><div className="h-4 bg-gray-100 rounded"></div></td>
+                                  <td className="px-6 py-3"><div className="h-4 bg-gray-100 rounded"></div></td>
+                                </tr>
+                              ))}
+                              <tr>
+                                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">Tidak ada data penjualan</td>
+                              </tr>
+                            </>
                           ) : (
                             salesData.map((item, index) => (
                           <tr key={index} className="hover:bg-gray-50">
@@ -178,16 +167,6 @@ const LaporanPenjualan = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                   {formatRupiah(item.total_revenue)}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-900">
-                                  <div className="space-y-1">
-                                    {item.payment_methods && Object.entries(item.payment_methods).map(([method, amount]) => (
-                                      <div key={method} className="flex justify-between text-xs">
-                                        <span className="font-medium">{method}:</span>
-                                        <span>{formatRupiah(amount)}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                            </td>
                           </tr>
                             ))
                           )}
@@ -195,13 +174,9 @@ const LaporanPenjualan = () => {
                     </table>
                   </div>
                 </div>
-                )}
               </>
-            )}
-          </div>
-        </main>
-      </div>
-    </div>
+            </div>
+    </Layout>
   );
 };
 

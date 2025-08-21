@@ -16,7 +16,10 @@ import LaporanTerlaris from './pages/LaporanTerlaris';
 import LaporanPiutang from './pages/LaporanPiutang';
 import Categories from './pages/Kategori';
 import SizeProduct from './pages/SizeProduct';
-import CategoryReport from './pages/CategoryReport';
+import LaporanPengeluaran from './pages/LaporanPengeluaran';
+import Pengeluaran from './pages/Pengeluaran';
+import Modal from './pages/Modal';
+
 
 function App() {
   return (
@@ -57,6 +60,16 @@ function App() {
               <LaporanPenjualan />
             </LoginCheck>
           } />
+          <Route path="/laporan-pengeluaran" element={
+            <LoginCheck>
+              <LaporanPengeluaran />
+            </LoginCheck>
+          } />
+          <Route path="/pengeluaran" element={
+            <LoginCheck>
+              <Pengeluaran />
+            </LoginCheck>
+          } />
           <Route path="/keuangan" element={
             <LoginCheck>
               <Keuangan />
@@ -92,9 +105,9 @@ function App() {
               <SizeProduct />
             </LoginCheck>
           } />
-          <Route path="/pages/laporan-kategori-terlaris" element={
+          <Route path="/modal" element={
             <LoginCheck>
-              <CategoryReport />
+              <Modal />
             </LoginCheck>
           } />
 

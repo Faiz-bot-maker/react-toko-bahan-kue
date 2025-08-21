@@ -41,7 +41,7 @@ const Login = () => {
       <div className="relative z-10 grid min-h-screen grid-cols-1 md:grid-cols-2">
         <div className="relative hidden md:block">
           <img
-            src="https://plus.unsplash.com/premium_photo-1700593974557-34f2837447c7?q=80&w=388&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            src="public/img/login-page.png"
             alt="Bahan-bahan kue lengkap"
             className="absolute inset-0 h-full w-full object-cover"
             loading="lazy"
