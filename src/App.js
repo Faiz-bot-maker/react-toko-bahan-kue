@@ -2,23 +2,39 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import LoginCheck from './components/LoginCheck';
+// import AdminGuard from './components/AdminGuard';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Products from './pages/Products';
-// import Orders from './pages/Orders';
-import Users from './pages/Users';
-import LaporanPenjualan from './pages/LaporanPenjualan';
-import Keuangan from './pages/Keuangan';
-import Cabang from './pages/Cabang';
-import Distributor from './pages/Distributor';
-import Role from './pages/Role';
-import LaporanTerlaris from './pages/LaporanTerlaris';
-import LaporanPiutang from './pages/LaporanPiutang';
-import Categories from './pages/Kategori';
-import SizeProduct from './pages/SizeProduct';
-import LaporanPengeluaran from './pages/LaporanPengeluaran';
-import Pengeluaran from './pages/Pengeluaran';
-import Modal from './pages/Modal';
+
+// Owner Page
+import Dashboard from './pages/owner/Dashboard';
+import Products from './pages/owner/Products';
+// import Orders from './pages/owner/Orders';
+import Users from './pages/owner/Users';
+import LaporanPenjualan from './pages/owner/LaporanPenjualan';
+import Keuangan from './pages/owner/Keuangan';
+import Cabang from './pages/owner/Cabang';
+import Distributor from './pages/owner/Distributor';
+import Role from './pages/owner/Role';
+import LaporanTerlaris from './pages/owner/LaporanTerlaris';
+import LaporanPiutang from './pages/owner/LaporanPiutang';
+import Categories from './pages/owner/Kategori';
+import SizeProduct from './pages/owner/SizeProduct';
+import LaporanPengeluaran from './pages/owner/LaporanPengeluaran';
+import Pengeluaran from './pages/owner/Pengeluaran';
+import Modal from './pages/owner/Modal';
+import BarangKeluar from './pages/owner/BarangKeluar';
+
+// Admin Pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminProducts from './pages/admin/AdminProducts';
+import AdminCategories from './pages/admin/AdminCategories';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminRoles from './pages/admin/AdminRoles';
+import AdminCabang from './pages/admin/AdminCabang';
+import AdminKeuangan from './pages/admin/AdminKeuangan';
+import AdminDistributor from './pages/admin/AdminDistributor';
+import AdminLaporanPenjualan from './pages/admin/AdminLaporanPenjualan';
+import AdminModal from './pages/admin/AdminModal';
 
 
 function App() {
@@ -108,6 +124,83 @@ function App() {
           <Route path="/modal" element={
             <LoginCheck>
               <Modal />
+            </LoginCheck>
+          } />
+          <Route path="/barang-keluar" element={
+            <LoginCheck>
+              <BarangKeluar />
+            </LoginCheck>
+          } />
+
+          {/* Admin Routes */}
+          <Route path="/admin/dashboard" element={
+            <LoginCheck>
+
+              <AdminDashboard />
+
+            </LoginCheck>
+          } />
+          <Route path="/admin/products" element={
+            <LoginCheck>
+
+              <AdminProducts />
+
+            </LoginCheck>
+          } />
+          <Route path="/admin/categories" element={
+            <LoginCheck>
+
+              <AdminCategories />
+
+            </LoginCheck>
+          } />
+          <Route path="/admin/users" element={
+            <LoginCheck>
+
+              <AdminUsers />
+
+            </LoginCheck>
+          } />
+          <Route path="/admin/roles" element={
+            <LoginCheck>
+
+              <AdminRoles />
+
+            </LoginCheck>
+          } />
+          <Route path="/admin/cabang" element={
+            <LoginCheck>
+
+              <AdminCabang />
+
+            </LoginCheck>
+          } />
+          <Route path="/admin/keuangan" element={
+            <LoginCheck>
+
+              <AdminKeuangan />
+
+            </LoginCheck>
+          } />
+          <Route path="/admin/distributor" element={
+            <LoginCheck>
+
+              <AdminDistributor />
+
+            </LoginCheck>
+          } />
+          <Route path="/admin/laporan-penjualan" element={
+            <LoginCheck>
+
+              <AdminLaporanPenjualan />
+
+            </LoginCheck>
+          } />
+          <Route path="/admin/modal" element={
+            <LoginCheck>
+
+              <AdminModal />
+
             </LoginCheck>
           } />
 

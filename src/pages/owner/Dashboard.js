@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
-import Layout from '../components/Layout';
+// import Sidebar from '../components/Sidebar';
+// import Header from '../components/Header';
+import Layout from '../../components/Layout';
 import { HiOutlineHome, HiOutlineCube, HiOutlineClipboardList, HiOutlineTruck, HiOutlineUsers, HiOutlineCurrencyDollar, HiOutlineTag, HiOutlineOfficeBuilding } from 'react-icons/hi';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import axios from 'axios';

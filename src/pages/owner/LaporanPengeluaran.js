@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import Layout from '../components/Layout';
+import Layout from '../../components/Layout';
 import axios from 'axios';
 import { HiOutlineDocumentReport, HiOutlinePlus } from 'react-icons/hi';
 import { FiEdit, FiTrash } from 'react-icons/fi';

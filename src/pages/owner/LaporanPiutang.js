@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { HiOutlinePlus } from 'react-icons/hi';
 import { FiEdit, FiTrash } from 'react-icons/fi';
 import axios from "axios";
-import Layout from '../components/Layout';
+import Layout from '../../components/Layout';
 
 const statusColor = {
     Pending: 'bg-yellow-100 text-yellow-800',

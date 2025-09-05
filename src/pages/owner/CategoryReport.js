@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // import Sidebar from '../components/Sidebar';
 // import Header from '../components/Header';
-import Layout from '../components/Layout';
+import Layout from '../../components/Layout';
 import { HiOutlineTrendingUp, HiOutlineCube } from 'react-icons/hi';
 import { MdCategory } from 'react-icons/md';
 import axios from 'axios';

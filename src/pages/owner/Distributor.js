@@ -5,7 +5,7 @@ import axios from "axios";
 import { HiOutlinePlus } from "react-icons/hi";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import { MdLocalShipping } from "react-icons/md";
-import Layout from "../components/Layout";
+import Layout from '../../components/Layout';
 
 const API_URL = `${process.env.REACT_APP_API_URL}/distributors`;
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // import Sidebar from '../components/Sidebar';
 // import Header from '../components/Header';
-import Layout from '../components/Layout';
+import Layout from '../../components/Layout';
 import { HiEye, HiEyeOff, HiOutlinePlus } from 'react-icons/hi';
 import { FiEdit, FiTrash } from 'react-icons/fi';
 import { MdPeople } from 'react-icons/md';

@@ -6,7 +6,7 @@ import { FiEdit, FiTrash } from 'react-icons/fi';
 import { TbRulerMeasure } from 'react-icons/tb';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import Layout from '../components/Layout';
+import Layout from '../../components/Layout';
 
 const getHeaders = () => ({
     Authorization: localStorage.getItem('authToken'),

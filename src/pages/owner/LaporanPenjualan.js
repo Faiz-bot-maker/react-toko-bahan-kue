@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { HiOutlineDocumentReport, HiOutlineTrendingUp, HiOutlineCurrencyDollar, HiOutlineShoppingBag } from 'react-icons/hi';
 import { MdAnalytics } from 'react-icons/md';
 import axios from 'axios';
-import Layout from '../components/Layout';
+import Layout from '../../components/Layout';
 
 const getHeaders = () => ({
   'Authorization': localStorage.getItem('authToken'),

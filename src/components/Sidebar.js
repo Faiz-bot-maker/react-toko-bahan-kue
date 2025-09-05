@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import {
   HiOutlineHome,
   HiOutlineCube,
@@ -46,6 +48,7 @@ const menus = [
     icon: <HiOutlineDocumentReport className="text-xs" />,
     items: [
       { name: 'Laporan Barang Terlaris', path: '/laporan-produk-terlaris' },
+      { name: 'Laporan Barang Keluar', path: '/barang-keluar' },
       { name: 'Laporan Piutang', path: '/laporan-piutang' },
       { name: 'Laporan Penjualan', path: '/laporan-penjualan' },
       { name: 'Laporan Pengeluaran', path: '/laporan-pengeluaran' },
@@ -62,9 +65,54 @@ const menus = [
   },
 ];
 
+const adminMenus = [
+  {
+    section: 'Admin - Produk & Kategori',
+    icon: <HiOutlineCube className="text-xs" />,
+    items: [
+      { name: 'Produk', path: '/admin/products' },
+      { name: 'Kategori', path: '/admin/categories' },
+    ],
+  },
+  {
+    section: 'Admin - Manajemen Relasi',
+    icon: <HiOutlineOfficeBuilding className="text-xs" />,
+    items: [
+      { name: 'Cabang', path: '/admin/cabang' },
+      { name: 'Distributor', path: '/admin/distributor' },
+    ],
+  },
+  {
+    section: 'Admin - Akun & Akses',
+    icon: <HiOutlineIdentification className="text-xs" />,
+    items: [
+      { name: 'Role', path: '/admin/roles' },
+      { name: 'User', path: '/admin/users' },
+    ],
+  },
+  {
+    section: 'Admin - Keuangan',
+    icon: <HiOutlineCurrencyDollar className="text-xs" />,
+    items: [
+      { name: 'Modal', path: '/admin/modal' },
+      { name: 'Keuangan', path: '/admin/keuangan' },
+    ],
+  },
+  {
+    section: 'Admin - Laporan',
+    icon: <HiOutlineDocumentReport className="text-xs" />,
+    items: [
+      { name: 'Laporan Penjualan', path: '/admin/laporan-penjualan' },
+    ],
+  },
+];
+
 const Sidebar = () => {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const [openSections, setOpenSections] = useState([]);
+  const [userRole, setUserRole] = useState(null);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const isMounted = useRef(false);
 
   useEffect(() => {
@@ -80,6 +128,46 @@ const Sidebar = () => {
       isMounted.current = true;
     }
   }, []);
+
+  // Check user role for admin access
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (!isAuthenticated) {
+        setHasAdminAccess(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/me`, {
+          headers: {
+            Authorization: localStorage.getItem('authToken'),
+            'ngrok-skip-browser-warning': 'true',
+          }
+        });
+        
+        const userData = response.data?.data || response.data;
+        const userRole = userData.role?.name || userData.role_name;
+        
+        setUserRole(userRole);
+        
+        // Define admin roles that can access admin pages
+        const adminRoles = ['admin', 'super_admin', 'owner', 'manager'];
+        const hasAccess = adminRoles.includes(userRole?.toLowerCase());
+        
+        // Store user role in localStorage for consistency
+        if (hasAccess) {
+            localStorage.setItem('userRole', userRole);
+        }
+        
+        setHasAdminAccess(hasAccess);
+      } catch (error) {
+        console.error('Failed to fetch user role:', error);
+        setHasAdminAccess(false);
+      }
+    };
+
+    checkUserRole();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isMounted.current) {
@@ -120,6 +208,47 @@ const Sidebar = () => {
         {/* Dropdown menus */}
         {menus.map((menuSection, index) => (
           <div key={index} className="mt-2">
+            {/* Section Title dengan icon */}
+            <button
+              onClick={() => toggleSection(menuSection.section)}
+              className="flex justify-between items-center w-full px-6 py-1 text-[10px] text-[#B2C8BC] hover:text-white transition-all"
+            >
+              <span className="flex items-center gap-2">
+                {menuSection.icon}
+                {menuSection.section}
+              </span>
+              {openSections.includes(menuSection.section) ? (
+                <HiChevronUp className="text-white text-xs" />
+              ) : (
+                <HiChevronDown className="text-[#B2C8BC] text-xs" />
+              )}
+            </button>
+
+            {/* Section Items tanpa icon */}
+            {openSections.includes(menuSection.section) && (
+              <ul className="flex flex-col gap-[2px] mt-1">
+                {menuSection.items.map((item) => (
+                  <li key={item.path}>
+                    <Link
+                      to={item.path}
+                      className={`flex items-center px-12 py-1.5 rounded-md font-normal text-[10px] transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
+                        location.pathname === item.path
+                          ? 'bg-[#1B5E4B] text-white font-semibold'
+                          : 'text-[#E6F2ED]'
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+
+        {/* Admin Dropdown menus - Only show if user has admin access */}
+        {hasAdminAccess && adminMenus.map((menuSection, index) => (
+          <div key={`admin-${index}`} className="mt-2">
             {/* Section Title dengan icon */}
             <button
               onClick={() => toggleSection(menuSection.section)}

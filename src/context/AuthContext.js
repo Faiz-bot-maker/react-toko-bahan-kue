@@ -26,9 +26,7 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(savedUser));
     }
     setIsLoading(false);
-  }, []);
-
-  const login = async (username, password) => {
+  }, []); const login = async (username, password) => {
     try {
       const loginEndpoint = process.env.REACT_APP_LOGIN_ENDPOINT + '/auth/login';
       const fullLoginUrl = `${loginEndpoint}`;
@@ -87,7 +85,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      window.location.href = '/login'; 
+      window.location.href = '/login';
     }
   };
 
