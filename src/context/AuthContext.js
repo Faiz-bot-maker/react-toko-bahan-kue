@@ -5,55 +5,56 @@ import { API_CONFIG, getHeaders, handleApiError } from '../config/api';
 const AuthContext = createContext();
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  const context = useContext( AuthContext );
+  if ( !context ) {
+    throw new Error( 'useAuth must be used within an AuthProvider' );
   }
   return context;
 };
 
-export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+export const AuthProvider = ( { children } ) => {
+  const [ isAuthenticated, setIsAuthenticated ] = useState( false );
+  const [ user, setUser ] = useState( null );
+  const [ isLoading, setIsLoading ] = useState( true );
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const savedUser = localStorage.getItem('user');
+  useEffect( () => {
+    const token = localStorage.getItem( 'authToken' );
+    const savedUser = localStorage.getItem( 'user' );
 
-    if (token && savedUser) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(savedUser));
+    if ( token && savedUser ) {
+      setIsAuthenticated( true );
+      setUser( JSON.parse( savedUser ) );
     }
-    setIsLoading(false);
-  }, []);   const login = async (username, password) => {
+    setIsLoading( false );
+  }, [] );
+  const login = async ( username, password ) => {
     try {
       const loginEndpoint = process.env.REACT_APP_LOGIN_ENDPOINT + '/auth/login';
       const fullLoginUrl = `${loginEndpoint}`;
 
-      console.log('Attempting login to:', fullLoginUrl);
+      console.log( 'Attempting login to:', fullLoginUrl );
 
-      const response = await axios.post(fullLoginUrl, {
+      const response = await axios.post( fullLoginUrl, {
         username: username,
         password: password
       }, {
         headers: getHeaders(),
         timeout: API_CONFIG.TIMEOUT
-      });
+      } );
 
-      if (response.status === 200) {
-        setIsAuthenticated(true);
-        localStorage.setItem('authToken', response.data.data.token);
-        
+      if ( response.status === 200 ) {
+        setIsAuthenticated( true );
+        localStorage.setItem( 'authToken', response.data.data.token );
+
         // Get user profile after successful login
         try {
-          const profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/users/me`, {
+          const profileResponse = await axios.get( `${process.env.REACT_APP_LOGIN_ENDPOINT}/auth/me`, {
             headers: {
               Authorization: response.data.data.token,
               'ngrok-skip-browser-warning': 'true',
             }
-          });
-          
+          } );
+
           const userData = profileResponse.data?.data || profileResponse.data;
           const loggedInUser = {
             username: userData.username || username,
@@ -62,35 +63,35 @@ export const AuthProvider = ({ children }) => {
             branch: userData.branch?.name || userData.branch_name || null,
             id: userData.id
           };
-          
-          setUser(loggedInUser);
-          localStorage.setItem('user', JSON.stringify(loggedInUser));
-          localStorage.setItem('userRole', loggedInUser.role);
-        } catch (profileError) {
-          console.error('Failed to fetch user profile:', profileError);
+
+          setUser( loggedInUser );
+          localStorage.setItem( 'user', JSON.stringify( loggedInUser ) );
+          localStorage.setItem( 'userRole', loggedInUser.role );
+        } catch ( profileError ) {
+          console.error( 'Failed to fetch user profile:', profileError );
           // Fallback to basic user info
-          const loggedInUser = { 
-            username, 
-            role: 'user' 
+          const loggedInUser = {
+            username,
+            role: 'user'
           };
-          setUser(loggedInUser);
-          localStorage.setItem('user', JSON.stringify(loggedInUser));
+          setUser( loggedInUser );
+          localStorage.setItem( 'user', JSON.stringify( loggedInUser ) );
         }
-        
+
         return { success: true };
       } else {
         return { success: false, message: response.data.data.message || 'Login gagal!' };
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      return handleApiError(error);
+    } catch ( error ) {
+      console.error( 'Login error:', error );
+      return handleApiError( error );
     }
   };
 
   const logout = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (token) {
+      const token = localStorage.getItem( 'authToken' );
+      if ( token ) {
         const logoutEndpoint = process.env.REACT_APP_LOGIN_ENDPOINT + '/auth/logout';
         await axios.post(
           logoutEndpoint,
@@ -104,14 +105,14 @@ export const AuthProvider = ({ children }) => {
           }
         );
       }
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch ( error ) {
+      console.error( 'Logout error:', error );
       // Lanjut Logout Tanpa Request dari server
     } finally {
-      setIsAuthenticated(false);
-      setUser(null);
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
+      setIsAuthenticated( false );
+      setUser( null );
+      localStorage.removeItem( 'authToken' );
+      localStorage.removeItem( 'user' );
       window.location.href = '/login';
     }
   };
@@ -125,8 +126,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
+    <AuthContext.Provider value={ value }>
+      { children }
     </AuthContext.Provider>
   );
 }; 

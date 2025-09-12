@@ -5,9 +5,6 @@ import axios from 'axios';
 import {
   HiOutlineHome,
   HiOutlineCube,
-  // HiOutlineClipboardList,
-  // HiOutlineUser,
-  // HiOutlineUsers,
   HiOutlineDocumentReport,
   HiOutlineCurrencyDollar,
   HiOutlineOfficeBuilding,
@@ -110,209 +107,206 @@ const adminMenus = [
 const Sidebar = () => {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
-  const [openSections, setOpenSections] = useState([]);
-  const [userRole, setUserRole] = useState(null);
-  const [hasAdminAccess, setHasAdminAccess] = useState(false);
-  const isMounted = useRef(false);
+  const [ openSections, setOpenSections ] = useState( [] );
+  const [ userRole, setUserRole ] = useState( null );
+  // const [ hasAdminAccess, setHasAdminAccess ] = useState( false );
+  const isMounted = useRef( false );
 
-  useEffect(() => {
-    if (!isMounted.current) {
-      const stored = sessionStorage.getItem('openSections');
-      if (stored) {
+  useEffect( () => {
+    if ( !isMounted.current ) {
+      const stored = sessionStorage.getItem( 'openSections' );
+      if ( stored ) {
         try {
-          setOpenSections(JSON.parse(stored));
-        } catch (e) {
-          console.error('Invalid session data');
+          setOpenSections( JSON.parse( stored ) );
+        } catch ( e ) {
+          console.error( 'Invalid session data' );
         }
       }
       isMounted.current = true;
     }
-  }, []);
+  }, [] );
 
   // Check user role for admin access
-  useEffect(() => {
+  useEffect( () => {
     const checkUserRole = async () => {
-      if (!isAuthenticated) {
-        setHasAdminAccess(false);
+      if ( !isAuthenticated ) {
+        // setHasAdminAccess( false );
         return;
       }
 
       // First check if we have user data from AuthContext
-      const savedUser = localStorage.getItem('user');
-      if (savedUser) {
+      const savedUser = localStorage.getItem( 'user' );
+      if ( savedUser ) {
         try {
-          const userData = JSON.parse(savedUser);
+          const userData = JSON.parse( savedUser );
           const userRole = userData.role;
-          
-          setUserRole(userRole);
-          
+
+          setUserRole( userRole );
+
           // Define admin roles that can access admin pages
-          const adminRoles = ['admin', 'super_admin', 'owner', 'manager'];
-          const hasAccess = adminRoles.includes(userRole?.toLowerCase());
-          
-          setHasAdminAccess(hasAccess);
+          // const adminRoles = [ 'admin', 'owner' ];
+          // const hasAccess = adminRoles.includes( userRole?.toLowerCase() );
+
+          // setHasAdminAccess( hasAccess );
           return;
-        } catch (error) {
-          console.error('Error parsing saved user data:', error);
+        } catch ( error ) {
+          console.error( 'Error parsing saved user data:', error );
         }
       }
 
       // Fallback: fetch from API if no saved data
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/me`, {
-          headers: {
-            Authorization: localStorage.getItem('authToken'),
-            'ngrok-skip-browser-warning': 'true',
-          }
-        });
-        
-        const userData = response.data?.data || response.data;
-        const userRole = userData.role?.name || userData.role_name;
-        
-        setUserRole(userRole);
-        
-        // Define admin roles that can access admin pages
-        const adminRoles = ['admin', 'super_admin', 'owner', 'manager'];
-        const hasAccess = adminRoles.includes(userRole?.toLowerCase());
-        
-        // Store user role in localStorage for consistency
-        if (hasAccess) {
-            localStorage.setItem('userRole', userRole);
-        }
-        
-        setHasAdminAccess(hasAccess);
-      } catch (error) {
-        console.error('Failed to fetch user role:', error);
-        setHasAdminAccess(false);
-      }
+      // try {
+      //   const response = await axios.get( `${process.env.REACT_APP_API_URL}/current`, {
+      //     headers: {
+      //       Authorization: localStorage.getItem( 'authToken' ),
+      //       'ngrok-skip-browser-warning': 'true',
+      //     }
+      //   } );
+
+      //   const userData = response.data?.data || response.data;
+      //   const userRole = userData.role?.name || userData.role_name;
+
+      //   setUserRole( userRole );
+
+      //   // Define admin roles that can access admin pages
+      //   const adminRoles = [ 'admin', 'owner' ];
+      //   const hasAccess = adminRoles.includes( userRole?.toLowerCase() );
+
+      //   // Store user role in localStorage for consistency
+      //   if ( hasAccess ) {
+      //     localStorage.setItem( 'userRole', userRole );
+      //   }
+
+      //   setHasAdminAccess( hasAccess );
+      // } catch ( error ) {
+      //   console.error( 'Failed to fetch user role:', error );
+      //   setHasAdminAccess( false );
+      // }
     };
 
     checkUserRole();
-  }, [isAuthenticated]);
+  }, [ isAuthenticated ] );
 
-  useEffect(() => {
-    if (isMounted.current) {
-      sessionStorage.setItem('openSections', JSON.stringify(openSections));
+  useEffect( () => {
+    if ( isMounted.current ) {
+      sessionStorage.setItem( 'openSections', JSON.stringify( openSections ) );
     }
-  }, [openSections]);
+  }, [ openSections ] );
 
-  const toggleSection = (section) => {
-    setOpenSections((prev) =>
-      prev.includes(section)
-        ? prev.filter((s) => s !== section)
-        : [...prev, section]
+  const toggleSection = ( section ) => {
+    setOpenSections( ( prev ) =>
+      prev.includes( section )
+        ? prev.filter( ( s ) => s !== section )
+        : [ ...prev, section ]
     );
   };
 
   return (
     <aside className="w-48 h-screen bg-[#11493E] shadow-xl flex flex-col overflow-hidden">
-      {/* Logo */}
+      {/* Logo */ }
       <div className="px-6 py-4 text-white text-[18px] font-bold tracking-wide flex justify-center items-center gap-1">
         <span>AZKA SHOP</span>
       </div>
 
-      {/* Menu */}
+      {/* Menu */ }
       <div className="flex-1 mt-2 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-[#1f6350] scrollbar-track-transparent">
-        {/* Dashboard */}
+        {/* Dashboard */ }
         <Link
           to="/dashboard"
-          className={`flex items-center px-6 py-1.5 rounded-md font-medium text-xs gap-2 transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
-            location.pathname === '/dashboard'
-              ? 'bg-[#1B5E4B] text-white font-semibold'
-              : 'text-[#E6F2ED]'
-          }`}
+          className={ `flex items-center px-6 py-1.5 rounded-md font-medium text-xs gap-2 transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${location.pathname === '/dashboard'
+            ? 'bg-[#1B5E4B] text-white font-semibold'
+            : 'text-[#E6F2ED]'
+            }` }
         >
           <HiOutlineHome className="text-xs" />
           <span>Beranda</span>
         </Link>
 
-        {/* Show menus based on user role */}
-        {userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'super_admin' ? (
+        {/* Show menus based on user role */ }
+        { userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'super_admin' ? (
           // Admin menus
-          adminMenus.map((menuSection, index) => (
-            <div key={`admin-${index}`} className="mt-2">
-              {/* Section Title dengan icon */}
+          adminMenus.map( ( menuSection, index ) => (
+            <div key={ `admin-${index}` } className="mt-2">
+              {/* Section Title dengan icon */ }
               <button
-                onClick={() => toggleSection(menuSection.section)}
+                onClick={ () => toggleSection( menuSection.section ) }
                 className="flex justify-between items-center w-full px-6 py-1 text-[10px] text-[#B2C8BC] hover:text-white transition-all"
               >
                 <span className="flex items-center gap-2">
-                  {menuSection.icon}
-                  {menuSection.section}
+                  { menuSection.icon }
+                  { menuSection.section }
                 </span>
-                {openSections.includes(menuSection.section) ? (
+                { openSections.includes( menuSection.section ) ? (
                   <HiChevronUp className="text-white text-xs" />
                 ) : (
                   <HiChevronDown className="text-[#B2C8BC] text-xs" />
-                )}
+                ) }
               </button>
 
-              {/* Section Items tanpa icon */}
-              {openSections.includes(menuSection.section) && (
+              {/* Section Items tanpa icon */ }
+              { openSections.includes( menuSection.section ) && (
                 <ul className="flex flex-col gap-[2px] mt-1">
-                  {menuSection.items.map((item) => (
-                    <li key={item.path}>
+                  { menuSection.items.map( ( item ) => (
+                    <li key={ item.path }>
                       <Link
-                        to={item.path}
-                        className={`flex items-center px-12 py-1.5 rounded-md font-normal text-[10px] transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
-                          location.pathname === item.path
-                            ? 'bg-[#1B5E4B] text-white font-semibold'
-                            : 'text-[#E6F2ED]'
-                        }`}
+                        to={ item.path }
+                        className={ `flex items-center px-12 py-1.5 rounded-md font-normal text-[10px] transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${location.pathname === item.path
+                          ? 'bg-[#1B5E4B] text-white font-semibold'
+                          : 'text-[#E6F2ED]'
+                          }` }
                       >
-                        {item.name}
+                        { item.name }
                       </Link>
                     </li>
-                  ))}
+                  ) ) }
                 </ul>
-              )}
+              ) }
             </div>
-          ))
+          ) )
         ) : (
           // Owner/Regular user menus
-          menus.map((menuSection, index) => (
-            <div key={index} className="mt-2">
-              {/* Section Title dengan icon */}
+          menus.map( ( menuSection, index ) => (
+            <div key={ index } className="mt-2">
+              {/* Section Title dengan icon */ }
               <button
-                onClick={() => toggleSection(menuSection.section)}
+                onClick={ () => toggleSection( menuSection.section ) }
                 className="flex justify-between items-center w-full px-6 py-1 text-[10px] text-[#B2C8BC] hover:text-white transition-all"
               >
                 <span className="flex items-center gap-2">
-                  {menuSection.icon}
-                  {menuSection.section}
+                  { menuSection.icon }
+                  { menuSection.section }
                 </span>
-                {openSections.includes(menuSection.section) ? (
+                { openSections.includes( menuSection.section ) ? (
                   <HiChevronUp className="text-white text-xs" />
                 ) : (
                   <HiChevronDown className="text-[#B2C8BC] text-xs" />
-                )}
+                ) }
               </button>
 
-              {/* Section Items tanpa icon */}
-              {openSections.includes(menuSection.section) && (
+              {/* Section Items tanpa icon */ }
+              { openSections.includes( menuSection.section ) && (
                 <ul className="flex flex-col gap-[2px] mt-1">
-                  {menuSection.items.map((item) => (
-                    <li key={item.path}>
+                  { menuSection.items.map( ( item ) => (
+                    <li key={ item.path }>
                       <Link
-                        to={item.path}
-                        className={`flex items-center px-12 py-1.5 rounded-md font-normal text-[10px] transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
-                          location.pathname === item.path
-                            ? 'bg-[#1B5E4B] text-white font-semibold'
-                            : 'text-[#E6F2ED]'
-                        }`}
+                        to={ item.path }
+                        className={ `flex items-center px-12 py-1.5 rounded-md font-normal text-[10px] transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${location.pathname === item.path
+                          ? 'bg-[#1B5E4B] text-white font-semibold'
+                          : 'text-[#E6F2ED]'
+                          }` }
                       >
-                        {item.name}
+                        { item.name }
                       </Link>
                     </li>
-                  ))}
+                  ) ) }
                 </ul>
-              )}
+              ) }
             </div>
-          ))
-        )}
+          ) )
+        ) }
       </div>
 
-      {/* Footer */}
+      {/* Footer */ }
       <div className="text-[9px] text-[#B2C8BC] text-center py-2 border-t border-[#1B5E4B]">
         <span className="mr-1">&copy;</span>2025 Trio Duo
       </div>
