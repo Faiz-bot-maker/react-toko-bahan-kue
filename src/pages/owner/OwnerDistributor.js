@@ -9,7 +9,7 @@ import Layout from '../../components/Layout';
 
 const API_URL = `${process.env.REACT_APP_API_URL}/distributors`;
 
-const Distributor = () => {
+const OwnerDistributor = () => {
   const [distributors, setDistributors] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: "add", idx: null });
   const [form, setForm] = useState({ id: null, name: "", address: "" });
@@ -269,4 +269,4 @@ const Distributor = () => {
   );
 };
 
-export default Distributor;
+export default OwnerDistributor;

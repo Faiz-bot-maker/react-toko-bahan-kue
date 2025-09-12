@@ -7,7 +7,7 @@ import Layout from '../../components/Layout';
 
 const API_URL = `${process.env.REACT_APP_API_URL}/capitals`;
 
-const Modal = () => {
+const OwnerModal = () => {
     const [modals, setModals] = useState([]);
     const [modal, setModal] = useState({ open: false, mode: "add", idx: null });
     const [form, setForm] = useState({
@@ -266,4 +266,4 @@ const Modal = () => {
     );
 };
 
-export default Modal;
+export default OwnerModal;

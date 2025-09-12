@@ -6,7 +6,7 @@ import axios from "axios";
 
 const API_URL = `${process.env.REACT_APP_API_URL}/barang-keluar`;
 
-const BarangKeluar = () => {
+const OwnerBarangKeluar = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -138,4 +138,4 @@ const BarangKeluar = () => {
     );
 };
 
-export default BarangKeluar;
+export default OwnerBarangKeluar;

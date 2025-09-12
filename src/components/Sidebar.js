@@ -137,6 +137,27 @@ const Sidebar = () => {
         return;
       }
 
+      // First check if we have user data from AuthContext
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        try {
+          const userData = JSON.parse(savedUser);
+          const userRole = userData.role;
+          
+          setUserRole(userRole);
+          
+          // Define admin roles that can access admin pages
+          const adminRoles = ['admin', 'super_admin', 'owner', 'manager'];
+          const hasAccess = adminRoles.includes(userRole?.toLowerCase());
+          
+          setHasAdminAccess(hasAccess);
+          return;
+        } catch (error) {
+          console.error('Error parsing saved user data:', error);
+        }
+      }
+
+      // Fallback: fetch from API if no saved data
       try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/me`, {
           headers: {
@@ -205,87 +226,90 @@ const Sidebar = () => {
           <span>Beranda</span>
         </Link>
 
-        {/* Dropdown menus */}
-        {menus.map((menuSection, index) => (
-          <div key={index} className="mt-2">
-            {/* Section Title dengan icon */}
-            <button
-              onClick={() => toggleSection(menuSection.section)}
-              className="flex justify-between items-center w-full px-6 py-1 text-[10px] text-[#B2C8BC] hover:text-white transition-all"
-            >
-              <span className="flex items-center gap-2">
-                {menuSection.icon}
-                {menuSection.section}
-              </span>
-              {openSections.includes(menuSection.section) ? (
-                <HiChevronUp className="text-white text-xs" />
-              ) : (
-                <HiChevronDown className="text-[#B2C8BC] text-xs" />
+        {/* Show menus based on user role */}
+        {userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'super_admin' ? (
+          // Admin menus
+          adminMenus.map((menuSection, index) => (
+            <div key={`admin-${index}`} className="mt-2">
+              {/* Section Title dengan icon */}
+              <button
+                onClick={() => toggleSection(menuSection.section)}
+                className="flex justify-between items-center w-full px-6 py-1 text-[10px] text-[#B2C8BC] hover:text-white transition-all"
+              >
+                <span className="flex items-center gap-2">
+                  {menuSection.icon}
+                  {menuSection.section}
+                </span>
+                {openSections.includes(menuSection.section) ? (
+                  <HiChevronUp className="text-white text-xs" />
+                ) : (
+                  <HiChevronDown className="text-[#B2C8BC] text-xs" />
+                )}
+              </button>
+
+              {/* Section Items tanpa icon */}
+              {openSections.includes(menuSection.section) && (
+                <ul className="flex flex-col gap-[2px] mt-1">
+                  {menuSection.items.map((item) => (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        className={`flex items-center px-12 py-1.5 rounded-md font-normal text-[10px] transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
+                          location.pathname === item.path
+                            ? 'bg-[#1B5E4B] text-white font-semibold'
+                            : 'text-[#E6F2ED]'
+                        }`}
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               )}
-            </button>
+            </div>
+          ))
+        ) : (
+          // Owner/Regular user menus
+          menus.map((menuSection, index) => (
+            <div key={index} className="mt-2">
+              {/* Section Title dengan icon */}
+              <button
+                onClick={() => toggleSection(menuSection.section)}
+                className="flex justify-between items-center w-full px-6 py-1 text-[10px] text-[#B2C8BC] hover:text-white transition-all"
+              >
+                <span className="flex items-center gap-2">
+                  {menuSection.icon}
+                  {menuSection.section}
+                </span>
+                {openSections.includes(menuSection.section) ? (
+                  <HiChevronUp className="text-white text-xs" />
+                ) : (
+                  <HiChevronDown className="text-[#B2C8BC] text-xs" />
+                )}
+              </button>
 
-            {/* Section Items tanpa icon */}
-            {openSections.includes(menuSection.section) && (
-              <ul className="flex flex-col gap-[2px] mt-1">
-                {menuSection.items.map((item) => (
-                  <li key={item.path}>
-                    <Link
-                      to={item.path}
-                      className={`flex items-center px-12 py-1.5 rounded-md font-normal text-[10px] transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
-                        location.pathname === item.path
-                          ? 'bg-[#1B5E4B] text-white font-semibold'
-                          : 'text-[#E6F2ED]'
-                      }`}
-                    >
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
-
-        {/* Admin Dropdown menus - Only show if user has admin access */}
-        {hasAdminAccess && adminMenus.map((menuSection, index) => (
-          <div key={`admin-${index}`} className="mt-2">
-            {/* Section Title dengan icon */}
-            <button
-              onClick={() => toggleSection(menuSection.section)}
-              className="flex justify-between items-center w-full px-6 py-1 text-[10px] text-[#B2C8BC] hover:text-white transition-all"
-            >
-              <span className="flex items-center gap-2">
-                {menuSection.icon}
-                {menuSection.section}
-              </span>
-              {openSections.includes(menuSection.section) ? (
-                <HiChevronUp className="text-white text-xs" />
-              ) : (
-                <HiChevronDown className="text-[#B2C8BC] text-xs" />
+              {/* Section Items tanpa icon */}
+              {openSections.includes(menuSection.section) && (
+                <ul className="flex flex-col gap-[2px] mt-1">
+                  {menuSection.items.map((item) => (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        className={`flex items-center px-12 py-1.5 rounded-md font-normal text-[10px] transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
+                          location.pathname === item.path
+                            ? 'bg-[#1B5E4B] text-white font-semibold'
+                            : 'text-[#E6F2ED]'
+                        }`}
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               )}
-            </button>
-
-            {/* Section Items tanpa icon */}
-            {openSections.includes(menuSection.section) && (
-              <ul className="flex flex-col gap-[2px] mt-1">
-                {menuSection.items.map((item) => (
-                  <li key={item.path}>
-                    <Link
-                      to={item.path}
-                      className={`flex items-center px-12 py-1.5 rounded-md font-normal text-[10px] transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
-                        location.pathname === item.path
-                          ? 'bg-[#1B5E4B] text-white font-semibold'
-                          : 'text-[#E6F2ED]'
-                      }`}
-                    >
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
+            </div>
+          ))
+        )}
       </div>
 
       {/* Footer */}

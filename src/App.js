@@ -2,27 +2,28 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import LoginCheck from './components/LoginCheck';
-// import AdminGuard from './components/AdminGuard';
+import RoleGuard from './components/RoleGuard';
+import RoleBasedRedirect from './components/RoleBasedRedirect';
 import Login from './pages/Login';
 
 // Owner Page
-import Dashboard from './pages/owner/Dashboard';
-import Products from './pages/owner/Products';
-// import Orders from './pages/owner/Orders';
-import Users from './pages/owner/Users';
-import LaporanPenjualan from './pages/owner/LaporanPenjualan';
-import Keuangan from './pages/owner/Keuangan';
-import Cabang from './pages/owner/Cabang';
-import Distributor from './pages/owner/Distributor';
-import Role from './pages/owner/Role';
-import LaporanTerlaris from './pages/owner/LaporanTerlaris';
-import LaporanPiutang from './pages/owner/LaporanPiutang';
-import Categories from './pages/owner/Kategori';
-import SizeProduct from './pages/owner/SizeProduct';
-import LaporanPengeluaran from './pages/owner/LaporanPengeluaran';
-import Pengeluaran from './pages/owner/Pengeluaran';
-import Modal from './pages/owner/Modal';
-import BarangKeluar from './pages/owner/BarangKeluar';
+import Dashboard from './pages/owner/OwnerDashboard';
+import Products from './pages/owner/OwnerProducts';
+// import Orders from './pages/owner/OwnerOrders';
+import Users from './pages/owner/OwnerUsers';
+import LaporanPenjualan from './pages/owner/OwnerLaporanPenjualan';
+import Keuangan from './pages/owner/OwnerKeuangan';
+import Cabang from './pages/owner/OwnerCabang';
+import Distributor from './pages/owner/OwnerDistributor';
+import Role from './pages/owner/OwnerRole';
+import LaporanTerlaris from './pages/owner/OwnerLaporanTerlaris';
+import LaporanPiutang from './pages/owner/OwnerLaporanPiutang';
+import Categories from './pages/owner/OwnerKategori';
+import SizeProduct from './pages/owner/OwnerSizeProduct';
+import LaporanPengeluaran from './pages/owner/OwnerLaporanPengeluaran';
+import Pengeluaran from './pages/owner/OwnerPengeluaran';
+import Modal from './pages/owner/OwnerModal';
+import BarangKeluar from './pages/owner/OwnerBarangKeluar';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -48,165 +49,199 @@ function App() {
           {/* Protected Routes */}
           <Route path="/dashboard" element={
             <LoginCheck>
-              <Dashboard />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <Dashboard />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/products" element={
             <LoginCheck>
-              <Products />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <Products />
+              </RoleGuard>
             </LoginCheck>
           } />
           {/* <Route path="/orders" element={
             <LoginCheck>
-              <Orders />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <Orders />
+              </RoleGuard>
             </LoginCheck>
           } /> */}
           <Route path="/users" element={
             <LoginCheck>
-              <Users />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <Users />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/categories" element={
             <LoginCheck>
-              <Categories />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <Categories />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/laporan-penjualan" element={
             <LoginCheck>
-              <LaporanPenjualan />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <LaporanPenjualan />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/laporan-pengeluaran" element={
             <LoginCheck>
-              <LaporanPengeluaran />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <LaporanPengeluaran />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/pengeluaran" element={
             <LoginCheck>
-              <Pengeluaran />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <Pengeluaran />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/keuangan" element={
             <LoginCheck>
-              <Keuangan />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <Keuangan />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/cabang" element={
             <LoginCheck>
-              <Cabang />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <Cabang />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/distributor" element={
             <LoginCheck>
-              <Distributor />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <Distributor />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/role" element={
             <LoginCheck>
-              <Role />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <Role />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/laporan-produk-terlaris" element={
             <LoginCheck>
-              <LaporanTerlaris />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <LaporanTerlaris />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/laporan-piutang" element={
             <LoginCheck>
-              <LaporanPiutang />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <LaporanPiutang />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/pages/sizeproduct" element={
             <LoginCheck>
-              <SizeProduct />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <SizeProduct />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/modal" element={
             <LoginCheck>
-              <Modal />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <Modal />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/barang-keluar" element={
             <LoginCheck>
-              <BarangKeluar />
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <BarangKeluar />
+              </RoleGuard>
             </LoginCheck>
           } />
 
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={
             <LoginCheck>
-
-              <AdminDashboard />
-
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminDashboard />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/products" element={
             <LoginCheck>
-
-              <AdminProducts />
-
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminProducts />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/categories" element={
             <LoginCheck>
-
-              <AdminCategories />
-
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminCategories />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/users" element={
             <LoginCheck>
-
-              <AdminUsers />
-
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminUsers />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/roles" element={
             <LoginCheck>
-
-              <AdminRoles />
-
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminRoles />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/cabang" element={
             <LoginCheck>
-
-              <AdminCabang />
-
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminCabang />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/keuangan" element={
             <LoginCheck>
-
-              <AdminKeuangan />
-
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminKeuangan />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/distributor" element={
             <LoginCheck>
-
-              <AdminDistributor />
-
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminDistributor />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/laporan-penjualan" element={
             <LoginCheck>
-
-              <AdminLaporanPenjualan />
-
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminLaporanPenjualan />
+              </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/modal" element={
             <LoginCheck>
-
-              <AdminModal />
-
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminModal />
+              </RoleGuard>
             </LoginCheck>
           } />
 
           {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<RoleBasedRedirect />} />
+          <Route path="*" element={<RoleBasedRedirect />} />
         </Routes>
       </Router>
     </AuthProvider>

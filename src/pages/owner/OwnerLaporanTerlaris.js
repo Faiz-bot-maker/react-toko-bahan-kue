@@ -373,7 +373,7 @@ const getHeaders = () => ({
 
 const formatRupiah = (angka) => 'Rp ' + angka.toLocaleString('id-ID');
 
-const LaporanTerlaris = () => {
+const OwnerLaporanTerlaris = () => {
   const [bestSellers, setBestSellers] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
@@ -759,4 +759,4 @@ const LaporanTerlaris = () => {
   );
 };
 
-export default LaporanTerlaris;
+export default OwnerLaporanTerlaris;

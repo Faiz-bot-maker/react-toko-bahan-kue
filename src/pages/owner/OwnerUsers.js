@@ -11,7 +11,7 @@ const API_URL = `${process.env.REACT_APP_API_URL}/users`;
 const ROLE_URL = `${process.env.REACT_APP_API_URL}/roles`;
 const BRANCH_URL = `${process.env.REACT_APP_API_URL}/branches`;
 
-const Users = () => {
+const OwnerUsers = () => {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -357,4 +357,4 @@ const Users = () => {
   );
 };
 
-export default Users;
+export default OwnerUsers;

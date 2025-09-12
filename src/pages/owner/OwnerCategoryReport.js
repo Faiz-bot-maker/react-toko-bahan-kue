@@ -13,7 +13,7 @@ const getHeaders = () => ({
 
 const formatRupiah = (angka) => 'Rp ' + angka.toLocaleString('id-ID');
 
-const CategoryReport = () => {
+const OwnerCategoryReport = () => {
   const [categoryData, setCategoryData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -137,4 +137,4 @@ const CategoryReport = () => {
   );
 };
 
-export default CategoryReport;
+export default OwnerCategoryReport;

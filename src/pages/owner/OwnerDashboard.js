@@ -13,7 +13,7 @@ const getHeaders = () => ({
 
 const formatRupiah = (angka) => 'Rp ' + angka.toLocaleString('id-ID');
 
-const Dashboard = () => {
+const OwnerDashboard = () => {
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalProducts: 0,
@@ -156,4 +156,4 @@ const chartData = [
   );
 };
 
-export default Dashboard; 
+export default OwnerDashboard; 

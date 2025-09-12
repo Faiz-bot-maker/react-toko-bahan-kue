@@ -13,7 +13,7 @@ const getHeaders = () => ({
     'ngrok-skip-browser-warning': 'true',
 });
 
-const SizeProduct = () => {
+const OwnerSizeProduct = () => {
     const [sizes, setSizes] = useState([]);
     const [modal, setModal] = useState({ open: false, mode: 'add', data: null });
     const [formData, setFormData] = useState({ name: '', buy_price: '', sell_price: '' });
@@ -292,4 +292,4 @@ const SizeProduct = () => {
     );
 };
 
-export default SizeProduct;
+export default OwnerSizeProduct;

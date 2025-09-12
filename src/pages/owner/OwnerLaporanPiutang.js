@@ -13,7 +13,7 @@ const statusColor = {
 
 const formatRupiah = (angka) => 'Rp ' + angka.toLocaleString('id-ID');
 
-const LaporanPiutang = () => {
+const OwnerLaporanPiutang = () => {
     const [pelanggan, setPelanggan] = useState([]);
     const [modal, setModal] = useState({ open: false, mode: 'add', idx: null });
     const [form, setForm] = useState({ nama: '', total: '', status: 'Pending' });
@@ -326,4 +326,4 @@ const LaporanPiutang = () => {
     );
 };
 
-export default LaporanPiutang;
+export default OwnerLaporanPiutang;

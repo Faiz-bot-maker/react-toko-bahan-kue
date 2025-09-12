@@ -9,7 +9,7 @@ import Layout from '../../components/Layout';
 
 const API_URL = `${process.env.REACT_APP_API_URL}/categories`;
 
-const Kategori = () => {
+const OwnerKategori = () => {
     const [categories, setCategories] = useState([]);
     const [modal, setModal] = useState({ open: false, mode: "add", idx: null });
     const [form, setForm] = useState({ id: "", name: "" });
@@ -266,4 +266,4 @@ const Kategori = () => {
     );
 };
 
-export default Kategori;
+export default OwnerKategori;

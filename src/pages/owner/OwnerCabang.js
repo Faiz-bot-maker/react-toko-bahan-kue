@@ -9,7 +9,7 @@ import Layout from '../../components/Layout';
 
 const API_URL = `${process.env.REACT_APP_API_URL}/branches`;
 
-const Cabang = () => {
+const OwnerCabang = () => {
   const [branches, setBranches] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: "add", idx: null });
   const [form, setForm] = useState({ id: null, name: "", address: "" });
@@ -271,4 +271,4 @@ const Cabang = () => {
   );
 };
 
-export default Cabang;
+export default OwnerCabang;

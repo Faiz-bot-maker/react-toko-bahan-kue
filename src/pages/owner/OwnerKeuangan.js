@@ -13,7 +13,7 @@ const getHeaders = () => ({
 
 const API_URL = `${process.env.REACT_APP_API_URL}/keuangan`; 
 
-const Keuangan = () => {
+const OwnerKeuangan = () => {
   const [data, setData] = useState([]);
 
   // Fetch data keuangan
@@ -115,4 +115,4 @@ const Keuangan = () => {
   );
 };
 
-export default Keuangan;
+export default OwnerKeuangan;

@@ -13,7 +13,7 @@ const getHeaders = () => ({
 
 const formatRupiah = (angka) => 'Rp ' + angka.toLocaleString('id-ID');
 
-const LaporanPenjualan = () => {
+const OwnerLaporanPenjualan = () => {
   const [salesData, setSalesData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -180,4 +180,4 @@ const LaporanPenjualan = () => {
   );
 };
 
-export default LaporanPenjualan; 
+export default OwnerLaporanPenjualan; 

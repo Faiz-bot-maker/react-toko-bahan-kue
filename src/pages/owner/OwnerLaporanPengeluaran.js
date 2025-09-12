@@ -11,7 +11,7 @@ const getHeaders = () => ({
 
 const formatRupiah = (angka) => 'Rp ' + (angka || 0).toLocaleString('id-ID');
 
-const LaporanPengeluaran = () => {
+const OwnerLaporanPengeluaran = () => {
   // Ringkasan
   const [summaryRows, setSummaryRows] = useState([]);
   const [totalAll, setTotalAll] = useState(0);
@@ -489,4 +489,4 @@ const LaporanPengeluaran = () => {
   );
 };
 
-export default LaporanPengeluaran; 
+export default OwnerLaporanPengeluaran; 

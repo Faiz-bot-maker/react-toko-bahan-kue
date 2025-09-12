@@ -14,7 +14,7 @@ const getHeaders = () => ({
 
 const formatRupiah = (angka) => 'Rp ' + (Number(angka) || 0).toLocaleString('id-ID');
 
-const Pengeluaran = () => {
+const OwnerPengeluaran = () => {
   const [branches, setBranches] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -262,4 +262,4 @@ const Pengeluaran = () => {
   );
 };
 
-export default Pengeluaran; 
+export default OwnerPengeluaran; 

@@ -7,7 +7,7 @@ import axios from "axios";
 
 const API_URL = `${process.env.REACT_APP_API_URL}/roles`;
 
-const Role = () => {
+const OwnerRole = () => {
   const [roles, setRoles] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: "add", idx: null });
   const [form, setForm] = useState({ id: null, name: "" });
@@ -218,13 +218,13 @@ const Role = () => {
                   <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                     <button
                       type="button"
-                      onClick={closeModal}
+                      onClick={closeModal} 
                       className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm"
                     >
                       Batal
                     </button>
                     <button
-                      type="submit"
+                      type="submit" 
                       className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors text-sm"
                     >
                       Simpan
@@ -240,4 +240,4 @@ const Role = () => {
   );
 };
 
-export default Role;
+export default OwnerRole;

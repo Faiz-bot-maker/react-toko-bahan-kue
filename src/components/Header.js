@@ -31,9 +31,15 @@ const Header = () => {
   return (
     <header className="bg-white/80 text-gray-800 h-16 flex items-center justify-end px-10 backdrop-blur-lg relative z-[99999]">
       <div className="flex items-center gap-3">
-        <span className="text-base font-semibold text-jade-700 hidden sm:block">
-          {user?.username || user?.name || 'Admin'}
-        </span>
+        <div className="text-right hidden sm:block">
+          <div className="text-base font-semibold text-jade-700">
+            {user?.name || user?.username || 'User'}
+          </div>
+          <div className="text-xs text-jade-600 capitalize">
+            {user?.role || 'user'}
+            {user?.branch && ` • ${user.branch}`}
+          </div>
+        </div>
         <div className="relative" ref={dropdownRef}>
           <div
             className="w-10 h-10 rounded-full bg-gradient-to-tr from-jade-100 to-blue-100 flex items-center justify-center border-2 border-jade-300 shadow hover:scale-110 hover:border-jade-500 transition-all cursor-pointer"
@@ -46,8 +52,11 @@ const Header = () => {
           {isDropdownOpen && (
             <div className="fixed right-10 top-16 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-[999999]">
               <div className="px-4 py-2 border-b border-gray-100">
-                <p className="text-sm font-medium text-gray-900">{user?.username || user?.name || 'Admin'}</p>
-                <p className="text-xs text-gray-500">{user?.username || ''}</p>
+                <p className="text-sm font-medium text-gray-900">{user?.name || user?.username || 'User'}</p>
+                <p className="text-xs text-gray-500 capitalize">
+                  {user?.role || 'user'}
+                  {user?.branch && ` • ${user.branch}`}
+                </p>
               </div>
               <div className="py-1">
                 <button

@@ -17,7 +17,7 @@ const getHeaders = () => ({
   'ngrok-skip-browser-warning': 'true',
 });
 
-const Products = () => {
+const OwnerProducts = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [modal, setModal] = useState({ open: false, mode: 'add', data: null });
@@ -345,4 +345,4 @@ const Products = () => {
   );
 };
 
-export default Products;
+export default OwnerProducts;

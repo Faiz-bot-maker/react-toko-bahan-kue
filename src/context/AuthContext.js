@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(savedUser));
     }
     setIsLoading(false);
-  }, []); const login = async (username, password) => {
+  }, []);   const login = async (username, password) => {
     try {
       const loginEndpoint = process.env.REACT_APP_LOGIN_ENDPOINT + '/auth/login';
       const fullLoginUrl = `${loginEndpoint}`;
@@ -43,13 +43,40 @@ export const AuthProvider = ({ children }) => {
 
       if (response.status === 200) {
         setIsAuthenticated(true);
-        // setUser(userData);
         localStorage.setItem('authToken', response.data.data.token);
-        // Save minimal user info so UI (e.g., Header) can display username
-        const loggedInUser = { username };
-        setUser(loggedInUser);
-        localStorage.setItem('user', JSON.stringify(loggedInUser));
-        // console.log('Login successful for user:', userData.name);
+        
+        // Get user profile after successful login
+        try {
+          const profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/users/me`, {
+            headers: {
+              Authorization: response.data.data.token,
+              'ngrok-skip-browser-warning': 'true',
+            }
+          });
+          
+          const userData = profileResponse.data?.data || profileResponse.data;
+          const loggedInUser = {
+            username: userData.username || username,
+            name: userData.name || userData.username,
+            role: userData.role?.name || userData.role_name || 'user',
+            branch: userData.branch?.name || userData.branch_name || null,
+            id: userData.id
+          };
+          
+          setUser(loggedInUser);
+          localStorage.setItem('user', JSON.stringify(loggedInUser));
+          localStorage.setItem('userRole', loggedInUser.role);
+        } catch (profileError) {
+          console.error('Failed to fetch user profile:', profileError);
+          // Fallback to basic user info
+          const loggedInUser = { 
+            username, 
+            role: 'user' 
+          };
+          setUser(loggedInUser);
+          localStorage.setItem('user', JSON.stringify(loggedInUser));
+        }
+        
         return { success: true };
       } else {
         return { success: false, message: response.data.data.message || 'Login gagal!' };
