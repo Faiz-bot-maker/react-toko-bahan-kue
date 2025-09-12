@@ -64,42 +64,44 @@ const menus = [
 
 const adminMenus = [
   {
-    section: 'Admin - Produk & Kategori',
+    section: 'Inventori',
     icon: <HiOutlineCube className="text-xs" />,
     items: [
-      { name: 'Produk', path: '/admin/products' },
-      { name: 'Kategori', path: '/admin/categories' },
+      // { name: 'Produk', path: '/admin/products' },
+      // { name: 'Kategori', path: '/admin/categories' },
+      { name: 'Inventori', path: '/admin/inventory' },
     ],
   },
   {
-    section: 'Admin - Manajemen Relasi',
+    section: 'Manajemen Relasi',
     icon: <HiOutlineOfficeBuilding className="text-xs" />,
     items: [
-      { name: 'Cabang', path: '/admin/cabang' },
+      // { name: 'Cabang', path: '/admin/cabang' },
       { name: 'Distributor', path: '/admin/distributor' },
     ],
   },
+  // {
+  //   section: 'Admin - Akun & Akses',
+  //   icon: <HiOutlineIdentification className="text-xs" />,
+  //   items: [
+  //     { name: 'Role', path: '/admin/roles' },
+  //     { name: 'User', path: '/admin/users' },
+  //   ],
+  // },
+  
   {
-    section: 'Admin - Akun & Akses',
-    icon: <HiOutlineIdentification className="text-xs" />,
+    section: 'Laporan',
+    icon: <HiOutlineDocumentReport className="text-xs" />,
     items: [
-      { name: 'Role', path: '/admin/roles' },
-      { name: 'User', path: '/admin/users' },
+      { name: 'Laporan Penjualan', path: '/admin/laporan-penjualan' },
     ],
   },
   {
-    section: 'Admin - Keuangan',
+    section: 'Keuangan',
     icon: <HiOutlineCurrencyDollar className="text-xs" />,
     items: [
       { name: 'Modal', path: '/admin/modal' },
       { name: 'Keuangan', path: '/admin/keuangan' },
-    ],
-  },
-  {
-    section: 'Admin - Laporan',
-    icon: <HiOutlineDocumentReport className="text-xs" />,
-    items: [
-      { name: 'Laporan Penjualan', path: '/admin/laporan-penjualan' },
     ],
   },
 ];

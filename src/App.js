@@ -36,6 +36,8 @@ import AdminKeuangan from './pages/admin/AdminKeuangan';
 import AdminDistributor from './pages/admin/AdminDistributor';
 import AdminLaporanPenjualan from './pages/admin/AdminLaporanPenjualan';
 import AdminModal from './pages/admin/AdminModal';
+import AdminInventory from './pages/admin/AdminInventory';
+import SizeInventory from './pages/admin/InventorySize';
 
 
 function App() {
@@ -235,6 +237,20 @@ function App() {
             <LoginCheck>
               <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminModal />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/admin/inventory" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminInventory />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/admin/size-inventory" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <SizeInventory />
               </RoleGuard>
             </LoginCheck>
           } />
