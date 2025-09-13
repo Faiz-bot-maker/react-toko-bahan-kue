@@ -94,6 +94,7 @@ const adminMenus = [
     icon: <HiOutlineDocumentReport className="text-xs" />,
     items: [
       { name: 'Laporan Penjualan', path: '/admin/laporan-penjualan' },
+      { name: 'Laporan Pengeluaran', path: '/admin/out-report' },
     ],
   },
   {
