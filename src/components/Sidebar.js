@@ -45,8 +45,9 @@ const menus = [
     icon: <HiOutlineDocumentReport className="text-xs" />,
     items: [
       { name: 'Laporan Barang Terlaris', path: '/laporan-produk-terlaris' },
-      { name: 'Laporan Barang Keluar', path: '/barang-keluar' },
+      // { name: 'Laporan Barang Keluar', path: '/barang-keluar' },
       { name: 'Laporan Pergerakan Stok', path: '/own-pergerakan-stok' },
+      { name: 'Laporan Transaksi Keluar', path: '/own-transaksi-keluar' },
       { name: 'Laporan Piutang', path: '/laporan-piutang' },
       { name: 'Laporan Penjualan', path: '/laporan-penjualan' },
       { name: 'Laporan Pengeluaran', path: '/laporan-pengeluaran' },
@@ -96,13 +97,17 @@ const adminMenus = [
     icon: <HiOutlineDocumentReport className="text-xs" />,
     items: [
       { name: 'Laporan Penjualan', path: '/admin/laporan-penjualan' },
+      { name: 'Laporan Pergerakan Stok', path: '/admin/adm-pergerakan-stok' },
       { name: 'Laporan Pengeluaran', path: '/admin/out-report' },
+      { name: 'Laporan Piutang', path: '/admin/adm-piutang' },
+      { name: 'Laporan Transaksi Pengeluaran', path: '/admin/adm-transaksi-keluar' },
     ],
   },
   {
     section: 'Keuangan',
     icon: <HiOutlineCurrencyDollar className="text-xs" />,
     items: [
+      { name: 'Alur Kas', path: '/admin/adm-alur-kas' },
       { name: 'Modal', path: '/admin/modal' },
       { name: 'Keuangan', path: '/admin/keuangan' },
     ],

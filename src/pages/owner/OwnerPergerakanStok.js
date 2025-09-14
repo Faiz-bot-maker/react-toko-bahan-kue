@@ -134,7 +134,7 @@ const OwnerPergerakanStok = () => {
 
                     <button
                         onClick={fetchMovements}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                     >
                         Terapkan
                     </button>
@@ -144,7 +144,7 @@ const OwnerPergerakanStok = () => {
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
-                            <thead className="bg-gradient-to-r from-blue-700 to-blue-800 text-white">
+                            <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                                         ID

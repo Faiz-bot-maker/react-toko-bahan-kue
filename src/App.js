@@ -23,9 +23,10 @@ import SizeProduct from './pages/owner/OwnerSizeProduct';
 import LaporanPengeluaran from './pages/owner/OwnerLaporanPengeluaran';
 import Pengeluaran from './pages/owner/OwnerPengeluaran';
 import Modal from './pages/owner/OwnerModal';
-import BarangKeluar from './pages/owner/OwnerBarangKeluar';
+// import BarangKeluar from './pages/owner/OwnerBarangKeluar';
 import OwnerAlurKas from './pages/owner/OwnerAlurKas';
 import OwnerPergerakanStok from './pages/owner/OwnerPergerakanStok';
+import OwnerTransaksiKeluar from './pages/owner/OwnerTransaksiKeluar';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -41,6 +42,10 @@ import AdminModal from './pages/admin/AdminModal';
 import AdminInventory from './pages/admin/AdminInventory';
 import SizeInventory from './pages/admin/InventorySize';
 import AdminPengeluaran from './pages/admin/AdminLaporanPengeluaran';
+import AdminTransaksiKeluar from './pages/admin/AdminTransaksiKeluar';
+import AdminLaporanPiutang from './pages/admin/AdminLaporanPiutang';
+import AdminAlurKas from './pages/admin/AdminAlurKas';
+import AdminPergerakanStok from './pages/admin/AdminPergerakanStok';
 
 
 function App() {
@@ -164,13 +169,13 @@ function App() {
               </RoleGuard>
             </LoginCheck>
           } />
-          <Route path="/barang-keluar" element={
+          {/* <Route path="/barang-keluar" element={
             <LoginCheck>
               <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <BarangKeluar />
               </RoleGuard>
             </LoginCheck>
-          } />
+          } /> */}
           <Route path="/own-alur-kas" element={
             <LoginCheck>
               <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
@@ -182,6 +187,13 @@ function App() {
             <LoginCheck>
               <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <OwnerPergerakanStok />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/own-transaksi-keluar" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <OwnerTransaksiKeluar />
               </RoleGuard>
             </LoginCheck>
           } />
@@ -278,6 +290,35 @@ function App() {
               </RoleGuard>
             </LoginCheck>
           } />
+          <Route path="/admin/adm-transaksi-keluar" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminTransaksiKeluar />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/admin/adm-piutang" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminLaporanPiutang />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/admin/adm-alur-kas" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminAlurKas />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/admin/adm-pergerakan-stok" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
+                <AdminPergerakanStok />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+
 
           {/* Default redirect */}
           <Route path="/" element={<RoleBasedRedirect />} />

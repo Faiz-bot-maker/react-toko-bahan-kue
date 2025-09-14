@@ -1,66 +1,51 @@
-// src/pages/owner/OwnerAlurKas.js
+// src/pages/admin/AdminPergerakanStok.js
 import React, { useState, useEffect } from "react";
-import { HiOutlineCurrencyDollar } from "react-icons/hi";
+import { HiOutlineSwitchHorizontal } from "react-icons/hi";
 import axios from "axios";
 import Layout from "../../components/Layout";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const API_URL = `${process.env.REACT_APP_API_URL}/cash-bank-transactions`;
+const API_URL = `${process.env.REACT_APP_API_URL}/inventory-movement`;
 
 const getHeaders = () => ({
     Authorization: localStorage.getItem("authToken"),
     "ngrok-skip-browser-warning": "true",
 });
 
-const OwnerAlurKas = () => {
-    const [transactions, setTransactions] = useState([]);
+const AdminPergerakanStok = () => {
+    const [movements, setMovements] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // filter state
+    // filter tanggal
     const [dateRange, setDateRange] = useState([null, null]);
     const [startDate, endDate] = dateRange;
-    const [branchFilter, setBranchFilter] = useState("");
 
-    // daftar cabang
-    const [branches, setBranches] = useState([]);
+    // cabang admin dari localStorage
+    const adminBranchId = localStorage.getItem("branch_id");
 
     useEffect(() => {
-        fetchBranches();
-        fetchTransactions();
+        fetchMovements();
     }, []);
 
-    const fetchBranches = async () => {
-        try {
-            const res = await axios.get(
-                `${process.env.REACT_APP_API_URL}/branches`,
-                { headers: getHeaders() }
-            );
-            setBranches(res.data?.data || []);
-        } catch (err) {
-            console.error("Gagal memuat daftar cabang:", err);
-        }
-    };
-
-    const fetchTransactions = async () => {
+    const fetchMovements = async () => {
         try {
             setLoading(true);
-            let params = {};
-            if (startDate)
-                params.start_date = startDate.toISOString().split("T")[0];
+            let params = {
+                branch_id: adminBranchId, // Hanya cabang admin
+            };
+            if (startDate) params.start_date = startDate.toISOString().split("T")[0];
             if (endDate) params.end_date = endDate.toISOString().split("T")[0];
-            if (branchFilter) params.branch_id = branchFilter;
 
             const res = await axios.get(API_URL, {
                 headers: getHeaders(),
                 params,
             });
 
-            const data = res.data?.data || [];
-            setTransactions(data);
+            setMovements(res.data?.data || []);
         } catch (err) {
-            console.error("Failed to fetch transactions:", err);
-            setTransactions([]);
+            console.error("Failed to fetch inventory movements:", err);
+            setMovements([]);
         } finally {
             setLoading(false);
         }
@@ -72,6 +57,8 @@ const OwnerAlurKas = () => {
             year: "numeric",
             month: "long",
             day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
         });
     };
 
@@ -81,21 +68,20 @@ const OwnerAlurKas = () => {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
-                        <div className="p-3 bg-green-100 rounded-lg">
-                            <HiOutlineCurrencyDollar className="text-2xl text-green-600" />
+                        <div className="p-3 bg-blue-100 rounded-lg">
+                            <HiOutlineSwitchHorizontal className="text-2xl text-blue-600" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-800">Alur Kas</h1>
+                            <h1 className="text-2xl font-bold text-gray-800">Pergerakan Stok</h1>
                             <p className="text-sm text-gray-600">
-                                Daftar transaksi keluar-masuk kas & bank
+                                Catatan perubahan stok barang cabang Anda
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Filters */}
+                {/* Filter Tanggal */}
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
-                    {/* Filter tanggal */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Rentang Tanggal
@@ -112,28 +98,9 @@ const OwnerAlurKas = () => {
                         />
                     </div>
 
-                    {/* Filter cabang */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Cabang
-                        </label>
-                        <select
-                            value={branchFilter}
-                            onChange={(e) => setBranchFilter(e.target.value)}
-                            className="border rounded px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua Cabang</option>
-                            {branches.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                    {b.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
                     <button
-                        onClick={fetchTransactions}
-                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        onClick={fetchMovements}
+                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                     >
                         Terapkan
                     </button>
@@ -146,25 +113,25 @@ const OwnerAlurKas = () => {
                             <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
-                                        No
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
-                                        Tanggal
+                                        ID
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                                         Cabang
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
-                                        Tipe
+                                        Produk
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
-                                        Sumber
+                                        Ukuran
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
-                                        Deskripsi
+                                        Referensi
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
-                                        Jumlah
+                                        Perubahan
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                                        Tanggal
                                     </th>
                                 </tr>
                             </thead>
@@ -173,53 +140,46 @@ const OwnerAlurKas = () => {
                                     <tr>
                                         <td colSpan={7} className="px-6 py-12 text-center">
                                             <div className="flex items-center justify-center">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                                                 <span className="ml-3 text-gray-600 text-sm">
                                                     Memuat data...
                                                 </span>
                                             </div>
                                         </td>
                                     </tr>
-                                ) : transactions.length === 0 ? (
+                                ) : movements.length === 0 ? (
                                     <tr>
                                         <td colSpan={7} className="px-6 py-16 text-center">
                                             <div className="flex flex-col items-center">
-                                                <HiOutlineCurrencyDollar className="text-6xl text-gray-300 mb-4" />
+                                                <HiOutlineSwitchHorizontal className="text-6xl text-gray-300 mb-4" />
                                                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                                                     Data tidak ada
                                                 </h3>
                                                 <p className="text-gray-500 text-sm">
-                                                    Tidak ditemukan transaksi sesuai filter
+                                                    Tidak ditemukan pergerakan stok sesuai filter
                                                 </p>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : (
-                                    transactions.map((trx) => (
-                                        <tr key={trx.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 font-medium text-gray-900">
-                                                {trx.id}
-                                            </td>
+                                    movements.map((mv, index) => (
+                                        <tr key={mv.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 font-medium text-gray-900">{index + 1}</td>
+                                            <td className="px-6 py-4 text-gray-600">{mv.branch_name}</td>
+                                            <td className="px-6 py-4 text-gray-600">{mv.product_name}</td>
+                                            <td className="px-6 py-4 text-gray-600">{mv.size_label}</td>
                                             <td className="px-6 py-4 text-gray-600">
-                                                {formatDate(trx.transaction_date)}
-                                            </td>
-                                            <td className="px-6 py-4 text-gray-600">
-                                                {trx.branch_name}
+                                                {mv.reference_type} ({mv.reference_key})
                                             </td>
                                             <td
-                                                className={`px-6 py-4 font-semibold ${trx.type === "IN"
-                                                        ? "text-green-600"
-                                                        : "text-red-600"
-                                                    }`}
+                                                className={`px-6 py-4 font-semibold ${
+                                                    mv.change_qty > 0 ? "text-green-600" : "text-red-600"
+                                                }`}
                                             >
-                                                {trx.type === "IN" ? "Masuk" : "Keluar"}
+                                                {mv.change_qty > 0 ? `+${mv.change_qty}` : mv.change_qty}
                                             </td>
-                                            <td className="px-6 py-4 text-gray-600">{trx.source}</td>
                                             <td className="px-6 py-4 text-gray-600">
-                                                {trx.description}
-                                            </td>
-                                            <td className="px-6 py-4 text-gray-900 font-medium">
-                                                Rp {trx.amount.toLocaleString("id-ID")}
+                                                {formatDate(mv.created_at)}
                                             </td>
                                         </tr>
                                     ))
@@ -233,4 +193,4 @@ const OwnerAlurKas = () => {
     );
 };
 
-export default OwnerAlurKas;
+export default AdminPergerakanStok;
