@@ -24,6 +24,8 @@ import LaporanPengeluaran from './pages/owner/OwnerLaporanPengeluaran';
 import Pengeluaran from './pages/owner/OwnerPengeluaran';
 import Modal from './pages/owner/OwnerModal';
 import BarangKeluar from './pages/owner/OwnerBarangKeluar';
+import OwnerAlurKas from './pages/owner/OwnerAlurKas';
+import OwnerPergerakanStok from './pages/owner/OwnerPergerakanStok';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -166,6 +168,20 @@ function App() {
             <LoginCheck>
               <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <BarangKeluar />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/own-alur-kas" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <OwnerAlurKas />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/own-pergerakan-stok" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <OwnerPergerakanStok />
               </RoleGuard>
             </LoginCheck>
           } />

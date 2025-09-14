@@ -46,6 +46,7 @@ const menus = [
     items: [
       { name: 'Laporan Barang Terlaris', path: '/laporan-produk-terlaris' },
       { name: 'Laporan Barang Keluar', path: '/barang-keluar' },
+      { name: 'Laporan Pergerakan Stok', path: '/own-pergerakan-stok' },
       { name: 'Laporan Piutang', path: '/laporan-piutang' },
       { name: 'Laporan Penjualan', path: '/laporan-penjualan' },
       { name: 'Laporan Pengeluaran', path: '/laporan-pengeluaran' },
@@ -55,6 +56,7 @@ const menus = [
     section: 'Keuangan',
     icon: <HiOutlineCurrencyDollar className="text-xs" />,
     items: [
+      { name: 'Alur Kas', path: '/own-alur-kas' },
       { name: 'Modal', path: '/Modal' },
       { name: 'Keuangan', path: '/keuangan' },
       // { name: 'Pengeluaran', path: '/pengeluaran' },
