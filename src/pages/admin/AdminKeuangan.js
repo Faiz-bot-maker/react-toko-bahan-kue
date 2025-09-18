@@ -1,369 +1,467 @@
 import React, { useState, useEffect } from "react";
-import {
-    HiOutlineCurrencyDollar,
-    HiOutlinePlus,
-    HiOutlinePencil,
-    HiOutlineTrash,
-} from "react-icons/hi";
-import axios from "axios";
 import Layout from "../../components/Layout";
+import axios from "axios";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
-const API_URL = `${process.env.REACT_APP_API_URL}/finance`;
-
-const getHeaders = () => ({
-    Authorization: localStorage.getItem("authToken"),
+const getHeaders = () => ( {
+    Authorization: localStorage.getItem( "authToken" ),
     "ngrok-skip-browser-warning": "true",
-});
+} );
 
-const formatRupiah = (angka) => "Rp " + angka.toLocaleString("id-ID");
+// Ambil branch id admin dari localStorage
+const branchId = localStorage.getItem( "branch_id" );
+
+const API_URL_BALANCE = `${process.env.REACT_APP_API_URL}/finance-report/balance-sheet?branch_id=${branchId}`;
+const API_URL_CASHFLOW = `${process.env.REACT_APP_API_URL}/finance-report/cashflow?branch_id=${branchId}`;
+const API_URL_SUMMARY = `${process.env.REACT_APP_API_URL}/finance-report/summary?branch_id=${branchId}`;
 
 const AdminKeuangan = () => {
-    const [financialData, setFinancialData] = useState({
-        totalRevenue: 0,
-        totalExpenses: 0,
-        netProfit: 0,
-    });
-    const [transactions, setTransactions] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [ balanceSheet, setBalanceSheet ] = useState( null );
+    const [ cashFlow, setCashFlow ] = useState( null );
+    const [ summary, setSummary ] = useState( null );
 
-    // Modal untuk tambah/edit transaksi
-    const [showModal, setShowModal] = useState(false);
-    const [editingTransaction, setEditingTransaction] = useState(null);
-    const [formData, setFormData] = useState({
-        type: "income",
-        amount: "",
-        description: "",
-        date: "",
-        category: "",
-    });
-
-    useEffect(() => {
-        fetchFinancialData();
-        fetchTransactions();
-    }, []);
-
-    const fetchFinancialData = async () => {
-        try {
-            const res = await axios.get(`${API_URL}/summary`, {
-                headers: getHeaders(),
-            });
-            setFinancialData(res.data?.data || res.data);
-        } catch (err) {
-            console.error("Failed to fetch financial data:", err);
-        }
-    };
-
-    const fetchTransactions = async () => {
-        try {
-            setLoading(true);
-            const res = await axios.get(`${API_URL}/transactions`, {
-                headers: getHeaders(),
-            });
-            const data = res.data?.data || res.data;
-            if (Array.isArray(data)) setTransactions(data);
-        } catch (err) {
-            console.error("Failed to fetch transactions:", err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            if (editingTransaction) {
-                await axios.put(
-                    `${API_URL}/transactions/${editingTransaction.id}`,
-                    formData,
-                    { headers: getHeaders() }
-                );
-            } else {
-                await axios.post(`${API_URL}/transactions`, formData, {
-                    headers: getHeaders(),
-                });
-            }
-            setShowModal(false);
-            setEditingTransaction(null);
-            setFormData({
-                type: "income",
-                amount: "",
-                description: "",
-                date: "",
-                category: "",
-            });
-            fetchFinancialData();
-            fetchTransactions();
-        } catch (err) {
-            console.error("Failed to save transaction:", err);
-        }
-    };
-
-    const handleEdit = (transaction) => {
-        setEditingTransaction(transaction);
-        setFormData({
-            type: transaction.type,
-            amount: transaction.amount,
-            description: transaction.description,
-            date: transaction.date,
-            category: transaction.category,
-        });
-        setShowModal(true);
-    };
-
-    const handleDelete = async (id) => {
-        if (window.confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
+    // Fetch Balance Sheet
+    useEffect( () => {
+        const fetchBalanceSheet = async () => {
             try {
-                await axios.delete(`${API_URL}/transactions/${id}`, {
-                    headers: getHeaders(),
-                });
-                fetchFinancialData();
-                fetchTransactions();
-            } catch (err) {
-                console.error("Failed to delete transaction:", err);
+                const res = await axios.get( API_URL_BALANCE, { headers: getHeaders() } );
+                setBalanceSheet( res.data.data );
+            } catch ( err ) {
+                console.error( "Error fetch balance sheet:", err );
             }
-        }
+        };
+        fetchBalanceSheet();
+    }, [] );
+
+    // Fetch Cash Flow
+    useEffect( () => {
+        const fetchCashFlow = async () => {
+            try {
+                const res = await axios.get( API_URL_CASHFLOW, { headers: getHeaders() } );
+                setCashFlow( res.data.data );
+            } catch ( err ) {
+                console.error( "Error fetch cash flow:", err );
+            }
+        };
+        fetchCashFlow();
+    }, [] );
+
+    // Fetch Summary
+    useEffect( () => {
+        const fetchSummary = async () => {
+            try {
+                const res = await axios.get( API_URL_SUMMARY, { headers: getHeaders() } );
+                setSummary( res.data.data );
+            } catch ( err ) {
+                console.error( "Error fetch summary:", err );
+            }
+        };
+        fetchSummary();
+    }, [] );
+
+    // Export Excel
+    const exportAllToExcel = () => {
+        if ( !balanceSheet || !cashFlow || !summary ) return;
+
+        const wb = XLSX.utils.book_new();
+
+        // Neraca
+        const balanceData = [
+            [ "Aktiva", "Nominal", "Kewajiban & Ekuitas", "Nominal" ],
+            [
+                "Kas & Bank",
+                balanceSheet.assets.cash_and_bank,
+                "Hutang Usaha",
+                balanceSheet.liabilities.accounts_payable,
+            ],
+            [
+                "Piutang Usaha",
+                balanceSheet.assets.accounts_receivable,
+                "Total Kewajiban Lancar",
+                balanceSheet.liabilities.total_current_liabilities,
+            ],
+            [
+                "Persediaan",
+                balanceSheet.assets.inventory,
+                "Modal Pemilik",
+                balanceSheet.equity.owner_capital,
+            ],
+            [ "", "", "Laba Ditahan", balanceSheet.equity.retained_earnings ],
+            [
+                "Total Aktiva Lancar",
+                balanceSheet.assets.total_current_assets,
+                "Total Ekuitas",
+                balanceSheet.equity.total_equity,
+            ],
+            [
+                "Total Aktiva",
+                balanceSheet.balance.total_assets,
+                "Kewajiban + Ekuitas",
+                balanceSheet.balance.liabilities_plus_equity,
+            ],
+        ];
+        const wsBalance = XLSX.utils.aoa_to_sheet( balanceData );
+        XLSX.utils.book_append_sheet( wb, wsBalance, "Neraca" );
+
+        // Cash Flow
+        const cashData = [
+            [ "Item", "Nominal" ],
+            [ "Penerimaan Kas", cashFlow.cash_in ],
+            [ "Pengeluaran Kas", cashFlow.cash_out ],
+            [ "Saldo Akhir", cashFlow.balance ],
+        ];
+        const wsCash = XLSX.utils.aoa_to_sheet( cashData );
+        XLSX.utils.book_append_sheet( wb, wsCash, "Arus Kas" );
+
+        // Summary
+        const summaryData = [
+            [ "Item", "Nominal" ],
+            [ "Total Penjualan", summary.total_sales ],
+            [ "Total HPP", summary.total_hpp ],
+            [ "Total Biaya", summary.total_expenses ],
+            [ "Laba Bersih", summary.net_profit ],
+        ];
+        const wsSummary = XLSX.utils.aoa_to_sheet( summaryData );
+        XLSX.utils.book_append_sheet( wb, wsSummary, "Ringkasan" );
+
+        XLSX.writeFile( wb, `LaporanKeuanganCabang_${branchId}.xlsx` );
+    };
+
+    // Export PDF
+    const exportAllToPDF = () => {
+        if ( !balanceSheet || !cashFlow || !summary ) return;
+
+        const doc = new jsPDF();
+
+        // ====== Neraca ======
+        doc.setFontSize( 16 );
+        doc.text( `LAPORAN NERACA - Cabang ${branchId}`, 105, 15, { align: "center" } );
+        doc.setFontSize( 10 );
+        doc.text( `Per ${balanceSheet.as_of}`, 105, 22, { align: "center" } );
+
+        autoTable( doc, {
+            startY: 30,
+            head: [ [ "Aktiva", "Nominal", "Kewajiban & Ekuitas", "Nominal" ] ],
+            body: [
+                [
+                    "Kas & Bank",
+                    balanceSheet.assets.cash_and_bank.toLocaleString( "id-ID" ),
+                    "Hutang Usaha",
+                    balanceSheet.liabilities.accounts_payable.toLocaleString( "id-ID" ),
+                ],
+                [
+                    "Piutang Usaha",
+                    balanceSheet.assets.accounts_receivable.toLocaleString( "id-ID" ),
+                    "Total Kewajiban Lancar",
+                    balanceSheet.liabilities.total_current_liabilities.toLocaleString( "id-ID" ),
+                ],
+                [
+                    "Persediaan",
+                    balanceSheet.assets.inventory.toLocaleString( "id-ID" ),
+                    "Modal Pemilik",
+                    balanceSheet.equity.owner_capital.toLocaleString( "id-ID" ),
+                ],
+                [ "", "", "Laba Ditahan", balanceSheet.equity.retained_earnings.toLocaleString( "id-ID" ) ],
+                [
+                    "Total Aktiva Lancar",
+                    balanceSheet.assets.total_current_assets.toLocaleString( "id-ID" ),
+                    "Total Ekuitas",
+                    balanceSheet.equity.total_equity.toLocaleString( "id-ID" ),
+                ],
+                [
+                    "Total Aktiva",
+                    balanceSheet.balance.total_assets.toLocaleString( "id-ID" ),
+                    "Kewajiban + Ekuitas",
+                    balanceSheet.balance.liabilities_plus_equity.toLocaleString( "id-ID" ),
+                ],
+            ],
+            styles: { halign: "right" },
+            columnStyles: { 0: { halign: "left" }, 2: { halign: "left" } },
+            headStyles: { fillColor: [ 55, 71, 79 ], textColor: [ 255, 255, 255 ], halign: "center" },
+            theme: "grid",
+        } );
+
+        // ====== Arus Kas ======
+        doc.addPage();
+        doc.setFontSize( 16 );
+        doc.text( `LAPORAN ARUS KAS - Cabang ${branchId}`, 105, 15, { align: "center" } );
+        doc.setFontSize( 10 );
+        doc.text( `Periode: ${cashFlow.period}`, 105, 22, { align: "center" } );
+
+        autoTable( doc, {
+            startY: 30,
+            head: [ [ "Item", "Nominal" ] ],
+            body: [
+                [ "Penerimaan Kas", cashFlow.cash_in.toLocaleString( "id-ID" ) ],
+                [ "Pengeluaran Kas", cashFlow.cash_out.toLocaleString( "id-ID" ) ],
+                [ "Saldo Akhir", cashFlow.balance.toLocaleString( "id-ID" ) ],
+            ],
+            styles: { halign: "right" },
+            columnStyles: { 0: { halign: "left" } },
+            headStyles: { fillColor: [ 55, 71, 79 ], textColor: [ 255, 255, 255 ] },
+            theme: "grid",
+        } );
+
+        // ====== Ringkasan ======
+        doc.addPage();
+        doc.setFontSize( 16 );
+        doc.text( `LAPORAN LABA RUGI - Cabang ${branchId}`, 105, 15, { align: "center" } );
+        doc.setFontSize( 10 );
+        doc.text( `Periode: ${summary.period}`, 105, 22, { align: "center" } );
+
+        autoTable( doc, {
+            startY: 30,
+            head: [ [ "Item", "Nominal" ] ],
+            body: [
+                [ "Total Penjualan", summary.total_sales.toLocaleString( "id-ID" ) ],
+                [ "Total HPP", summary.total_hpp.toLocaleString( "id-ID" ) ],
+                [ "Total Biaya", summary.total_expenses.toLocaleString( "id-ID" ) ],
+                [ "Laba Bersih", summary.net_profit.toLocaleString( "id-ID" ) ],
+            ],
+            styles: { halign: "right" },
+            columnStyles: { 0: { halign: "left" } },
+            headStyles: { fillColor: [ 55, 71, 79 ], textColor: [ 255, 255, 255 ] },
+            theme: "grid",
+        } );
+
+        doc.save( `LaporanKeuanganCabang_${branchId}.pdf` );
     };
 
     return (
         <Layout>
-            <div className="w-full max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 bg-green-100 rounded-lg">
-                            <HiOutlineCurrencyDollar className="text-2xl text-green-600" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-800">
-                                Laporan Keuangan
-                            </h1>
-                            <p className="text-sm text-gray-600">
-                                Pantau pendapatan, pengeluaran, dan laba bersih
-                            </p>
-                        </div>
-                    </div>
+            <div className="p-6 space-y-10">
+                <h1 className="text-2xl font-bold text-center mb-8">
+                    📊 Laporan Keuangan - Cabang { branchId }
+                </h1>
+
+                {/* Tombol Export */ }
+                <div className="flex justify-center gap-4 mb-8">
                     <button
-                        onClick={() => setShowModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        onClick={ exportAllToExcel }
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
                     >
-                        <HiOutlinePlus className="text-sm" />
-                        Tambah Transaksi
+                        Export ke Excel
+                    </button>
+                    <button
+                        onClick={ exportAllToPDF }
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow"
+                    >
+                        Export ke PDF
                     </button>
                 </div>
 
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-gradient-to-br from-green-400/30 to-green-100 rounded-xl p-6 border border-gray-100">
-                        <p className="text-sm font-medium text-gray-600 mb-1">
-                            Total Pendapatan
-                        </p>
-                        <p className="text-2xl font-bold text-gray-800">
-                            {formatRupiah(financialData.totalRevenue)}
-                        </p>
+                {/* Card Summary */ }
+                { summary && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                        <div className="bg-white border rounded-xl shadow p-6">
+                            <h3 className="text-sm font-semibold text-gray-600">Total Penjualan</h3>
+                            <p className="text-2xl font-bold text-green-600 mt-2">
+                                Rp { summary.total_sales.toLocaleString( "id-ID" ) }
+                            </p>
+                        </div>
+                        <div className="bg-white border rounded-xl shadow p-6">
+                            <h3 className="text-sm font-semibold text-gray-600">Total Biaya</h3>
+                            <p className="text-2xl font-bold text-red-600 mt-2">
+                                Rp { summary.total_expenses.toLocaleString( "id-ID" ) }
+                            </p>
+                        </div>
+                        <div className="bg-white border rounded-xl shadow p-6">
+                            <h3 className="text-sm font-semibold text-gray-600">Laba Bersih</h3>
+                            <p className="text-2xl font-bold text-blue-600 mt-2">
+                                Rp { summary.net_profit.toLocaleString( "id-ID" ) }
+                            </p>
+                        </div>
                     </div>
-                    <div className="bg-gradient-to-br from-red-400/30 to-red-100 rounded-xl p-6 border border-gray-100">
-                        <p className="text-sm font-medium text-gray-600 mb-1">
-                            Total Pengeluaran
-                        </p>
-                        <p className="text-2xl font-bold text-gray-800">
-                            {formatRupiah(financialData.totalExpenses)}
-                        </p>
-                    </div>
-                    <div className="bg-gradient-to-br from-blue-400/30 to-blue-100 rounded-xl p-6 border border-gray-100">
-                        <p className="text-sm font-medium text-gray-600 mb-1">
-                            Laba Bersih
-                        </p>
-                        <p className="text-2xl font-bold text-gray-800">
-                            {formatRupiah(financialData.netProfit)}
-                        </p>
-                    </div>
-                </div>
+                ) }
 
-                {/* Transactions Table */}
-                <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-800">
-                            Transaksi Keuangan
-                        </h3>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                                        Tanggal
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                                        Deskripsi
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                                        Kategori
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                                        Jenis
-                                    </th>
-                                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider">
-                                        Jumlah
-                                    </th>
-                                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider">
-                                        Aksi
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {loading ? (
+                {/* Neraca */ }
+                <section>
+                    <h2 className="text-xl font-bold mb-2 bg-gray-700 text-white px-3 py-2 rounded">
+                        Laporan Neraca
+                    </h2>
+                    { balanceSheet ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full border border-gray-300 text-sm">
+                                <thead className="bg-gray-700 text-white">
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center">
-                                            Loading data...
+                                        <th className="border px-4 py-2 text-left w-1/4">Aktiva</th>
+                                        <th className="border px-4 py-2 text-right w-1/4">Nominal</th>
+                                        <th className="border px-4 py-2 text-left w-1/4">
+                                            Kewajiban & Ekuitas
+                                        </th>
+                                        <th className="border px-4 py-2 text-right w-1/4">Nominal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td className="border px-4 py-2">Kas & Bank</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { balanceSheet.assets.cash_and_bank.toLocaleString( "id-ID" ) }
+                                        </td>
+                                        <td className="border px-4 py-2">Hutang Usaha</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { balanceSheet.liabilities.accounts_payable.toLocaleString(
+                                                "id-ID"
+                                            ) }
                                         </td>
                                     </tr>
-                                ) : transactions.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center">
-                                            Tidak ada transaksi
+                                        <td className="border px-4 py-2">Piutang Usaha</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { balanceSheet.assets.accounts_receivable.toLocaleString(
+                                                "id-ID"
+                                            ) }
+                                        </td>
+                                        <td className="border px-4 py-2">Total Kewajiban Lancar</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { balanceSheet.liabilities.total_current_liabilities.toLocaleString(
+                                                "id-ID"
+                                            ) }
                                         </td>
                                     </tr>
-                                ) : (
-                                    transactions.map((trx) => (
-                                        <tr key={trx.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4">
-                                                {new Date(trx.date).toLocaleDateString("id-ID")}
-                                            </td>
-                                            <td className="px-6 py-4">{trx.description}</td>
-                                            <td className="px-6 py-4">{trx.category}</td>
-                                            <td className="px-6 py-4">
-                                                <span
-                                                    className={`px-2 py-1 text-xs rounded-full ${trx.type === "income"
-                                                            ? "bg-green-100 text-green-800"
-                                                            : "bg-red-100 text-red-800"
-                                                        }`}
-                                                >
-                                                    {trx.type === "income"
-                                                        ? "Pendapatan"
-                                                        : "Pengeluaran"}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                {trx.type === "income" ? "+" : "-"}
-                                                {formatRupiah(trx.amount)}
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex gap-2 justify-end">
-                                                    <button
-                                                        onClick={() => handleEdit(trx)}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
-                                                    >
-                                                        <HiOutlinePencil />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(trx.id)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                                                    >
-                                                        <HiOutlineTrash />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                    <tr>
+                                        <td className="border px-4 py-2">Persediaan</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { balanceSheet.assets.inventory.toLocaleString( "id-ID" ) }
+                                        </td>
+                                        <td className="border px-4 py-2">Modal Pemilik</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { balanceSheet.equity.owner_capital.toLocaleString( "id-ID" ) }
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border px-4 py-2"></td>
+                                        <td className="border px-4 py-2"></td>
+                                        <td className="border px-4 py-2">Laba Ditahan</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { balanceSheet.equity.retained_earnings.toLocaleString(
+                                                "id-ID"
+                                            ) }
+                                        </td>
+                                    </tr>
+                                    <tr className="bg-gray-50 font-bold">
+                                        <td className="border px-4 py-2">Total Aktiva Lancar</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { balanceSheet.assets.total_current_assets.toLocaleString(
+                                                "id-ID"
+                                            ) }
+                                        </td>
+                                        <td className="border px-4 py-2">Total Ekuitas</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { balanceSheet.equity.total_equity.toLocaleString( "id-ID" ) }
+                                        </td>
+                                    </tr>
+                                    <tr className="bg-gray-200 font-bold">
+                                        <td className="border px-4 py-2">Total Aktiva</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { balanceSheet.balance.total_assets.toLocaleString( "id-ID" ) }
+                                        </td>
+                                        <td className="border px-4 py-2">Kewajiban + Ekuitas</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { balanceSheet.balance.liabilities_plus_equity.toLocaleString(
+                                                "id-ID"
+                                            ) }
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <p>Sedang memuat Laporan Neraca...</p>
+                    ) }
+                </section>
+
+                {/* Arus Kas */ }
+                <section>
+                    <h2 className="text-xl font-bold mb-2 bg-gray-700 text-white px-3 py-2 rounded">
+                        Laporan Arus Kas
+                    </h2>
+                    { cashFlow ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full border border-gray-300 text-sm">
+                                <thead className="bg-gray-700 text-white">
+                                    <tr>
+                                        <th className="border px-4 py-2 text-left w-1/2">Item</th>
+                                        <th className="border px-4 py-2 text-right w-1/2">Nominal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td className="border px-4 py-2">Penerimaan Kas</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { cashFlow.cash_in.toLocaleString( "id-ID" ) }
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border px-4 py-2">Pengeluaran Kas</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { cashFlow.cash_out.toLocaleString( "id-ID" ) }
+                                        </td>
+                                    </tr>
+                                    <tr className="bg-gray-50 font-bold">
+                                        <td className="border px-4 py-2">Saldo Akhir</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { cashFlow.balance.toLocaleString( "id-ID" ) }
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <p>Sedang memuat Laporan Arus Kas...</p>
+                    ) }
+                </section>
+
+                {/* Summary */ }
+                <section>
+                    <h2 className="text-xl font-bold mb-2 bg-gray-700 text-white px-3 py-2 rounded">
+                        Laporan Uang Cabang
+                    </h2>
+                    { summary ? (
+                        <div className="overflow-x-auto">
+                            {/* Ringkasan Total */ }
+                            <table className="w-full border border-gray-300 text-sm mb-6">
+                                <thead className="bg-gray-700 text-white">
+                                    <tr>
+                                        <th className="border px-4 py-2 text-left">Item</th>
+                                        <th className="border px-4 py-2 text-right">Nominal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td className="border px-4 py-2">Total Penjualan</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { summary.total_sales.toLocaleString( "id-ID" ) }
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border px-4 py-2">Total HPP</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { summary.total_hpp.toLocaleString( "id-ID" ) }
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border px-4 py-2">Total Biaya</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { summary.total_expenses.toLocaleString( "id-ID" ) }
+                                        </td>
+                                    </tr>
+                                    <tr className="bg-gray-50 font-bold">
+                                        <td className="border px-4 py-2">Laba Bersih</td>
+                                        <td className="border px-4 py-2 text-right">
+                                            { summary.net_profit.toLocaleString( "id-ID" ) }
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <p>Sedang memuat Laporan Uang Cabang...</p>
+                    ) }
+                </section>
             </div>
-
-            {/* Modal Tambah/Edit */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                        <h2 className="text-xl font-bold mb-4">
-                            {editingTransaction ? "Edit Transaksi" : "Tambah Transaksi"}
-                        </h2>
-                        <form onSubmit={handleSubmit}>
-                            <div className="mb-4">
-                                <label className="block mb-2 text-sm">Jenis</label>
-                                <select
-                                    value={formData.type}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, type: e.target.value })
-                                    }
-                                    className="w-full border rounded-lg px-3 py-2"
-                                    required
-                                >
-                                    <option value="income">Pendapatan</option>
-                                    <option value="expense">Pengeluaran</option>
-                                </select>
-                            </div>
-                            <div className="mb-4">
-                                <label className="block mb-2 text-sm">Jumlah</label>
-                                <input
-                                    type="number"
-                                    value={formData.amount}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, amount: e.target.value })
-                                    }
-                                    className="w-full border rounded-lg px-3 py-2"
-                                    required
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block mb-2 text-sm">Deskripsi</label>
-                                <input
-                                    type="text"
-                                    value={formData.description}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, description: e.target.value })
-                                    }
-                                    className="w-full border rounded-lg px-3 py-2"
-                                    required
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block mb-2 text-sm">Kategori</label>
-                                <input
-                                    type="text"
-                                    value={formData.category}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, category: e.target.value })
-                                    }
-                                    className="w-full border rounded-lg px-3 py-2"
-                                    required
-                                />
-                            </div>
-                            <div className="mb-6">
-                                <label className="block mb-2 text-sm">Tanggal</label>
-                                <input
-                                    type="date"
-                                    value={formData.date}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, date: e.target.value })
-                                    }
-                                    className="w-full border rounded-lg px-3 py-2"
-                                    required
-                                />
-                            </div>
-                            <div className="flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowModal(false);
-                                        setEditingTransaction(null);
-                                    }}
-                                    className="flex-1 px-4 py-2 border rounded-lg"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg"
-                                >
-                                    {editingTransaction ? "Update" : "Simpan"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </Layout>
     );
 };

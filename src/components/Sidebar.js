@@ -22,6 +22,7 @@ const menus = [
     items: [
       { name: 'Produk', path: '/products' },
       { name: 'Kategori', path: '/categories' },
+      { name: 'Inventory', path: '/own-inventory' },
     ],
   },
   {
@@ -30,14 +31,6 @@ const menus = [
     items: [
       { name: 'Cabang', path: '/cabang' },
       { name: 'Distributor', path: '/distributor' },
-    ],
-  },
-  {
-    section: 'Akun & Akses',
-    icon: <HiOutlineIdentification className="text-xs" />,
-    items: [
-      { name: 'Role', path: '/role' },
-      { name: 'User', path: '/users' },
     ],
   },
   {
@@ -61,6 +54,14 @@ const menus = [
       { name: 'Modal', path: '/Modal' },
       { name: 'Keuangan', path: '/keuangan' },
       // { name: 'Pengeluaran', path: '/pengeluaran' },
+    ],
+  },
+  {
+    section: 'Akun & Akses',
+    icon: <HiOutlineIdentification className="text-xs" />,
+    items: [
+      { name: 'Role', path: '/role' },
+      { name: 'User', path: '/users' },
     ],
   },
 ];
@@ -91,7 +92,7 @@ const adminMenus = [
   //     { name: 'User', path: '/admin/users' },
   //   ],
   // },
-  
+
   {
     section: 'Laporan',
     icon: <HiOutlineDocumentReport className="text-xs" />,
