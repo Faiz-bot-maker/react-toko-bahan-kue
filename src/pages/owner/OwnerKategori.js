@@ -16,7 +16,8 @@ const OwnerKategori = () => {
     // 🔍 state tambahan untuk search & pagination
     const [ search, setSearch ] = useState( "" );
     const [ currentPage, setCurrentPage ] = useState( 1 );
-    const itemsPerPage = 5;
+    const [ totalPages, setTotalPages ] = useState( 1 );
+    const [ totalItems, setTotalItems ] = useState( 0 );
 
     useEffect( () => {
         fetchCategories();
@@ -33,11 +34,11 @@ const OwnerKategori = () => {
             } );
 
             const data = res.data?.data || res.data;
-            if ( Array.isArray( data ) ) {
-                setCategories( data );
-            } else {
-                console.error( "Data kategori tidak valid:", res.data );
-            }
+            const paging = res.data?.paging || {};
+            setCategories( Array.isArray( data ) ? data : [] );
+            setCurrentPage( paging.page || 1 );
+            setTotalPages( paging.total_page || 1 );
+            setTotalItems( paging.total_item || 0 );
         } catch ( err ) {
             console.error( "Gagal fetch kategori:", err );
         } finally {
@@ -120,15 +121,73 @@ const OwnerKategori = () => {
         }
     };
 
-    // 🔍 Filter kategori sesuai pencarian
-    const filteredCategories = categories.filter( c =>
-        c.name.toLowerCase().includes( search.toLowerCase() )
-    );
+    const Pagination = ( { page, setPage, totalPages, total, perPage } ) => {
+        const startIndex = ( page - 1 ) * perPage;
+        const endIndex = Math.min( startIndex + perPage, total );
+
+        return (
+            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+                <div className="text-xs text-gray-500">
+                    Menampilkan { total === 0 ? 0 : startIndex + 1 }-{ endIndex } dari total { total } produk
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={ () => setPage( 1 ) }
+                        disabled={ page === 1 }
+                        className={ `px-2.5 py-1.5 rounded border ${page === 1
+                            ? 'text-gray-400 border-gray-200'
+                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }` }
+                    >
+                        «
+                    </button>
+                    <button
+                        onClick={ () => setPage( ( p ) => Math.max( 1, p - 1 ) ) }
+                        disabled={ page === 1 }
+                        className={ `px-3 py-1.5 rounded border ${page === 1
+                            ? 'text-gray-400 border-gray-200'
+                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }` }
+                    >
+                        Prev
+                    </button>
+                    <span className="text-sm text-gray-700">
+                        { page } / { totalPages }
+                    </span>
+                    <button
+                        onClick={ () => setPage( ( p ) => Math.min( totalPages, p + 1 ) ) }
+                        disabled={ page === totalPages }
+                        className={ `px-3 py-1.5 rounded border ${page === totalPages
+                            ? 'text-gray-400 border-gray-200'
+                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }` }
+                    >
+                        Next
+                    </button>
+                    <button
+                        onClick={ () => setPage( totalPages ) }
+                        disabled={ page === totalPages }
+                        className={ `px-2.5 py-1.5 rounded border ${page === totalPages
+                            ? 'text-gray-400 border-gray-200'
+                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }` }
+                    >
+                        »
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+    // // 🔍 Filter kategori sesuai pencarian
+    // const filteredCategories = categories.filter( c =>
+    //     c.name.toLowerCase().includes( search.toLowerCase() )
+    // );
 
     // 📑 Pagination logic
-    const totalPages = Math.ceil( filteredCategories.length / itemsPerPage );
-    const startIndex = ( currentPage - 1 ) * itemsPerPage;
-    const currentData = filteredCategories.slice( startIndex, startIndex + itemsPerPage );
+    // const totalPages = Math.ceil( filteredCategories.length / itemsPerPage );
+    // const startIndex = ( currentPage - 1 ) * itemsPerPage;
+    // const currentData = filteredCategories.slice( startIndex, startIndex + itemsPerPage );
 
     return (
         <Layout>
@@ -190,7 +249,7 @@ const OwnerKategori = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                ) : currentData.length === 0 ? (
+                                ) : categories.length === 0 ? (
                                     <tr>
                                         <td colSpan={ 2 } className="px-6 py-16 text-center">
                                             <div className="flex flex-col items-center">
@@ -201,7 +260,7 @@ const OwnerKategori = () => {
                                         </td>
                                     </tr>
                                 ) : (
-                                    currentData.map( ( b, idx ) => (
+                                    categories.map( ( b, idx ) => (
                                         <tr key={ b.id || idx } className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="font-medium text-gray-900 text-sm">{ b.name }</div>
@@ -230,32 +289,21 @@ const OwnerKategori = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* 📑 Pagination */ }
+                    { totalPages > 1 && (
+                        <Pagination
+                            page={ currentPage }
+                            setPage={ setCurrentPage }
+                            totalPages={ totalPages }
+                            total={ totalItems }
+                            perPage={ categories.length }
+                        />
+                    ) }
+
                 </div>
 
-                {/* 📑 Pagination */ }
-                { totalPages > 1 && (
-                    <div className="flex justify-between items-center mt-4">
-                        <p className="text-sm text-gray-600">
-                            Halaman { currentPage } dari { totalPages }
-                        </p>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={ () => setCurrentPage( ( prev ) => Math.max( prev - 1, 1 ) ) }
-                                disabled={ currentPage === 1 }
-                                className="px-3 py-1 rounded-md border text-sm disabled:opacity-50"
-                            >
-                                Prev
-                            </button>
-                            <button
-                                onClick={ () => setCurrentPage( ( prev ) => Math.min( prev + 1, totalPages ) ) }
-                                disabled={ currentPage === totalPages }
-                                className="px-3 py-1 rounded-md border text-sm disabled:opacity-50"
-                            >
-                                Next
-                            </button>
-                        </div>
-                    </div>
-                ) }
+
 
                 {/* Modal */ }
                 { modal.open && (
