@@ -178,7 +178,7 @@ const OwnerLaporanPenjualan = () => {
           </select>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Rentang Tanggal</label>
+            {/* <label className="block text-sm font-medium text-gray-700 mb-1">Rentang Tanggal</label> */ }
             <div className="flex gap-2">
               <DatePicker
                 selectsRange={ true }
