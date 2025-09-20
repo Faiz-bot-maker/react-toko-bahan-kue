@@ -3,6 +3,8 @@ import { HiOutlineTrendingUp, HiOutlineCurrencyDollar, HiOutlineShoppingBag } fr
 import { MdAnalytics } from 'react-icons/md';
 import axios from 'axios';
 import Layout from '../../components/Layout';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 const getHeaders = () => ( {
   'Authorization': localStorage.getItem( 'authToken' ),
@@ -22,11 +24,12 @@ const OwnerLaporanPenjualan = () => {
   const [ branchFilter, setBranchFilter ] = useState( null );
   const [ branchOptions, setBranchOptions ] = useState( [] );
 
-  // Filter tanggal
-  const [ dateRange, setDateRange ] = useState( { start: '', end: '' } );
+  // Filter tanggal (pakai array dari DatePicker)
+  const [ dateRange, setDateRange ] = useState( [ null, null ] );
   const [ appliedDateRange, setAppliedDateRange ] = useState( { start: '', end: '' } );
+  const [ startDate, endDate ] = dateRange;
 
-  const today = new Date().toISOString().split( 'T' )[ 0 ]; // yyyy-mm-dd
+  const today = new Date();
 
   // Ambil list cabang
   useEffect( () => {
@@ -101,8 +104,11 @@ const OwnerLaporanPenjualan = () => {
 
   // Apply filter tanggal
   const applyDateFilter = () => {
-    if ( !dateRange.start ) return;
-    setAppliedDateRange( { start: dateRange.start, end: dateRange.end || dateRange.start } );
+    if ( !startDate ) return;
+    setAppliedDateRange( {
+      start: startDate.toISOString().split( 'T' )[ 0 ],
+      end: ( endDate || startDate ).toISOString().split( 'T' )[ 0 ],
+    } );
     setCurrentPage( 1 );
   };
 
@@ -171,28 +177,27 @@ const OwnerLaporanPenjualan = () => {
             ) ) }
           </select>
 
-          <div className="flex gap-2">
-            <input
-              type="date"
-              max={ today }
-              value={ dateRange.start }
-              onChange={ e => setDateRange( { ...dateRange, start: e.target.value, end: e.target.value > dateRange.end ? e.target.value : dateRange.end } ) }
-              className="px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-blue-300 focus:border-blue-500"
-            />
-            <input
-              type="date"
-              min={ dateRange.start || undefined }
-              max={ today }
-              value={ dateRange.end }
-              onChange={ e => setDateRange( { ...dateRange, end: e.target.value } ) }
-              className="px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-blue-300 focus:border-blue-500"
-            />
-            <button
-              onClick={ applyDateFilter }
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
-            >
-              Terapkan
-            </button>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Rentang Tanggal</label>
+            <div className="flex gap-2">
+              <DatePicker
+                selectsRange={ true }
+                startDate={ startDate }
+                endDate={ endDate }
+                onChange={ ( update ) => setDateRange( update ) }
+                isClearable={ true }
+                maxDate={ today }
+                dateFormat="dd/MM/yyyy"
+                className="border rounded px-3 py-2 text-sm w-60"
+                placeholderText="Pilih rentang tanggal"
+              />
+              <button
+                onClick={ applyDateFilter }
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
+              >
+                Terapkan
+              </button>
+            </div>
           </div>
         </div>
 
