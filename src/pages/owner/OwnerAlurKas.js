@@ -8,27 +8,34 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const API_URL = `${process.env.REACT_APP_API_URL}/cash-bank-transactions`;
 
-const getHeaders = () => ({
-    Authorization: localStorage.getItem("authToken"),
+const getHeaders = () => ( {
+    Authorization: localStorage.getItem( "authToken" ),
     "ngrok-skip-browser-warning": "true",
-});
+} );
 
 const OwnerAlurKas = () => {
-    const [transactions, setTransactions] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [ transactions, setTransactions ] = useState( [] );
+    const [ loading, setLoading ] = useState( true );
 
     // filter state
-    const [dateRange, setDateRange] = useState([null, null]);
-    const [startDate, endDate] = dateRange;
-    const [branchFilter, setBranchFilter] = useState("");
+    const [ dateRange, setDateRange ] = useState( [ null, null ] );
+    const [ startDate, endDate ] = dateRange;
+    const [ branchFilter, setBranchFilter ] = useState( "" );
 
     // daftar cabang
-    const [branches, setBranches] = useState([]);
+    const [ branches, setBranches ] = useState( [] );
 
-    useEffect(() => {
+    useEffect( () => {
         fetchBranches();
         fetchTransactions();
-    }, []);
+    }, [] );
+
+    // ⏺️ Auto reload kalau filter direset
+    useEffect( () => {
+        if ( !startDate && !endDate && branchFilter === "" ) {
+            fetchTransactions();
+        }
+    }, [ startDate, endDate, branchFilter ] );
 
     const fetchBranches = async () => {
         try {
@@ -36,49 +43,48 @@ const OwnerAlurKas = () => {
                 `${process.env.REACT_APP_API_URL}/branches`,
                 { headers: getHeaders() }
             );
-            setBranches(res.data?.data || []);
-        } catch (err) {
-            console.error("Gagal memuat daftar cabang:", err);
+            setBranches( res.data?.data || [] );
+        } catch ( err ) {
+            console.error( "Gagal memuat daftar cabang:", err );
         }
     };
 
     const fetchTransactions = async () => {
         try {
-            setLoading(true);
+            setLoading( true );
             let params = {};
-            if (startDate)
-                params.start_date = startDate.toISOString().split("T")[0];
-            if (endDate) params.end_date = endDate.toISOString().split("T")[0];
-            if (branchFilter) params.branch_id = branchFilter;
+            if ( startDate ) params.start_at = startDate.toISOString().split( "T" )[ 0 ];
+            if ( endDate ) params.end_at = endDate.toISOString().split( "T" )[ 0 ];
+            if ( branchFilter ) params.branch_id = branchFilter;
 
-            const res = await axios.get(API_URL, {
+            const res = await axios.get( API_URL, {
                 headers: getHeaders(),
                 params,
-            });
+            } );
 
-            const data = res.data?.data || [];
-            setTransactions(data);
-        } catch (err) {
-            console.error("Failed to fetch transactions:", err);
-            setTransactions([]);
+            const data = Array.isArray( res.data?.data ) ? res.data.data : [];
+            setTransactions( data );
+        } catch ( err ) {
+            console.error( "Failed to fetch transactions:", err );
+            setTransactions( [] );
         } finally {
-            setLoading(false);
+            setLoading( false );
         }
     };
 
-    const formatDate = (timestamp) => {
-        const d = new Date(timestamp);
-        return d.toLocaleDateString("id-ID", {
+    const formatDate = ( timestamp ) => {
+        const d = new Date( timestamp );
+        return d.toLocaleDateString( "id-ID", {
             year: "numeric",
             month: "long",
             day: "numeric",
-        });
+        } );
     };
 
     return (
         <Layout>
             <div className="w-full max-w-6xl mx-auto">
-                {/* Header */}
+                {/* Header */ }
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-green-100 rounded-lg">
@@ -93,53 +99,54 @@ const OwnerAlurKas = () => {
                     </div>
                 </div>
 
-                {/* Filters */}
+                {/* Filters */ }
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
-                    {/* Filter tanggal */}
+                    {/* Filter tanggal */ }
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Rentang Tanggal
                         </label>
                         <DatePicker
-                            selectsRange={true}
-                            startDate={startDate}
-                            endDate={endDate}
-                            onChange={(update) => setDateRange(update)}
-                            isClearable={true}
+                            selectsRange={ true }
+                            startDate={ startDate }
+                            endDate={ endDate }
+                            onChange={ ( update ) => setDateRange( update ) }
+                            isClearable={ true }
                             dateFormat="dd/MM/yyyy"
                             className="border rounded px-3 py-2 text-sm w-60"
                             placeholderText="Pilih rentang tanggal"
+                            maxDate={ new Date() }
                         />
                     </div>
 
-                    {/* Filter cabang */}
+                    {/* Filter cabang */ }
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Cabang
                         </label>
                         <select
-                            value={branchFilter}
-                            onChange={(e) => setBranchFilter(e.target.value)}
+                            value={ branchFilter }
+                            onChange={ ( e ) => setBranchFilter( e.target.value ) }
                             className="border rounded px-3 py-2 text-sm"
                         >
                             <option value="">Semua Cabang</option>
-                            {branches.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                    {b.name}
+                            { branches.map( ( b ) => (
+                                <option key={ b.id } value={ b.id }>
+                                    { b.name }
                                 </option>
-                            ))}
+                            ) ) }
                         </select>
                     </div>
 
                     <button
-                        onClick={fetchTransactions}
+                        onClick={ fetchTransactions }
                         className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
                         Terapkan
                     </button>
                 </div>
 
-                {/* Table */}
+                {/* Table */ }
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
@@ -169,9 +176,9 @@ const OwnerAlurKas = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {loading ? (
+                                { loading ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center">
+                                        <td colSpan={ 7 } className="px-6 py-12 text-center">
                                             <div className="flex items-center justify-center">
                                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                                                 <span className="ml-3 text-gray-600 text-sm">
@@ -182,7 +189,7 @@ const OwnerAlurKas = () => {
                                     </tr>
                                 ) : transactions.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-16 text-center">
+                                        <td colSpan={ 7 } className="px-6 py-16 text-center">
                                             <div className="flex flex-col items-center">
                                                 <HiOutlineCurrencyDollar className="text-6xl text-gray-300 mb-4" />
                                                 <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -195,35 +202,33 @@ const OwnerAlurKas = () => {
                                         </td>
                                     </tr>
                                 ) : (
-                                    transactions.map((trx) => (
-                                        <tr key={trx.id} className="hover:bg-gray-50">
+                                    transactions.map( ( trx, idx ) => (
+                                        <tr key={ trx.id } className="hover:bg-gray-50">
                                             <td className="px-6 py-4 font-medium text-gray-900">
-                                                {trx.id}
+                                                { idx + 1 }
                                             </td>
                                             <td className="px-6 py-4 text-gray-600">
-                                                {formatDate(trx.transaction_date)}
+                                                { formatDate( trx.transaction_date ) }
                                             </td>
                                             <td className="px-6 py-4 text-gray-600">
-                                                {trx.branch_name}
+                                                { trx.branch_name }
                                             </td>
                                             <td
-                                                className={`px-6 py-4 font-semibold ${trx.type === "IN"
-                                                        ? "text-green-600"
-                                                        : "text-red-600"
-                                                    }`}
+                                                className={ `px-6 py-4 font-semibold ${trx.type === "IN" ? "text-green-600" : "text-red-600"
+                                                    }` }
                                             >
-                                                {trx.type === "IN" ? "Masuk" : "Keluar"}
+                                                { trx.type === "IN" ? "Masuk" : "Keluar" }
                                             </td>
-                                            <td className="px-6 py-4 text-gray-600">{trx.source}</td>
+                                            <td className="px-6 py-4 text-gray-600">{ trx.source }</td>
                                             <td className="px-6 py-4 text-gray-600">
-                                                {trx.description}
+                                                { trx.description }
                                             </td>
                                             <td className="px-6 py-4 text-gray-900 font-medium">
-                                                Rp {trx.amount.toLocaleString("id-ID")}
+                                                Rp { trx.amount.toLocaleString( "id-ID" ) }
                                             </td>
                                         </tr>
-                                    ))
-                                )}
+                                    ) )
+                                ) }
                             </tbody>
                         </table>
                     </div>
