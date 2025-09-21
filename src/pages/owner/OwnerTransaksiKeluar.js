@@ -1,198 +1,190 @@
-import React, { useState, useEffect } from 'react';
-import { HiOutlineTrendingUp, HiOutlineCurrencyDollar, HiOutlineShoppingBag } from 'react-icons/hi';
-import { MdAnalytics } from 'react-icons/md';
-import axios from 'axios';
-import Layout from '../../components/Layout';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+// src/pages/owner/OwnerTransaksiKeluar.js
+import React, { useState, useEffect } from "react";
+import { HiOutlineShoppingCart } from "react-icons/hi";
+import axios from "axios";
+import Layout from "../../components/Layout";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+const API_URL = `${process.env.REACT_APP_API_URL}/sales`;
 
 const getHeaders = () => ( {
-    'Authorization': localStorage.getItem( 'authToken' ),
-    'ngrok-skip-browser-warning': 'true',
+    Authorization: localStorage.getItem( "authToken" ),
+    "ngrok-skip-browser-warning": "true",
 } );
 
-const formatRupiah = ( angka ) => 'Rp ' + angka.toLocaleString( 'id-ID' );
-
-const OwnerLaporanPenjualan = () => {
-    const [ salesData, setSalesData ] = useState( [] );
+const OwnerTransaksiKeluar = () => {
+    const [ transactions, setTransactions ] = useState( [] );
     const [ loading, setLoading ] = useState( true );
-    const [ currentPage, setCurrentPage ] = useState( 1 );
-    const [ totalPages, setTotalPages ] = useState( 1 );
-    const [ totalItems, setTotalItems ] = useState( 0 );
 
-    // Filter branch
-    const [ branchFilter, setBranchFilter ] = useState( null );
-    const [ branchOptions, setBranchOptions ] = useState( [] );
-
-    // Filter tanggal dengan DatePicker
-    const [ dateRange, setDateRange ] = useState( [ null, null ] ); // [startDate, endDate]
-    const [ appliedDateRange, setAppliedDateRange ] = useState( [ null, null ] );
+    // filter state
+    const [ dateRange, setDateRange ] = useState( [ null, null ] );
     const [ startDate, endDate ] = dateRange;
+    const [ branchFilter, setBranchFilter ] = useState( "" );
+    const [ searchTerm, setSearchTerm ] = useState( "" );
 
-    const today = new Date();
+    // daftar cabang
+    const [ branches, setBranches ] = useState( [] );
 
-    // Ambil list cabang
     useEffect( () => {
-        const fetchBranches = async () => {
-            try {
-                const res = await axios.get( `${process.env.REACT_APP_API_URL}/branches`, { headers: getHeaders() } );
-                if ( res.data?.data ) setBranchOptions( res.data.data );
-            } catch ( err ) {
-                console.error( "Failed to fetch branches:", err );
-            }
-        };
         fetchBranches();
+        fetchTransactions();
     }, [] );
 
-    // Fetch data penjualan
-    const fetchSalesData = async ( page = 1 ) => {
-        try {
-            setLoading( true );
-            const params = new URLSearchParams();
-            params.append( 'page', page );
-            params.append( 'size', 10 );
-            if ( branchFilter ) params.append( 'branch_id', branchFilter );
-            if ( appliedDateRange[ 0 ] ) params.append( 'start_at', appliedDateRange[ 0 ].toISOString().split( 'T' )[ 0 ] );
-            if ( appliedDateRange[ 1 ] ) params.append( 'end_at', appliedDateRange[ 1 ].toISOString().split( 'T' )[ 0 ] );
+    // refetch saat filter berubah
+    useEffect( () => {
+        if ( ( startDate && !endDate ) || ( !startDate && endDate ) ) {
+            return;
+        }
+        fetchTransactions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ startDate, endDate, branchFilter ] );
 
-            const response = await axios.get(
-                `${process.env.REACT_APP_API_URL}/sales-and-product-reports/daily?${params.toString()}`,
+    const fetchBranches = async () => {
+        try {
+            const res = await axios.get(
+                `${process.env.REACT_APP_API_URL}/branches`,
                 { headers: getHeaders() }
             );
-
-            const data = response.data?.data || [];
-            const paging = response.data?.paging || {};
-            setSalesData( data );
-            setCurrentPage( paging.page || 1 );
-            setTotalPages( paging.total_page || 1 );
-            setTotalItems( paging.total_item || 0 );
+            setBranches( res.data?.data || [] );
         } catch ( err ) {
-            console.error( 'Gagal mengambil data penjualan:', err );
+            console.error( "Gagal memuat daftar cabang:", err );
+        }
+    };
+
+    const fetchTransactions = async () => {
+        try {
+            setLoading( true );
+            let params = {};
+            if ( startDate && endDate ) {
+                params.start_date = startDate.toISOString().split( "T" )[ 0 ];
+                params.end_date = endDate.toISOString().split( "T" )[ 0 ];
+            }
+            if ( branchFilter ) params.branch_id = branchFilter;
+
+            const res = await axios.get( API_URL, {
+                headers: getHeaders(),
+                params,
+            } );
+
+            const data = res.data?.data || [];
+            setTransactions( data );
+        } catch ( err ) {
+            console.error( "Failed to fetch sales transactions:", err );
+            setTransactions( [] );
         } finally {
             setLoading( false );
         }
     };
 
-    useEffect( () => {
-        fetchSalesData( currentPage );
-    }, [ currentPage, branchFilter, appliedDateRange ] );
-
-    // Summary
-    const totalTransactions = salesData.reduce( ( sum, item ) => sum + ( item.total_transactions || 0 ), 0 );
-    const totalProductsSold = salesData.reduce( ( sum, item ) => sum + ( item.total_products_sold || 0 ), 0 );
-    const totalRevenue = salesData.reduce( ( sum, item ) => sum + ( item.total_revenue || 0 ), 0 );
-
-    const startIndex = ( currentPage - 1 ) * 10;
-    const endIndex = Math.min( startIndex + salesData.length, totalItems );
-
-    // Pagination
-    const Pagination = () => (
-        <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 mt-4">
-            <div className="text-xs text-gray-500">
-                Menampilkan { totalItems === 0 ? 0 : startIndex + 1 }-{ endIndex } dari total { totalItems } data
-            </div>
-            <div className="flex items-center gap-2">
-                <button onClick={ () => setCurrentPage( 1 ) } disabled={ currentPage === 1 } className={ `px-2.5 py-1.5 rounded border ${currentPage === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>«</button>
-                <button onClick={ () => setCurrentPage( p => Math.max( 1, p - 1 ) ) } disabled={ currentPage === 1 } className={ `px-3 py-1.5 rounded border ${currentPage === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Prev</button>
-                <span className="text-sm text-gray-700">{ currentPage } / { totalPages }</span>
-                <button onClick={ () => setCurrentPage( p => Math.min( totalPages, p + 1 ) ) } disabled={ currentPage === totalPages } className={ `px-3 py-1.5 rounded border ${currentPage === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Next</button>
-                <button onClick={ () => setCurrentPage( totalPages ) } disabled={ currentPage === totalPages } className={ `px-2.5 py-1.5 rounded border ${currentPage === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>»</button>
-            </div>
-        </div>
-    );
-
-    // Apply date range
-    const applyDateFilter = () => {
-        if ( !startDate ) return;
-        setAppliedDateRange( [ startDate, endDate || startDate ] );
-        setCurrentPage( 1 );
+    const resetFilters = () => {
+        setDateRange( [ null, null ] );
+        setBranchFilter( "" );
+        setSearchTerm( "" );
+        fetchTransactions();
     };
+
+    const formatDate = ( timestamp ) => {
+        const d = new Date( timestamp );
+        return d.toLocaleDateString( "id-ID", {
+            year: "numeric",
+            month: "numeric",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        } );
+    };
+
+    // filter pencarian (frontend)
+    const filteredTransactions = transactions.filter( ( trx ) => {
+        const term = searchTerm.toLowerCase();
+        return (
+            trx.code?.toLowerCase().includes( term ) ||
+            trx.customer_name?.toLowerCase().includes( term ) ||
+            trx.branch_name?.toLowerCase().includes( term ) ||
+            trx.status?.toLowerCase().includes( term )
+        );
+    } );
 
     return (
         <Layout>
-            <div className="w-full max-w-7xl mx-auto">
+            <div className="w-full max-w-6xl mx-auto">
                 {/* Header */ }
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
-                        <div className="p-3 bg-blue-100 rounded-lg">
-                            <MdAnalytics className="text-2xl text-blue-600" />
+                        <div className="p-3 bg-green-100 rounded-lg">
+                            <HiOutlineShoppingCart className="text-2xl text-green-600" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-800">Laporan Penjualan</h1>
-                            <p className="text-sm text-gray-600">Analisis data penjualan perusahaan</p>
+                            <h1 className="text-2xl font-bold text-gray-800">
+                                Transaksi Keluar
+                            </h1>
+                            <p className="text-sm text-gray-600">
+                                Daftar transaksi penjualan per cabang
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Summary */ }
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
-                    <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="bg-blue-100 p-3 rounded-lg">
-                                <HiOutlineTrendingUp className="text-2xl text-blue-600" />
-                            </div>
-                            <span className="text-xs text-gray-500 font-medium">Total Transaksi</span>
-                        </div>
-                        <div className="text-2xl font-bold text-gray-900 mb-2">{ totalTransactions }</div>
-                        <p className="text-xs text-gray-600">Transaksi</p>
-                    </div>
-                    <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="bg-green-100 p-3 rounded-lg">
-                                <HiOutlineShoppingBag className="text-2xl text-green-600" />
-                            </div>
-                            <span className="text-xs text-gray-500 font-medium">Total Produk Terjual</span>
-                        </div>
-                        <div className="text-2xl font-bold text-gray-900 mb-2">{ totalProductsSold }</div>
-                        <p className="text-xs text-gray-600">Unit</p>
-                    </div>
-                    <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="bg-purple-100 p-3 rounded-lg">
-                                <HiOutlineCurrencyDollar className="text-2xl text-purple-600" />
-                            </div>
-                            <span className="text-xs text-gray-500 font-medium">Total Pendapatan</span>
-                        </div>
-                        <div className="text-2xl font-bold text-gray-900 mb-2">{ formatRupiah( totalRevenue ) }</div>
-                        <p className="text-xs text-gray-600">Rupiah</p>
-                    </div>
-                </div>
-
-                {/* Filter */ }
-                <div className="flex mb-6 gap-3 items-end">
-                    <select
-                        value={ branchFilter || '' }
-                        onChange={ e => { setBranchFilter( e.target.value ); setCurrentPage( 1 ); } }
-                        className="px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-blue-300 focus:border-blue-500"
-                    >
-                        <option value="">Semua Cabang</option>
-                        { branchOptions.map( branch => (
-                            <option key={ branch.id } value={ branch.id }>{ branch.name }</option>
-                        ) ) }
-                    </select>
-
+                {/* Filters */ }
+                <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
+                    {/* Filter tanggal */ }
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Rentang Tanggal</label>
-                        <div className="flex gap-2">
-                            <DatePicker
-                                selectsRange={ true }
-                                startDate={ startDate }
-                                endDate={ endDate }
-                                onChange={ ( update ) => setDateRange( update ) }
-                                isClearable={ true }
-                                maxDate={ today }
-                                dateFormat="dd/MM/yyyy"
-                                className="border rounded px-3 py-2 text-sm w-60"
-                                placeholderText="Pilih rentang tanggal"
-                            />
-                            <button
-                                onClick={ applyDateFilter }
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
-                            >
-                                Terapkan
-                            </button>
-                        </div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Rentang Tanggal
+                        </label>
+                        <DatePicker
+                            selectsRange={ true }
+                            startDate={ startDate }
+                            endDate={ endDate }
+                            onChange={ ( update ) => setDateRange( update ) }
+                            isClearable={ true }
+                            dateFormat="dd/MM/yyyy"
+                            className="border rounded px-3 py-2 text-sm w-60"
+                            placeholderText="Pilih rentang tanggal"
+                            maxDate={ new Date() }
+                        />
                     </div>
+
+                    {/* Filter cabang */ }
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Cabang
+                        </label>
+                        <select
+                            value={ branchFilter }
+                            onChange={ ( e ) => setBranchFilter( e.target.value ) }
+                            className="border rounded px-3 py-2 text-sm"
+                        >
+                            <option value="">Semua Cabang</option>
+                            { branches.map( ( b ) => (
+                                <option key={ b.id } value={ b.id }>
+                                    { b.name }
+                                </option>
+                            ) ) }
+                        </select>
+                    </div>
+
+                    {/* Search */ }
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Cari
+                        </label>
+                        <input
+                            type="text"
+                            value={ searchTerm }
+                            onChange={ ( e ) => setSearchTerm( e.target.value ) }
+                            placeholder="Cari kode / customer..."
+                            className="border rounded px-3 py-2 text-sm w-60"
+                        />
+                    </div>
+
+                    <button
+                        onClick={ resetFilters }
+                        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors"
+                    >
+                        Reset
+                    </button>
                 </div>
 
                 {/* Table */ }
@@ -201,30 +193,74 @@ const OwnerLaporanPenjualan = () => {
                         <table className="min-w-full">
                             <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
                                 <tr>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Tanggal</th>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Cabang</th>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Total Transaksi</th>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Produk Terjual</th>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Total Pendapatan</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                                        Customer
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                                        Code
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                                        Cabang
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                                        Tanggal
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 { loading ? (
                                     <tr>
-                                        <td colSpan={ 5 } className="px-6 py-6 text-center">Memuat data...</td>
+                                        <td colSpan={ 5 } className="px-6 py-12 text-center">
+                                            <div className="flex items-center justify-center">
+                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                                                <span className="ml-3 text-gray-600 text-sm">
+                                                    Memuat data...
+                                                </span>
+                                            </div>
+                                        </td>
                                     </tr>
-                                ) : salesData.length === 0 ? (
+                                ) : filteredTransactions.length === 0 ? (
                                     <tr>
-                                        <td colSpan={ 5 } className="px-6 py-12 text-center text-gray-500">Tidak ada data penjualan</td>
+                                        <td colSpan={ 5 } className="px-6 py-16 text-center">
+                                            <div className="flex flex-col items-center">
+                                                <HiOutlineShoppingCart className="text-6xl text-gray-300 mb-4" />
+                                                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                                    Data tidak ada
+                                                </h3>
+                                                <p className="text-gray-500 text-sm">
+                                                    { searchTerm
+                                                        ? "Tidak ditemukan hasil pencarian"
+                                                        : "Tidak ditemukan transaksi sesuai filter" }
+                                                </p>
+                                            </div>
+                                        </td>
                                     </tr>
                                 ) : (
-                                    salesData.map( ( item, index ) => (
-                                        <tr key={ index } className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ new Date( item.date ).toLocaleDateString( 'id-ID' ) }</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ item.branch_name }</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ item.total_transactions }</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ item.total_products_sold }</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ formatRupiah( item.total_revenue ) }</td>
+                                    filteredTransactions.map( ( trx ) => (
+                                        <tr key={ trx.code } className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 text-gray-600">
+                                                { trx.customer_name }
+                                            </td>
+                                            <td className="px-6 py-4 font-medium text-gray-900">
+                                                { trx.code }
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-600">
+                                                { trx.branch_name }
+                                            </td>
+                                            <td
+                                                className={ `px-6 py-4 font-semibold ${trx.status === "COMPLETED"
+                                                    ? "text-green-600"
+                                                    : "text-yellow-600"
+                                                    }` }
+                                            >
+                                                { trx.status }
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-600">
+                                                { formatDate( trx.created_at ) }
+                                            </td>
                                         </tr>
                                     ) )
                                 ) }
@@ -232,11 +268,9 @@ const OwnerLaporanPenjualan = () => {
                         </table>
                     </div>
                 </div>
-
-                { totalPages > 1 && <Pagination /> }
             </div>
         </Layout>
     );
 };
 
-export default OwnerLaporanPenjualan;
+export default OwnerTransaksiKeluar;

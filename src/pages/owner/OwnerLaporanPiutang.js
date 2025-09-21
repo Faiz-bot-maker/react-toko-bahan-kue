@@ -101,6 +101,11 @@ const OwnerLaporanPiutang = () => {
 
     // Filter data saat tombol Cari diklik
     const handleSearch = () => {
+        if ( !searchNama && !startDate && !endDate ) {
+            setFilteredData( [] );
+            return;
+        }
+
         const result = pelanggan.filter( ( p ) => {
             const matchNama = p.nama.toLowerCase().includes( searchNama.toLowerCase() );
             let matchTanggal = true;
@@ -191,7 +196,13 @@ const OwnerLaporanPiutang = () => {
                         selectsRange={ true }
                         startDate={ startDate }
                         endDate={ endDate }
-                        onChange={ ( update ) => setDateRange( update ) }
+                        onChange={ ( update ) => {
+                            setDateRange( update );
+                            if ( !update[ 0 ] && !update[ 1 ] ) {
+                                // clear datepicker → reset filter
+                                setFilteredData( [] );
+                            }
+                        } }
                         isClearable={ true }
                         dateFormat="dd/MM/yyyy"
                         className="border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm w-full"
@@ -345,17 +356,17 @@ const OwnerLaporanPiutang = () => {
                                         </select>
                                     </div>
 
-                                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                                    <div className="flex justify-end gap-3 pt-4">
                                         <button
                                             type="button"
                                             onClick={ closeModal }
-                                            className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                                            className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors"
                                         >
                                             Batal
                                         </button>
                                         <button
                                             type="submit"
-                                            className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                                            className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium shadow-sm transition-colors"
                                         >
                                             Simpan
                                         </button>

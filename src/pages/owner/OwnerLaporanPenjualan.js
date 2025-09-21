@@ -4,7 +4,7 @@ import { MdAnalytics } from 'react-icons/md';
 import axios from 'axios';
 import Layout from '../../components/Layout';
 import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
+import 'react-datepicker/dist/react-datepicker.css';
 
 const getHeaders = () => ( {
   'Authorization': localStorage.getItem( 'authToken' ),
@@ -24,9 +24,9 @@ const OwnerLaporanPenjualan = () => {
   const [ branchFilter, setBranchFilter ] = useState( null );
   const [ branchOptions, setBranchOptions ] = useState( [] );
 
-  // Filter tanggal (pakai array dari DatePicker)
-  const [ dateRange, setDateRange ] = useState( [ null, null ] );
-  const [ appliedDateRange, setAppliedDateRange ] = useState( { start: '', end: '' } );
+  // Filter tanggal dengan DatePicker
+  const [ dateRange, setDateRange ] = useState( [ null, null ] ); // [startDate, endDate]
+  const [ appliedDateRange, setAppliedDateRange ] = useState( [ null, null ] );
   const [ startDate, endDate ] = dateRange;
 
   const today = new Date();
@@ -52,15 +52,14 @@ const OwnerLaporanPenjualan = () => {
       params.append( 'page', page );
       params.append( 'size', 10 );
       if ( branchFilter ) params.append( 'branch_id', branchFilter );
-      if ( appliedDateRange.start ) params.append( 'start_date', appliedDateRange.start );
-      if ( appliedDateRange.end ) params.append( 'end_date', appliedDateRange.end );
-
-      console.log( 'Fetching with params:', Object.fromEntries( params.entries() ) );
+      if ( appliedDateRange[ 0 ] ) params.append( 'start_at', appliedDateRange[ 0 ].toISOString().split( 'T' )[ 0 ] );
+      if ( appliedDateRange[ 1 ] ) params.append( 'end_at', appliedDateRange[ 1 ].toISOString().split( 'T' )[ 0 ] );
 
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/sales-and-product-reports/daily?${params.toString()}`,
         { headers: getHeaders() }
       );
+
       const data = response.data?.data || [];
       const paging = response.data?.paging || {};
       setSalesData( data );
@@ -86,29 +85,33 @@ const OwnerLaporanPenjualan = () => {
   const startIndex = ( currentPage - 1 ) * 10;
   const endIndex = Math.min( startIndex + salesData.length, totalItems );
 
-  // Pagination component
+  // Pagination
   const Pagination = () => (
     <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 mt-4">
       <div className="text-xs text-gray-500">
         Menampilkan { totalItems === 0 ? 0 : startIndex + 1 }-{ endIndex } dari total { totalItems } data
       </div>
       <div className="flex items-center gap-2">
-        <button onClick={ () => setCurrentPage( 1 ) } disabled={ currentPage === 1 } className={ `px-2.5 py-1.5 rounded border ${currentPage === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>«</button>
-        <button onClick={ () => setCurrentPage( p => Math.max( 1, p - 1 ) ) } disabled={ currentPage === 1 } className={ `px-3 py-1.5 rounded border ${currentPage === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Prev</button>
+        <button onClick={ () => setCurrentPage( 1 ) } disabled={ currentPage === 1 }
+          className={ `px-2.5 py-1.5 rounded border ${currentPage === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>«</button>
+        <button onClick={ () => setCurrentPage( p => Math.max( 1, p - 1 ) ) } disabled={ currentPage === 1 }
+          className={ `px-3 py-1.5 rounded border ${currentPage === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Prev</button>
         <span className="text-sm text-gray-700">{ currentPage } / { totalPages }</span>
-        <button onClick={ () => setCurrentPage( p => Math.min( totalPages, p + 1 ) ) } disabled={ currentPage === totalPages } className={ `px-3 py-1.5 rounded border ${currentPage === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Next</button>
-        <button onClick={ () => setCurrentPage( totalPages ) } disabled={ currentPage === totalPages } className={ `px-2.5 py-1.5 rounded border ${currentPage === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>»</button>
+        <button onClick={ () => setCurrentPage( p => Math.min( totalPages, p + 1 ) ) } disabled={ currentPage === totalPages }
+          className={ `px-3 py-1.5 rounded border ${currentPage === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Next</button>
+        <button onClick={ () => setCurrentPage( totalPages ) } disabled={ currentPage === totalPages }
+          className={ `px-2.5 py-1.5 rounded border ${currentPage === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>»</button>
       </div>
     </div>
   );
 
-  // Apply filter tanggal
+  // Apply date range
   const applyDateFilter = () => {
-    if ( !startDate ) return;
-    setAppliedDateRange( {
-      start: startDate.toISOString().split( 'T' )[ 0 ],
-      end: ( endDate || startDate ).toISOString().split( 'T' )[ 0 ],
-    } );
+    if ( !startDate ) {
+      setAppliedDateRange( [ null, null ] );
+      return;
+    }
+    setAppliedDateRange( [ startDate, endDate || startDate ] );
     setCurrentPage( 1 );
   };
 
@@ -128,7 +131,7 @@ const OwnerLaporanPenjualan = () => {
           </div>
         </div>
 
-        {/* Summary Cards */ }
+        {/* Summary */ }
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
           <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-4">
@@ -140,7 +143,6 @@ const OwnerLaporanPenjualan = () => {
             <div className="text-2xl font-bold text-gray-900 mb-2">{ totalTransactions }</div>
             <p className="text-xs text-gray-600">Transaksi</p>
           </div>
-
           <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <div className="bg-green-100 p-3 rounded-lg">
@@ -151,7 +153,6 @@ const OwnerLaporanPenjualan = () => {
             <div className="text-2xl font-bold text-gray-900 mb-2">{ totalProductsSold }</div>
             <p className="text-xs text-gray-600">Unit</p>
           </div>
-
           <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <div className="bg-purple-100 p-3 rounded-lg">
@@ -164,11 +165,15 @@ const OwnerLaporanPenjualan = () => {
           </div>
         </div>
 
-        {/* Filter Branch & Date */ }
+        {/* Filter */ }
         <div className="flex mb-6 gap-3 items-end">
           <select
             value={ branchFilter || '' }
-            onChange={ e => { setBranchFilter( e.target.value ); setCurrentPage( 1 ); } }
+            onChange={ e => {
+              const val = e.target.value;
+              setBranchFilter( val || null ); // reset kalau kosong
+              setCurrentPage( 1 );
+            } }
             className="px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-blue-300 focus:border-blue-500"
           >
             <option value="">Semua Cabang</option>
@@ -178,13 +183,20 @@ const OwnerLaporanPenjualan = () => {
           </select>
 
           <div>
-            {/* <label className="block text-sm font-medium text-gray-700 mb-1">Rentang Tanggal</label> */ }
+            <label className="block text-sm font-medium text-gray-700 mb-1">Rentang Tanggal</label>
             <div className="flex gap-2">
               <DatePicker
                 selectsRange={ true }
                 startDate={ startDate }
                 endDate={ endDate }
-                onChange={ ( update ) => setDateRange( update ) }
+                onChange={ ( update ) => {
+                  setDateRange( update );
+                  if ( !update[ 0 ] && !update[ 1 ] ) {
+                    // reset filter kalau di-clear
+                    setAppliedDateRange( [ null, null ] );
+                    setCurrentPage( 1 );
+                  }
+                } }
                 isClearable={ true }
                 maxDate={ today }
                 dateFormat="dd/MM/yyyy"
