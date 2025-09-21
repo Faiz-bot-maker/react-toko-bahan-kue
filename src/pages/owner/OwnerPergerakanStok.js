@@ -58,8 +58,8 @@ const OwnerPergerakanStok = () => {
             setLoading( true );
             let params = {};
             if ( startDate && endDate ) {
-                params.start_date = startDate.toISOString().split( "T" )[ 0 ];
-                params.end_date = endDate.toISOString().split( "T" )[ 0 ];
+                params.start_at = startDate.toISOString().split( "T" )[ 0 ];
+                params.end_at = endDate.toISOString().split( "T" )[ 0 ];
             }
             if ( branchFilter ) params.branch_id = branchFilter;
 

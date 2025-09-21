@@ -289,19 +289,17 @@ const OwnerKategori = () => {
                             </tbody>
                         </table>
                     </div>
-
-                    {/* 📑 Pagination */ }
-                    { totalPages > 1 && (
-                        <Pagination
-                            page={ currentPage }
-                            setPage={ setCurrentPage }
-                            totalPages={ totalPages }
-                            total={ totalItems }
-                            perPage={ categories.length }
-                        />
-                    ) }
-
                 </div>
+                {/* 📑 Pagination */ }
+                { totalPages > 1 && (
+                    <Pagination
+                        page={ currentPage }
+                        setPage={ setCurrentPage }
+                        totalPages={ totalPages }
+                        total={ totalItems }
+                        perPage={ categories.length }
+                    />
+                ) }
 
 
 
