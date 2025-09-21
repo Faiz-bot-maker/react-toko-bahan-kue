@@ -18,7 +18,8 @@ const OwnerLaporanPengeluaran = () => {
   const [ totalAll, setTotalAll ] = useState( 0 );
   const [ loadingSummary, setLoadingSummary ] = useState( true );
 
-  const [ branchMap, setBranchMap ] = useState( {} ); // mapping branch_id -> branch_name
+  const [ branches, setBranches ] = useState( [] );
+  const [ branchMap, setBranchMap ] = useState( {} );
 
   const [ detailRows, setDetailRows ] = useState( [] );
   const [ loadingDetail, setLoadingDetail ] = useState( true );
@@ -31,9 +32,9 @@ const OwnerLaporanPengeluaran = () => {
   const [ dateRange, setDateRange ] = useState( [ null, null ] );
   const [ startDate, endDate ] = dateRange;
   const [ branchFilter, setBranchFilter ] = useState( "" );
-  const [ search, setSearch ] = useState( "" ); // ⬅️ filter untuk deskripsi
+  const [ search, setSearch ] = useState( "" );
 
-  // Fetch summary (ringkasan)
+  // Fetch summary
   const fetchSummary = async () => {
     try {
       setLoadingSummary( true );
@@ -46,7 +47,6 @@ const OwnerLaporanPengeluaran = () => {
       setSummaryRows( data );
       setTotalAll( payload.total_all_branches || 0 );
 
-      // mapping branch_id => branch_name
       const mapping = {};
       data.forEach( ( b ) => {
         mapping[ b.branch_id ] = b.branch_name;
@@ -59,7 +59,21 @@ const OwnerLaporanPengeluaran = () => {
     }
   };
 
-  // Fetch detail (dengan pagination & filter)
+  // Fetch daftar cabang
+  const fetchBranches = async () => {
+    try {
+      const res = await axios.get( `${process.env.REACT_APP_API_URL}/branches`, {
+        headers: getHeaders(),
+      } );
+      const data = Array.isArray( res.data?.data ) ? res.data.data : [];
+      setBranches( data );
+    } catch ( err ) {
+      console.error( "Gagal memuat daftar cabang:", err );
+      setBranches( [] );
+    }
+  };
+
+  // Fetch detail (pagination + filter)
   const fetchDetail = async ( pageNumber = 1 ) => {
     try {
       setLoadingDetail( true );
@@ -69,16 +83,16 @@ const OwnerLaporanPengeluaran = () => {
       params.append( "size", size );
 
       if ( startDate ) {
-        params.append( "start_date", startDate.toISOString().split( "T" )[ 0 ] );
+        params.append( "start_at", startDate.toISOString().split( "T" )[ 0 ] );
       }
       if ( endDate ) {
-        params.append( "end_date", endDate.toISOString().split( "T" )[ 0 ] );
+        params.append( "end_at", endDate.toISOString().split( "T" )[ 0 ] );
       }
       if ( branchFilter ) {
         params.append( "branch_id", branchFilter );
       }
       if ( search ) {
-        params.append( "search", search ); // ⬅️ filter deskripsi
+        params.append( "search", search );
       }
 
       const res = await axios.get(
@@ -97,12 +111,12 @@ const OwnerLaporanPengeluaran = () => {
 
   useEffect( () => {
     fetchSummary();
+    fetchBranches();
   }, [] );
 
   useEffect( () => {
     fetchDetail( page );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ page, branchFilter, startDate, endDate, search ] ); // ⬅️ ikut trigger kalau search berubah
+  }, [ page, branchFilter, startDate, endDate, search ] );
 
   return (
     <Layout>
@@ -113,16 +127,14 @@ const OwnerLaporanPengeluaran = () => {
             <HiOutlineDocumentReport className="text-2xl text-red-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Laporan Pengeluaran
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-800">Laporan Pengeluaran</h1>
             <p className="text-sm text-gray-600">
               Ringkasan total & detail pengeluaran semua cabang
             </p>
           </div>
         </div>
 
-        {/* =================== RINGKASAN =================== */ }
+        {/* Ringkasan */ }
         <h2 className="text-xl font-semibold mb-3">Ringkasan Per Cabang</h2>
         <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden mb-10">
           <table className="min-w-full">
@@ -145,19 +157,14 @@ const OwnerLaporanPengeluaran = () => {
                 </tr>
               ) : summaryRows.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={ 2 }
-                    className="px-6 py-12 text-center text-gray-500"
-                  >
-                    Belum ada data pengeluaran
+                  <td colSpan={ 2 } className="px-6 py-12 text-center text-gray-500">
+                    Data tidak ada
                   </td>
                 </tr>
               ) : (
                 summaryRows.map( ( row, idx ) => (
                   <tr key={ row.branch_id || idx } className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-800">
-                      { row.branch_name }
-                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-800">{ row.branch_name }</td>
                     <td className="px-6 py-4 text-sm text-gray-800 text-right font-semibold">
                       { formatRupiah( row.total_expenses ) }
                     </td>
@@ -180,26 +187,23 @@ const OwnerLaporanPengeluaran = () => {
           </table>
         </div>
 
-        {/* =================== DETAIL =================== */ }
+        {/* Detail */ }
         <h2 className="text-xl font-semibold mb-3">Detail Pengeluaran</h2>
-
-        {/* Filter */ }
         <div className="flex flex-wrap items-end gap-4 mb-4">
-          {/* Filter tanggal range */ }
+          {/* Tanggal */ }
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Periode
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Periode</label>
             <DatePicker
               selectsRange
               startDate={ startDate }
               endDate={ endDate }
               onChange={ ( update ) => {
                 setDateRange( update );
-                if ( !update[ 0 ] && !update[ 1 ] ) {
-                  setPage( 1 );
-                  fetchDetail( 1 );
-                }
+
+                // Reset page & fetch
+                if ( !update[ 0 ] && !update[ 1 ] ) fetchDetail( 1 );
+                if ( update[ 0 ] && update[ 1 ] ) fetchDetail( 1 );
+                setPage( 1 );
               } }
               isClearable
               maxDate={ new Date() }
@@ -209,36 +213,30 @@ const OwnerLaporanPengeluaran = () => {
             />
           </div>
 
-          {/* Filter cabang */ }
+          {/* Cabang */ }
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cabang
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cabang</label>
             <select
               value={ branchFilter }
               onChange={ ( e ) => {
                 setBranchFilter( e.target.value );
                 setPage( 1 );
-                if ( e.target.value === "" ) {
-                  fetchDetail( 1 );
-                }
+                if ( e.target.value === "" ) fetchDetail( 1 );
               } }
               className="border rounded-md px-3 py-2 text-sm"
             >
               <option value="">Semua Cabang</option>
-              { Object.entries( branchMap ).map( ( [ id, name ] ) => (
-                <option key={ id } value={ id }>
-                  { name }
+              { branches.map( ( b ) => (
+                <option key={ b.id } value={ b.id }>
+                  { b.name }
                 </option>
               ) ) }
             </select>
           </div>
 
-          {/* Search deskripsi */ }
+          {/* Search */ }
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cari Deskripsi
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cari Deskripsi</label>
             <input
               type="text"
               value={ search }
@@ -251,14 +249,18 @@ const OwnerLaporanPengeluaran = () => {
             />
           </div>
 
+          {/* Reset */ }
           <button
             onClick={ () => {
+              setDateRange( [ null, null ] );
+              setBranchFilter( "" );
+              setSearch( "" );
               setPage( 1 );
               fetchDetail( 1 );
             } }
-            className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800"
+            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
           >
-            Terapkan
+            Reset
           </button>
         </div>
 
@@ -267,53 +269,32 @@ const OwnerLaporanPengeluaran = () => {
           <table className="min-w-full">
             <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
-                  Tanggal
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
-                  Cabang
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
-                  Deskripsi
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">
-                  Jumlah
-                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Cabang</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Deskripsi</th>
+                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Jumlah</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               { loadingDetail ? (
                 <tr>
-                  <td colSpan={ 4 } className="px-6 py-12 text-center">
-                    Memuat data...
-                  </td>
+                  <td colSpan={ 4 } className="px-6 py-12 text-center">Memuat data...</td>
                 </tr>
               ) : detailRows.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={ 4 }
-                    className="px-6 py-12 text-center text-gray-500"
-                  >
-                    Belum ada data detail pengeluaran
-                  </td>
+                  <td colSpan={ 4 } className="px-6 py-12 text-center text-gray-500">Data tidak ada</td>
                 </tr>
               ) : (
                 detailRows.map( ( row, idx ) => (
                   <tr key={ row.id || idx } className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-800">
-                      { row.created_at
-                        ? new Date( row.created_at ).toLocaleDateString( "id-ID" )
-                        : "-" }
+                      { row.created_at ? new Date( row.created_at ).toLocaleDateString( "id-ID" ) : "-" }
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-800">
-                      { branchMap[ row.branch_id ] || `Cabang ${row.branch_id}` }
+                      { branches.find( ( b ) => b.id === row.branch_name )?.name || row.branch_name }
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-800">
-                      { row.description || "-" }
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-800 text-right font-semibold">
-                      { formatRupiah( row.amount ) }
-                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-800">{ row.description || "-" }</td>
+                    <td className="px-6 py-4 text-sm text-gray-800 text-right font-semibold">{ formatRupiah( row.amount ) }</td>
                   </tr>
                 ) )
               ) }
@@ -329,15 +310,13 @@ const OwnerLaporanPengeluaran = () => {
               disabled={ page === 1 }
               className={ `px-4 py-2 rounded-lg text-sm font-medium ${page === 1
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-gray-700 text-white hover:bg-gray-800"
-                }` }
+                : "bg-gray-700 text-white hover:bg-gray-800"}` }
             >
               Sebelumnya
             </button>
 
             <div className="text-sm text-gray-600">
-              Halaman <span className="font-semibold">{ page }</span> dari{ " " }
-              <span className="font-semibold">{ totalPage }</span>
+              Halaman <span className="font-semibold">{ page }</span> dari <span className="font-semibold">{ totalPage }</span>
             </div>
 
             <button
@@ -345,8 +324,7 @@ const OwnerLaporanPengeluaran = () => {
               disabled={ page === totalPage }
               className={ `px-4 py-2 rounded-lg text-sm font-medium ${page === totalPage
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-gray-700 text-white hover:bg-gray-800"
-                }` }
+                : "bg-gray-700 text-white hover:bg-gray-800"}` }
             >
               Berikutnya
             </button>

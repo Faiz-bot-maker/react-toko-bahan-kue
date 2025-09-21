@@ -26,9 +26,13 @@ const OwnerTransaksiKeluar = () => {
     // daftar cabang
     const [ branches, setBranches ] = useState( [] );
 
+    // pagination
+    const [ currentPage, setCurrentPage ] = useState( 1 );
+    const [ totalPages, setTotalPages ] = useState( 1 );
+    const [ totalItems, setTotalItems ] = useState( 0 );
+
     useEffect( () => {
         fetchBranches();
-        fetchTransactions();
     }, [] );
 
     // refetch saat filter berubah
@@ -36,9 +40,8 @@ const OwnerTransaksiKeluar = () => {
         if ( ( startDate && !endDate ) || ( !startDate && endDate ) ) {
             return;
         }
-        fetchTransactions();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ startDate, endDate, branchFilter ] );
+        fetchTransactions( currentPage, searchTerm );
+    }, [ startDate, endDate, branchFilter, currentPage, searchTerm ] );
 
     const fetchBranches = async () => {
         try {
@@ -52,13 +55,16 @@ const OwnerTransaksiKeluar = () => {
         }
     };
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = async ( page, search ) => {
         try {
             setLoading( true );
-            let params = {};
+            let params = { page };
             if ( startDate && endDate ) {
-                params.start_date = startDate.toISOString().split( "T" )[ 0 ];
-                params.end_date = endDate.toISOString().split( "T" )[ 0 ];
+                params.start_at = startDate.toISOString().split( "T" )[ 0 ];
+                params.end_at = endDate.toISOString().split( "T" )[ 0 ];
+            }
+            if ( search ) {
+                params.search = searchTerm
             }
             if ( branchFilter ) params.branch_id = branchFilter;
 
@@ -67,8 +73,13 @@ const OwnerTransaksiKeluar = () => {
                 params,
             } );
 
-            const data = res.data?.data || [];
+            const data = res.data?.data || res.data;
+            const paging = res.data?.paging || {};
+
             setTransactions( data );
+            setCurrentPage( paging.page || 1 );
+            setTotalPages( paging.total_page || 1 );
+            setTotalItems( paging.total_item || 0 );
         } catch ( err ) {
             console.error( "Failed to fetch sales transactions:", err );
             setTransactions( [] );
@@ -81,7 +92,8 @@ const OwnerTransaksiKeluar = () => {
         setDateRange( [ null, null ] );
         setBranchFilter( "" );
         setSearchTerm( "" );
-        fetchTransactions();
+        setCurrentPage( 1 );
+        fetchTransactions( 1, "" );
     };
 
     const formatDate = ( timestamp ) => {
@@ -95,16 +107,63 @@ const OwnerTransaksiKeluar = () => {
         } );
     };
 
-    // filter pencarian (frontend)
-    const filteredTransactions = transactions.filter( ( trx ) => {
-        const term = searchTerm.toLowerCase();
+    const Pagination = ( { page, setPage, totalPages, total, perPage } ) => {
+        const startIndex = ( page - 1 ) * perPage;
+        const endIndex = Math.min( startIndex + perPage, total );
+
         return (
-            trx.code?.toLowerCase().includes( term ) ||
-            trx.customer_name?.toLowerCase().includes( term ) ||
-            trx.branch_name?.toLowerCase().includes( term ) ||
-            trx.status?.toLowerCase().includes( term )
+            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+                <div className="text-xs text-gray-500">
+                    Menampilkan { total === 0 ? 0 : startIndex + 1 }-{ endIndex } dari total { total } produk
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={ () => setPage( 1 ) }
+                        disabled={ page === 1 }
+                        className={ `px-2.5 py-1.5 rounded border ${page === 1
+                            ? 'text-gray-400 border-gray-200'
+                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }` }
+                    >
+                        «
+                    </button>
+                    <button
+                        onClick={ () => setPage( ( p ) => Math.max( 1, p - 1 ) ) }
+                        disabled={ page === 1 }
+                        className={ `px-3 py-1.5 rounded border ${page === 1
+                            ? 'text-gray-400 border-gray-200'
+                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }` }
+                    >
+                        Prev
+                    </button>
+                    <span className="text-sm text-gray-700">
+                        { page } / { totalPages }
+                    </span>
+                    <button
+                        onClick={ () => setPage( ( p ) => Math.min( totalPages, p + 1 ) ) }
+                        disabled={ page === totalPages }
+                        className={ `px-3 py-1.5 rounded border ${page === totalPages
+                            ? 'text-gray-400 border-gray-200'
+                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }` }
+                    >
+                        Next
+                    </button>
+                    <button
+                        onClick={ () => setPage( totalPages ) }
+                        disabled={ page === totalPages }
+                        className={ `px-2.5 py-1.5 rounded border ${page === totalPages
+                            ? 'text-gray-400 border-gray-200'
+                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }` }
+                    >
+                        »
+                    </button>
+                </div>
+            </div>
         );
-    } );
+    };
 
     return (
         <Layout>
@@ -173,7 +232,10 @@ const OwnerTransaksiKeluar = () => {
                         <input
                             type="text"
                             value={ searchTerm }
-                            onChange={ ( e ) => setSearchTerm( e.target.value ) }
+                            onChange={ ( e ) => {
+                                setSearchTerm( e.target.value );
+                                setCurrentPage( 1 );
+                            } }
                             placeholder="Cari kode / customer..."
                             className="border rounded px-3 py-2 text-sm w-60"
                         />
@@ -222,7 +284,7 @@ const OwnerTransaksiKeluar = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                ) : filteredTransactions.length === 0 ? (
+                                ) : transactions.length === 0 ? (
                                     <tr>
                                         <td colSpan={ 5 } className="px-6 py-16 text-center">
                                             <div className="flex flex-col items-center">
@@ -239,7 +301,7 @@ const OwnerTransaksiKeluar = () => {
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredTransactions.map( ( trx ) => (
+                                    transactions.map( ( trx ) => (
                                         <tr key={ trx.code } className="hover:bg-gray-50">
                                             <td className="px-6 py-4 text-gray-600">
                                                 { trx.customer_name }
@@ -268,6 +330,18 @@ const OwnerTransaksiKeluar = () => {
                         </table>
                     </div>
                 </div>
+
+                {/* 📑 Pagination */ }
+                { totalPages > 1 && (
+                    <Pagination
+                        page={ currentPage }
+                        setPage={ setCurrentPage }
+                        totalPages={ totalPages }
+                        total={ totalItems }
+                        perPage={ transactions.length }
+                    />
+                ) }
+
             </div>
         </Layout>
     );

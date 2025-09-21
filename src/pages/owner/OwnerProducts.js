@@ -317,17 +317,17 @@ const OwnerProducts = () => {
               </tbody>
             </table>
           </div>
+          {/* 📌 Pagination */ }
+          { totalPages > 1 && (
+            <Pagination
+              page={ currentPage }
+              setPage={ setCurrentPage }
+              totalPages={ totalPages }
+              total={ totalItems }
+              perPage={ products.length }
+            />
+          ) }
         </div>
-        {/* 📌 Pagination */ }
-        { totalPages > 1 && (
-          <Pagination
-            page={ currentPage }
-            setPage={ setCurrentPage }
-            totalPages={ totalPages }
-            total={ totalItems }
-            perPage={ products.length }
-          />
-        ) }
 
         {/* Add/Edit Product Modal */ }
         { modal.open && (

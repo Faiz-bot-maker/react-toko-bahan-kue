@@ -20,10 +20,10 @@ const OwnerKategori = () => {
     const [ totalItems, setTotalItems ] = useState( 0 );
 
     useEffect( () => {
-        fetchCategories();
-    }, [] );
+        fetchCategories( search );
+    }, [ search ] );
 
-    const fetchCategories = async () => {
+    const fetchCategories = async ( search ) => {
         try {
             setLoading( true );
             const res = await axios.get( API_URL, {
@@ -31,6 +31,9 @@ const OwnerKategori = () => {
                     Authorization: localStorage.getItem( "authToken" ),
                     "ngrok-skip-browser-warning": "true",
                 },
+                params: {
+                    "search": search
+                }
             } );
 
             const data = res.data?.data || res.data;

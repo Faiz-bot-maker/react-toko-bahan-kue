@@ -229,7 +229,10 @@ const OwnerPergerakanStok = () => {
                         <input
                             type="text"
                             value={ searchTerm }
-                            onChange={ ( e ) => setSearchTerm( e.target.value ) }
+                            onChange={ ( e ) => {
+                                setCurrentPage( 1 );          // Reset ke halaman 1
+                                setSearchTerm( e.target.value ); // Update search term
+                            } }
                             placeholder="Cari produk / referensi..."
                             className="border rounded px-3 py-2 text-sm w-60"
                         />

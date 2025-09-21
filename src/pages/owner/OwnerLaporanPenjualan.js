@@ -24,21 +24,21 @@ const OwnerLaporanPenjualan = () => {
   const [ branchFilter, setBranchFilter ] = useState( null );
   const [ branchOptions, setBranchOptions ] = useState( [] );
 
-  // Filter tanggal dengan DatePicker
-  const [ dateRange, setDateRange ] = useState( [ null, null ] ); // [startDate, endDate]
+  // Filter tanggal
+  const [ dateRange, setDateRange ] = useState( [ null, null ] );
   const [ appliedDateRange, setAppliedDateRange ] = useState( [ null, null ] );
   const [ startDate, endDate ] = dateRange;
 
   const today = new Date();
 
-  // Ambil list cabang
+  // Ambil daftar cabang
   useEffect( () => {
     const fetchBranches = async () => {
       try {
         const res = await axios.get( `${process.env.REACT_APP_API_URL}/branches`, { headers: getHeaders() } );
         if ( res.data?.data ) setBranchOptions( res.data.data );
       } catch ( err ) {
-        console.error( "Failed to fetch branches:", err );
+        console.error( "Gagal mengambil daftar cabang:", err );
       }
     };
     fetchBranches();
@@ -105,13 +105,11 @@ const OwnerLaporanPenjualan = () => {
     </div>
   );
 
-  // Apply date range
-  const applyDateFilter = () => {
-    if ( !startDate ) {
-      setAppliedDateRange( [ null, null ] );
-      return;
-    }
-    setAppliedDateRange( [ startDate, endDate || startDate ] );
+  // Reset semua filter
+  const resetFilters = () => {
+    setBranchFilter( null );
+    setDateRange( [ null, null ] );
+    setAppliedDateRange( [ null, null ] );
     setCurrentPage( 1 );
   };
 
@@ -171,7 +169,7 @@ const OwnerLaporanPenjualan = () => {
             value={ branchFilter || '' }
             onChange={ e => {
               const val = e.target.value;
-              setBranchFilter( val || null ); // reset kalau kosong
+              setBranchFilter( val || null );
               setCurrentPage( 1 );
             } }
             className="px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-blue-300 focus:border-blue-500"
@@ -191,8 +189,11 @@ const OwnerLaporanPenjualan = () => {
                 endDate={ endDate }
                 onChange={ ( update ) => {
                   setDateRange( update );
+                  if ( update[ 0 ] && update[ 1 ] ) {
+                    setAppliedDateRange( [ update[ 0 ], update[ 1 ] ] );
+                    setCurrentPage( 1 );
+                  }
                   if ( !update[ 0 ] && !update[ 1 ] ) {
-                    // reset filter kalau di-clear
                     setAppliedDateRange( [ null, null ] );
                     setCurrentPage( 1 );
                   }
@@ -204,10 +205,10 @@ const OwnerLaporanPenjualan = () => {
                 placeholderText="Pilih rentang tanggal"
               />
               <button
-                onClick={ applyDateFilter }
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
+                onClick={ resetFilters }
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600"
               >
-                Terapkan
+                Reset
               </button>
             </div>
           </div>

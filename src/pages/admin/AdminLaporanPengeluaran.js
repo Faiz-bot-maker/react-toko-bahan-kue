@@ -4,76 +4,76 @@ import axios from "axios";
 import { HiOutlineDocumentReport, HiOutlinePlus } from "react-icons/hi";
 import { FiEdit, FiTrash } from "react-icons/fi";
 
-const getHeaders = () => ({
-    Authorization: localStorage.getItem("authToken"),
+const getHeaders = () => ( {
+    Authorization: localStorage.getItem( "authToken" ),
     "ngrok-skip-browser-warning": "true",
-});
+} );
 
-const formatRupiah = (angka) =>
-    "Rp " + (angka || 0).toLocaleString("id-ID");
+const formatRupiah = ( angka ) =>
+    "Rp " + ( angka || 0 ).toLocaleString( "id-ID" );
 
 const AdminLaporanPengeluaran = () => {
-    const [expenses, setExpenses] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [ expenses, setExpenses ] = useState( [] );
+    const [ loading, setLoading ] = useState( false );
 
-    const [modal, setModal] = useState({
+    const [ modal, setModal ] = useState( {
         open: false,
         mode: "add",
         data: null,
-    });
+    } );
 
-    const [form, setForm] = useState({
+    const [ form, setForm ] = useState( {
         description: "",
         amount: "",
-    });
+    } );
 
-    useEffect(() => {
+    useEffect( () => {
         fetchExpenses();
-    }, []);
+    }, [] );
 
     const fetchExpenses = async () => {
         try {
-            setLoading(true);
+            setLoading( true );
             const res = await axios.get(
                 `${process.env.REACT_APP_API_URL}/expenses`,
                 { headers: getHeaders() }
             );
             const rows = res.data?.data || [];
-            setExpenses(Array.isArray(rows) ? rows : []);
-        } catch (err) {
-            console.error("Gagal mengambil data:", err);
+            setExpenses( Array.isArray( rows ) ? rows : [] );
+        } catch ( err ) {
+            console.error( "Gagal mengambil data:", err );
         } finally {
-            setLoading(false);
+            setLoading( false );
         }
     };
 
     const openAdd = () => {
-        setModal({ open: true, mode: "add", data: null });
-        setForm({ description: "", amount: "" });
+        setModal( { open: true, mode: "add", data: null } );
+        setForm( { description: "", amount: "" } );
     };
 
-    const openEdit = (exp) => {
-        setModal({ open: true, mode: "edit", data: exp });
-        setForm({
+    const openEdit = ( exp ) => {
+        setModal( { open: true, mode: "edit", data: exp } );
+        setForm( {
             description: exp.description || "",
             amount: exp.amount || "",
-        });
+        } );
     };
 
     const closeModal = () => {
-        setModal({ open: false, mode: "add", data: null });
-        setForm({ description: "", amount: "" });
+        setModal( { open: false, mode: "add", data: null } );
+        setForm( { description: "", amount: "" } );
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async ( e ) => {
         e.preventDefault();
         try {
             const payload = {
                 description: form.description,
-                amount: Number(form.amount) || 0,
+                amount: Number( form.amount ) || 0,
             };
 
-            if (modal.mode === "add") {
+            if ( modal.mode === "add" ) {
                 await axios.post(
                     `${process.env.REACT_APP_API_URL}/expenses`,
                     payload,
@@ -89,23 +89,23 @@ const AdminLaporanPengeluaran = () => {
 
             closeModal();
             fetchExpenses();
-        } catch (err) {
-            console.error("Gagal menyimpan:", err);
-            alert("Gagal menyimpan data.");
+        } catch ( err ) {
+            console.error( "Gagal menyimpan:", err );
+            alert( "Gagal menyimpan data." );
         }
     };
 
-    const handleDelete = async (exp) => {
-        if (!window.confirm("Yakin ingin menghapus data ini?")) return;
+    const handleDelete = async ( exp ) => {
+        if ( !window.confirm( "Yakin ingin menghapus data ini?" ) ) return;
         try {
             await axios.delete(
                 `${process.env.REACT_APP_API_URL}/expenses/${exp.id}`,
                 { headers: getHeaders() }
             );
             fetchExpenses();
-        } catch (err) {
-            console.error("Gagal menghapus:", err);
-            alert("Gagal menghapus data.");
+        } catch ( err ) {
+            console.error( "Gagal menghapus:", err );
+            alert( "Gagal menghapus data." );
         }
     };
 
@@ -127,14 +127,14 @@ const AdminLaporanPengeluaran = () => {
                         </div>
                     </div>
                     <button
-                        onClick={openAdd}
+                        onClick={ openAdd }
                         className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded"
                     >
                         <HiOutlinePlus className="text-lg" /> Tambah Pengeluaran
                     </button>
                 </div>
 
-                {/* Tabel Expenses */}
+                {/* Tabel Expenses */ }
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
@@ -152,9 +152,9 @@ const AdminLaporanPengeluaran = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {loading ? (
+                                { loading ? (
                                     <tr>
-                                        <td colSpan={3} className="px-6 py-12 text-center">
+                                        <td colSpan={ 3 } className="px-6 py-12 text-center">
                                             <div className="flex items-center justify-center">
                                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
                                                 <span className="ml-3 text-gray-600 text-sm">
@@ -166,57 +166,57 @@ const AdminLaporanPengeluaran = () => {
                                 ) : expenses.length === 0 ? (
                                     <tr>
                                         <td
-                                            colSpan={3}
+                                            colSpan={ 3 }
                                             className="px-6 py-12 text-center text-gray-500"
                                         >
                                             Tidak ada data
                                         </td>
                                     </tr>
                                 ) : (
-                                    expenses.map((row) => (
+                                    expenses.map( ( row ) => (
                                         <tr
-                                            key={row.id}
+                                            key={ row.id }
                                             className="hover:bg-gray-50 transition-colors"
                                         >
                                             <td className="px-6 py-4 text-sm text-gray-800">
-                                                {row.description}
+                                                { row.description }
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-800">
-                                                {formatRupiah(row.amount)}
+                                                { formatRupiah( row.amount ) }
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <button
-                                                    onClick={() => openEdit(row)}
+                                                    onClick={ () => openEdit( row ) }
                                                     className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors mr-2"
                                                     title="Edit"
                                                 >
-                                                    <FiEdit size={18} />
+                                                    <FiEdit size={ 18 } />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(row)}
+                                                    onClick={ () => handleDelete( row ) }
                                                     className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Hapus"
                                                 >
-                                                    <FiTrash size={18} />
+                                                    <FiTrash size={ 18 } />
                                                 </button>
                                             </td>
                                         </tr>
-                                    ))
-                                )}
+                                    ) )
+                                ) }
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                {/* Modal Add/Edit */}
-                {modal.open && (
+                {/* Modal Add/Edit */ }
+                { modal.open && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                         <div className="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4 border border-gray-200">
                             <div className="p-6">
                                 <h2 className="text-xl font-bold text-gray-800 mb-4">
-                                    {modal.mode === "add" ? "Tambah" : "Edit"} Pengeluaran
+                                    { modal.mode === "add" ? "Tambah" : "Edit" } Pengeluaran
                                 </h2>
-                                <form onSubmit={handleSubmit} className="space-y-4">
+                                <form onSubmit={ handleSubmit } className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                                             Deskripsi
@@ -225,9 +225,9 @@ const AdminLaporanPengeluaran = () => {
                                             type="text"
                                             className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
                                             placeholder="Contoh: Makan siang, Transport"
-                                            value={form.description}
-                                            onChange={(e) =>
-                                                setForm({ ...form, description: e.target.value })
+                                            value={ form.description }
+                                            onChange={ ( e ) =>
+                                                setForm( { ...form, description: e.target.value } )
                                             }
                                             required
                                         />
@@ -240,9 +240,9 @@ const AdminLaporanPengeluaran = () => {
                                             type="number"
                                             className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
                                             placeholder="0"
-                                            value={form.amount}
-                                            onChange={(e) =>
-                                                setForm({ ...form, amount: e.target.value })
+                                            value={ form.amount }
+                                            onChange={ ( e ) =>
+                                                setForm( { ...form, amount: e.target.value } )
                                             }
                                             required
                                         />
@@ -251,7 +251,7 @@ const AdminLaporanPengeluaran = () => {
                                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                                         <button
                                             type="button"
-                                            onClick={closeModal}
+                                            onClick={ closeModal }
                                             className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm"
                                         >
                                             Batal
@@ -267,7 +267,7 @@ const AdminLaporanPengeluaran = () => {
                             </div>
                         </div>
                     </div>
-                )}
+                ) }
             </div>
         </Layout>
     );

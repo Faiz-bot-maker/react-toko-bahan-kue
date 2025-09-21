@@ -1,380 +1,253 @@
 import React, { useState, useEffect } from 'react';
-import { HiOutlinePlus } from 'react-icons/hi';
-import { FiEdit, FiTrash } from 'react-icons/fi';
-import axios from "axios";
 import Layout from '../../components/Layout';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import axios from 'axios';
 
 const statusColor = {
-    Pending: 'bg-yellow-100 text-yellow-800',
-    Lunas: 'bg-green-100 text-green-800',
+    PENDING: 'bg-yellow-100 text-yellow-800',
+    LUNAS: 'bg-green-100 text-green-800',
+    VOID: 'bg-gray-100 text-gray-600',
 };
 
 const formatRupiah = ( angka ) => 'Rp ' + angka.toLocaleString( 'id-ID' );
 
+const getHeaders = () => ( {
+    Authorization: localStorage.getItem( 'authToken' ),
+    "ngrok-skip-browser-warning": "true",
+} );
+
 const OwnerLaporanPiutang = () => {
-    const [ pelanggan, setPelanggan ] = useState( [] );
-    const [ filteredData, setFilteredData ] = useState( [] );
-    const [ modal, setModal ] = useState( { open: false, mode: 'add', idx: null } );
-    const [ form, setForm ] = useState( { nama: '', total: '', status: 'Pending' } );
+    const [ data, setData ] = useState( [] );
     const [ loading, setLoading ] = useState( true );
 
-    // Search & filter
-    const [ searchNama, setSearchNama ] = useState( "" );
+    // Filter
+    const [ searchTerm, setSearchTerm ] = useState( '' );
+    const [ branchFilter, setBranchFilter ] = useState( '' );
+    const [ branches, setBranches ] = useState( [] );
     const [ dateRange, setDateRange ] = useState( [ null, null ] );
+    const [ appliedDateRange, setAppliedDateRange ] = useState( [ null, null ] );
     const [ startDate, endDate ] = dateRange;
 
-    const API_URL = `${process.env.REACT_APP_API_URL}/customers`;
+    // Pagination
+    const [ currentPage, setCurrentPage ] = useState( 1 );
+    const [ totalPages, setTotalPages ] = useState( 1 );
+    const [ totalItems, setTotalItems ] = useState( 0 );
 
+    const API_URL = `${process.env.REACT_APP_API_URL}/debt`;
+
+    // Fetch branch list
     useEffect( () => {
-        fetchPelanggan();
+        const fetchBranches = async () => {
+            try {
+                const res = await axios.get( `${process.env.REACT_APP_API_URL}/branches`, { headers: getHeaders() } );
+                setBranches( res.data?.data || [] );
+            } catch ( err ) {
+                console.error( "Gagal fetch branch:", err );
+            }
+        };
+        fetchBranches();
     }, [] );
 
-    const fetchPelanggan = async () => {
+    // Fetch data otomatis saat filter/pagination berubah
+    useEffect( () => {
+        if ( ( startDate && !endDate ) || ( !startDate && endDate ) ) return;
+        fetchData( currentPage, searchTerm );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ currentPage, searchTerm, branchFilter, appliedDateRange ] );
+
+    const fetchData = async ( page = 1, search = '' ) => {
         try {
             setLoading( true );
-            const res = await axios.get( API_URL, {
-                headers: { "ngrok-skip-browser-warning": "true" },
-            } );
-            const data = res.data?.data || res.data;
-            if ( Array.isArray( data ) ) setPelanggan( data );
+
+            const params = new URLSearchParams();
+            params.append( 'page', page );
+            params.append( 'size', 10 );
+            if ( branchFilter ) params.append( 'branch_id', branchFilter );
+            if ( appliedDateRange[ 0 ] ) params.append( 'start_at', appliedDateRange[ 0 ].toISOString().split( 'T' )[ 0 ] );
+            if ( appliedDateRange[ 1 ] ) params.append( 'end_at', appliedDateRange[ 1 ].toISOString().split( 'T' )[ 0 ] );
+            if ( search ) params.append( 'search', search );
+
+            const res = await axios.get( API_URL, { headers: getHeaders(), params } );
+            const result = res.data?.data || res.data;
+            const paging = res.data?.paging || {};
+            setData( result );
+            setCurrentPage( paging.page || 1 );
+            setTotalPages( paging.total_page || 1 );
+            setTotalItems( paging.total_item || result.length );
         } catch ( err ) {
             console.error( "Gagal fetch data piutang:", err );
+            setData( [] );
         } finally {
             setLoading( false );
         }
     };
 
-    const openAdd = () => {
-        setForm( { nama: '', total: '', status: 'Pending' } );
-        setModal( { open: true, mode: 'add', idx: null } );
-    };
-    const openEdit = ( idx ) => {
-        setForm( pelanggan[ idx ] );
-        setModal( { open: true, mode: 'edit', idx } );
-    };
-    const closeModal = () => setModal( { open: false, mode: 'add', idx: null } );
-
-    const handleSubmit = async ( e ) => {
-        e.preventDefault();
-        if ( !form.nama || !form.total ) return;
-        try {
-            if ( modal.mode === 'add' ) {
-                await axios.post( API_URL, {
-                    nama: form.nama,
-                    total: Number( form.total ),
-                    status: form.status,
-                }, {
-                    headers: { "ngrok-skip-browser-warning": "true" },
-                } );
-            } else {
-                await axios.put( `${API_URL}/${pelanggan[ modal.idx ].id}`, {
-                    nama: form.nama,
-                    total: Number( form.total ),
-                    status: form.status,
-                }, {
-                    headers: { "ngrok-skip-browser-warning": "true" },
-                } );
-            }
-            fetchPelanggan();
-            closeModal();
-            setFilteredData( [] ); // reset filter setelah simpan
-        } catch ( err ) {
-            alert( 'Gagal simpan data piutang!' );
-        }
+    const resetFilters = () => {
+        setSearchTerm( '' );
+        setBranchFilter( '' );
+        setDateRange( [ null, null ] );
+        setAppliedDateRange( [ null, null ] );
+        setCurrentPage( 1 );
+        fetchData( 1 );
     };
 
-    const handleDelete = async ( idx ) => {
-        if ( window.confirm( 'Yakin hapus data piutang ini?' ) ) {
-            try {
-                await axios.delete( `${API_URL}/${pelanggan[ idx ].id}`, {
-                    headers: { "ngrok-skip-browser-warning": "true" },
-                } );
-                fetchPelanggan();
-                setFilteredData( [] ); // reset filter setelah hapus
-            } catch ( err ) {
-                alert( 'Gagal hapus data piutang!' );
-            }
-        }
+    const formatDate = ( timestamp ) => {
+        const d = new Date( timestamp );
+        return d.toLocaleDateString( "id-ID" );
     };
 
-    // Filter data saat tombol Cari diklik
-    const handleSearch = () => {
-        if ( !searchNama && !startDate && !endDate ) {
-            setFilteredData( [] );
-            return;
-        }
+    const totalPiutang = 0;
+    const totalLunas = 0;
 
-        const result = pelanggan.filter( ( p ) => {
-            const matchNama = p.nama.toLowerCase().includes( searchNama.toLowerCase() );
-            let matchTanggal = true;
-            if ( startDate && endDate ) {
-                const createdAt = new Date( p.created_at );
-                matchTanggal = createdAt >= startDate && createdAt <= endDate;
-            }
-            return matchNama && matchTanggal;
-        } );
-        setFilteredData( result );
+    // Pagination component
+    const Pagination = ( { page, setPage, totalPages, total, perPage } ) => {
+        const startIndex = ( page - 1 ) * perPage;
+        const endIndex = Math.min( startIndex + perPage, total );
+
+        return (
+            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+                <div className="text-xs text-gray-500">
+                    Menampilkan { total === 0 ? 0 : startIndex + 1 }-{ endIndex } dari total { total } piutang
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={ () => setPage( 1 ) } disabled={ page === 1 } className="px-2.5 py-1.5 rounded border">{ '«' }</button>
+                    <button onClick={ () => setPage( p => Math.max( 1, p - 1 ) ) } disabled={ page === 1 } className="px-3 py-1.5 rounded border">Prev</button>
+                    <span className="text-sm text-gray-700">{ page } / { totalPages }</span>
+                    <button onClick={ () => setPage( p => Math.min( totalPages, p + 1 ) ) } disabled={ page === totalPages } className="px-3 py-1.5 rounded border">Next</button>
+                    <button onClick={ () => setPage( totalPages ) } disabled={ page === totalPages } className="px-2.5 py-1.5 rounded border">{ '»' }</button>
+                </div>
+            </div>
+        );
     };
-
-    // Hitung total piutang & lunas berdasarkan filteredData atau pelanggan jika belum difilter
-    const displayData = filteredData.length > 0 ? filteredData : pelanggan;
-    const totalPiutang = displayData
-        .filter( p => p.status === 'Pending' )
-        .reduce( ( total, p ) => total + ( p.total || 0 ), 0 );
-    const totalLunas = displayData
-        .filter( p => p.status === 'Lunas' )
-        .reduce( ( total, p ) => total + ( p.total || 0 ), 0 );
 
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
-                {/* Header Section */ }
+                {/* Header */ }
                 <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 bg-red-100 rounded-lg">
-                            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={ 2 } d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-800">Laporan Piutang</h1>
-                            <p className="text-sm text-gray-600">Kelola data piutang pelanggan</p>
-                        </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Laporan Piutang</h1>
+                        <p className="text-sm text-gray-600">Kelola data piutang pelanggan</p>
                     </div>
-                    <button
-                        onClick={ openAdd }
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all duration-200 hover:shadow-xl"
-                    >
-                        <HiOutlinePlus className="text-lg" /> Tambah Piutang
-                    </button>
                 </div>
 
-                {/* Summary Cards */ }
+                {/* Summary */ }
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs text-gray-600 font-medium mb-1">Total Piutang</p>
-                                <p className="text-2xl font-bold text-red-600">{ formatRupiah( totalPiutang ) }</p>
-                                <p className="text-xs text-gray-500 mt-1">Belum dibayar</p>
-                            </div>
-                            <div className="w-14 h-14 bg-red-100 rounded-lg flex items-center justify-center">
-                                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={ 2 } d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                </svg>
-                            </div>
-                        </div>
+                        <p className="text-xs text-gray-600 font-medium mb-1">Total Piutang</p>
+                        <p className="text-2xl font-bold text-red-600">{ formatRupiah( totalPiutang ) }</p>
                     </div>
                     <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs text-gray-600 font-medium mb-1">Total Lunas</p>
-                                <p className="text-2xl font-bold text-green-600">{ formatRupiah( totalLunas ) }</p>
-                                <p className="text-xs text-gray-500 mt-1">Sudah dibayar</p>
-                            </div>
-                            <div className="w-14 h-14 bg-green-100 rounded-lg flex items-center justify-center">
-                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={ 2 } d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                        </div>
+                        <p className="text-xs text-gray-600 font-medium mb-1">Total Lunas</p>
+                        <p className="text-2xl font-bold text-green-600">{ formatRupiah( totalLunas ) }</p>
                     </div>
                 </div>
 
-                {/* Filter Section */ }
-                <div className="flex flex-col md:flex-row items-end md:items-center gap-4 mb-4">
-                    <input
-                        type="text"
-                        placeholder="Cari nama pelanggan..."
-                        value={ searchNama }
-                        onChange={ ( e ) => setSearchNama( e.target.value ) }
-                        className="border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm w-full md:w-1/3"
-                    />
-                    <DatePicker
-                        selectsRange={ true }
-                        startDate={ startDate }
-                        endDate={ endDate }
-                        onChange={ ( update ) => {
-                            setDateRange( update );
-                            if ( !update[ 0 ] && !update[ 1 ] ) {
-                                // clear datepicker → reset filter
-                                setFilteredData( [] );
-                            }
-                        } }
-                        isClearable={ true }
-                        dateFormat="dd/MM/yyyy"
-                        className="border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm w-full"
-                        placeholderText="Pilih rentang tanggal"
-                    />
-                    <button
-                        onClick={ handleSearch }
-                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors md:mt-0 mt-2"
-                    >
-                        Cari
-                    </button>
+                {/* Filters */ }
+                <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Cari</label>
+                        <input
+                            type="text"
+                            value={ searchTerm }
+                            onChange={ ( e ) => {
+                                setSearchTerm( e.target.value );
+                                setCurrentPage( 1 );
+                            } }
+                            placeholder="Cari nama pelanggan / kode..."
+                            className="border rounded px-3 py-2 text-sm w-60"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Cabang</label>
+                        <select
+                            value={ branchFilter }
+                            onChange={ ( e ) => {
+                                setBranchFilter( e.target.value );
+                                setCurrentPage( 1 );
+                            } }
+                            className="border rounded px-3 py-2 text-sm w-60"
+                        >
+                            <option value="">Semua Cabang</option>
+                            { branches.map( branch => (
+                                <option key={ branch.id } value={ branch.id }>{ branch.name }</option>
+                            ) ) }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Rentang Tanggal Hutang</label>
+                        <DatePicker
+                            selectsRange
+                            startDate={ startDate }
+                            endDate={ endDate }
+                            onChange={ ( update ) => {
+                                setDateRange( update );
+                                if ( update[ 0 ] && update[ 1 ] ) {
+                                    setAppliedDateRange( [ update[ 0 ], update[ 1 ] ] );
+                                    setCurrentPage( 1 );
+                                }
+                                if ( !update[ 0 ] && !update[ 1 ] ) {
+                                    setAppliedDateRange( [ null, null ] );
+                                    setCurrentPage( 1 );
+                                }
+                            } }
+                            isClearable
+                            dateFormat="dd/MM/yyyy"
+                            className="border rounded px-3 py-2 text-sm w-60"
+                        />
+                    </div>
+
+                    <button onClick={ resetFilters } className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors">Reset</button>
                 </div>
 
-                {/* Table Section */ }
+                {/* Table */ }
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
                             <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
                                 <tr>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                                        Nama Pelanggan
-                                    </th>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                                        Jumlah Piutang
-                                    </th>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                                        Status Pembayaran
-                                    </th>
-                                    <th className="px-6 py-4 text-right font-semibold text-xs uppercase tracking-wider">
-                                        Aksi
-                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Nama Pelanggan</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Referensi</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Jumlah Piutang</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Cabang</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Hutang</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Bayar</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 { loading ? (
-                                    <tr>
-                                        <td colSpan={ 4 } className="px-6 py-12 text-center">
-                                            <div className="flex items-center justify-center">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                                                <span className="ml-3 text-gray-600">Memuat data...</span>
-                                            </div>
-                                        </td>
+                                    <tr><td colSpan={ 7 } className="px-6 py-12 text-center">Memuat data...</td></tr>
+                                ) : data.length === 0 ? (
+                                    <tr><td colSpan={ 7 } className="px-6 py-12 text-center">Tidak ada data</td></tr>
+                                ) : data.map( ( d ) => (
+                                    <tr key={ d.id } className="hover:bg-gray-50">
+                                        <td className="px-6 py-4">{ d.related }</td>
+                                        <td className="px-6 py-4">{ d.reference_code }</td>
+                                        <td className="px-6 py-4">{ formatRupiah( d.total_amount || 0 ) }</td>
+                                        <td className="px-6 py-4"><span className={ `px-3 py-1 rounded-full text-xs ${statusColor[ d.status ]}` }>{ d.status }</span></td>
+                                        <td className="px-6 py-4">{ d.branch_name }</td>
+                                        <td className="px-6 py-4">{ d.due_date ? formatDate( d.due_date ) : '-' }</td>
+                                        <td className="px-6 py-4">{ d.created_at ? formatDate( d.created_at ) : '-' }</td>
                                     </tr>
-                                ) : displayData.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={ 4 } className="px-6 py-16 text-center">
-                                            <div className="flex flex-col items-center">
-                                                <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={ 2 } d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                                </svg>
-                                                <h3 className="text-lg font-medium text-gray-900 mb-2">Tidak ada data</h3>
-                                                <p className="text-gray-500 mb-4">Coba ganti filter atau tambah data baru</p>
-                                                <button
-                                                    onClick={ openAdd }
-                                                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                                                >
-                                                    <HiOutlinePlus className="text-base" /> Tambah Piutang
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    displayData.map( ( p, idx ) => (
-                                        <tr key={ idx } className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="font-medium text-gray-900">{ p.nama }</div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-gray-700 font-semibold">{ formatRupiah( p.total ) }</div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={ `px-3 py-1 rounded-full text-xs font-semibold ${statusColor[ p.status ]}` }>
-                                                    { p.status }
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex justify-end gap-2">
-                                                    <button
-                                                        onClick={ () => openEdit( idx ) }
-                                                        className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Edit"
-                                                    >
-                                                        <FiEdit size={ 18 } />
-                                                    </button>
-                                                    <button
-                                                        onClick={ () => handleDelete( idx ) }
-                                                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Hapus"
-                                                    >
-                                                        <FiTrash size={ 18 } />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ) )
-                                ) }
+                                ) ) }
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                {/* Modal */ }
-                { modal.open && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                        <div className="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4 border border-gray-200">
-                            <div className="p-6">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="p-2 bg-red-100 rounded-lg">
-                                        <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={ 2 } d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                        </svg>
-                                    </div>
-                                    <h2 className="text-xl font-bold text-gray-800">
-                                        { modal.mode === 'add' ? 'Tambah' : 'Edit' } Data Piutang
-                                    </h2>
-                                </div>
-
-                                <form onSubmit={ handleSubmit } className="space-y-6">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Nama Pelanggan</label>
-                                        <input
-                                            type="text"
-                                            className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-colors"
-                                            placeholder="Masukkan nama pelanggan"
-                                            value={ form.nama }
-                                            onChange={ e => setForm( { ...form, nama: e.target.value } ) }
-                                            required
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Jumlah Piutang</label>
-                                        <input
-                                            type="number"
-                                            className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-colors"
-                                            placeholder="Masukkan jumlah piutang"
-                                            value={ form.total }
-                                            onChange={ e => setForm( { ...form, total: e.target.value } ) }
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Status Pembayaran</label>
-                                        <select
-                                            className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-colors"
-                                            value={ form.status }
-                                            onChange={ e => setForm( { ...form, status: e.target.value } ) }
-                                        >
-                                            <option value="Pending">Belum Lunas</option>
-                                            <option value="Lunas">Lunas</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="flex justify-end gap-3 pt-4">
-                                        <button
-                                            type="button"
-                                            onClick={ closeModal }
-                                            className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors"
-                                        >
-                                            Batal
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium shadow-sm transition-colors"
-                                        >
-                                            Simpan
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+                {/* Pagination */ }
+                { totalPages > 1 && (
+                    <Pagination
+                        page={ currentPage }
+                        setPage={ setCurrentPage }
+                        totalPages={ totalPages }
+                        total={ totalItems }
+                        perPage={ data.length }
+                    />
                 ) }
             </div>
         </Layout>
