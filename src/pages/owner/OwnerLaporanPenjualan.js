@@ -52,8 +52,19 @@ const OwnerLaporanPenjualan = () => {
       params.append( 'page', page );
       params.append( 'size', 10 );
       if ( branchFilter ) params.append( 'branch_id', branchFilter );
-      if ( appliedDateRange[ 0 ] ) params.append( 'start_at', appliedDateRange[ 0 ].toISOString().split( 'T' )[ 0 ] );
-      if ( appliedDateRange[ 1 ] ) params.append( 'end_at', appliedDateRange[ 1 ].toISOString().split( 'T' )[ 0 ] );
+
+      if ( startDate && endDate ) {
+        const formatLocal = ( date ) => {
+          const d = new Date( date );
+          const year = d.getFullYear();
+          const month = String( d.getMonth() + 1 ).padStart( 2, "0" );
+          const day = String( d.getDate() ).padStart( 2, "0" );
+          return `${year}-${month}-${day}`;
+        }
+
+        params.append( "start_at", formatLocal( startDate ) );
+        params.append( "end_at", formatLocal( endDate ) );
+      }
 
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/sales-and-product-reports/daily?${params.toString()}`,
@@ -75,35 +86,74 @@ const OwnerLaporanPenjualan = () => {
 
   useEffect( () => {
     fetchSalesData( currentPage );
-  }, [ currentPage, branchFilter, appliedDateRange ] );
+  }, [ currentPage, branchFilter, startDate, endDate ] );
 
   // Summary
   const totalTransactions = salesData.reduce( ( sum, item ) => sum + ( item.total_transactions || 0 ), 0 );
   const totalProductsSold = salesData.reduce( ( sum, item ) => sum + ( item.total_products_sold || 0 ), 0 );
   const totalRevenue = salesData.reduce( ( sum, item ) => sum + ( item.total_revenue || 0 ), 0 );
 
-  const startIndex = ( currentPage - 1 ) * 10;
-  const endIndex = Math.min( startIndex + salesData.length, totalItems );
+  // const startIndex = ( currentPage - 1 ) * 10;
+  // const endIndex = Math.min( startIndex + salesData.length, totalItems );
 
   // Pagination
-  const Pagination = () => (
-    <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 mt-4">
-      <div className="text-xs text-gray-500">
-        Menampilkan { totalItems === 0 ? 0 : startIndex + 1 }-{ endIndex } dari total { totalItems } data
+  const Pagination = ( { page, setPage, totalPages, total, perPage } ) => {
+    const startIndex = ( page - 1 ) * perPage;
+    const endIndex = Math.min( startIndex + perPage, total );
+
+    return (
+      <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+        <div className="text-xs text-gray-500">
+          Menampilkan { total === 0 ? 0 : startIndex + 1 }-{ endIndex } dari total { total } produk
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={ () => setPage( 1 ) }
+            disabled={ page === 1 }
+            className={ `px-2.5 py-1.5 rounded border ${page === 1
+              ? 'text-gray-400 border-gray-200'
+              : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+              }` }
+          >
+            «
+          </button>
+          <button
+            onClick={ () => setPage( ( p ) => Math.max( 1, p - 1 ) ) }
+            disabled={ page === 1 }
+            className={ `px-3 py-1.5 rounded border ${page === 1
+              ? 'text-gray-400 border-gray-200'
+              : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+              }` }
+          >
+            Prev
+          </button>
+          <span className="text-sm text-gray-700">
+            { page } / { totalPages }
+          </span>
+          <button
+            onClick={ () => setPage( ( p ) => Math.min( totalPages, p + 1 ) ) }
+            disabled={ page === totalPages }
+            className={ `px-3 py-1.5 rounded border ${page === totalPages
+              ? 'text-gray-400 border-gray-200'
+              : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+              }` }
+          >
+            Next
+          </button>
+          <button
+            onClick={ () => setPage( totalPages ) }
+            disabled={ page === totalPages }
+            className={ `px-2.5 py-1.5 rounded border ${page === totalPages
+              ? 'text-gray-400 border-gray-200'
+              : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+              }` }
+          >
+            »
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <button onClick={ () => setCurrentPage( 1 ) } disabled={ currentPage === 1 }
-          className={ `px-2.5 py-1.5 rounded border ${currentPage === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>«</button>
-        <button onClick={ () => setCurrentPage( p => Math.max( 1, p - 1 ) ) } disabled={ currentPage === 1 }
-          className={ `px-3 py-1.5 rounded border ${currentPage === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Prev</button>
-        <span className="text-sm text-gray-700">{ currentPage } / { totalPages }</span>
-        <button onClick={ () => setCurrentPage( p => Math.min( totalPages, p + 1 ) ) } disabled={ currentPage === totalPages }
-          className={ `px-3 py-1.5 rounded border ${currentPage === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Next</button>
-        <button onClick={ () => setCurrentPage( totalPages ) } disabled={ currentPage === totalPages }
-          className={ `px-2.5 py-1.5 rounded border ${currentPage === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>»</button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // Reset semua filter
   const resetFilters = () => {
@@ -188,15 +238,8 @@ const OwnerLaporanPenjualan = () => {
                 startDate={ startDate }
                 endDate={ endDate }
                 onChange={ ( update ) => {
-                  setDateRange( update );
-                  if ( update[ 0 ] && update[ 1 ] ) {
-                    setAppliedDateRange( [ update[ 0 ], update[ 1 ] ] );
-                    setCurrentPage( 1 );
-                  }
-                  if ( !update[ 0 ] && !update[ 1 ] ) {
-                    setAppliedDateRange( [ null, null ] );
-                    setCurrentPage( 1 );
-                  }
+                  setDateRange( update )
+                  setCurrentPage( 1 );
                 } }
                 isClearable={ true }
                 maxDate={ today }
@@ -252,7 +295,15 @@ const OwnerLaporanPenjualan = () => {
           </div>
         </div>
 
-        { totalPages > 1 && <Pagination /> }
+        { totalPages > 1 && (
+          <Pagination
+            page={ currentPage }
+            setPage={ setCurrentPage }
+            totalPages={ totalPages }
+            total={ totalItems }
+            perPage={ salesData.length }
+          />
+        ) }
       </div>
     </Layout>
   );

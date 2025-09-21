@@ -59,8 +59,16 @@ const OwnerPergerakanStok = () => {
             setLoading( true );
             let params = {};
             if ( startDate && endDate ) {
-                params.start_at = startDate.toISOString().split( "T" )[ 0 ];
-                params.end_at = endDate.toISOString().split( "T" )[ 0 ];
+                const formatLocal = ( date ) => {
+                    const d = new Date( date );
+                    const year = d.getFullYear();
+                    const month = String( d.getMonth() + 1 ).padStart( 2, "0" );
+                    const day = String( d.getDate() ).padStart( 2, "0" );
+                    return `${year}-${month}-${day}`;
+                }
+
+                params.start_at = formatLocal( startDate );
+                params.end_at = formatLocal( endDate );
             }
             if ( branchFilter ) params.branch_id = branchFilter;
             params.search = search
@@ -193,7 +201,11 @@ const OwnerPergerakanStok = () => {
                             selectsRange={ true }
                             startDate={ startDate }
                             endDate={ endDate }
-                            onChange={ ( update ) => setDateRange( update ) }
+
+                            onChange={ ( update ) => {
+                                setCurrentPage( 1 );          // Reset ke halaman 1
+                                setDateRange( update )
+                            } }
                             isClearable={ true }
                             dateFormat="dd/MM/yyyy"
                             className="border rounded px-3 py-2 text-sm w-60"

@@ -60,8 +60,16 @@ const OwnerTransaksiKeluar = () => {
             setLoading( true );
             let params = { page };
             if ( startDate && endDate ) {
-                params.start_at = startDate.toISOString().split( "T" )[ 0 ];
-                params.end_at = endDate.toISOString().split( "T" )[ 0 ];
+                const formatLocal = ( date ) => {
+                    const d = new Date( date );
+                    const year = d.getFullYear();
+                    const month = String( d.getMonth() + 1 ).padStart( 2, "0" );
+                    const day = String( d.getDate() ).padStart( 2, "0" );
+                    return `${year}-${month}-${day}`;
+                }
+
+                params.start_at = formatLocal( startDate );
+                params.end_at = formatLocal( endDate );
             }
             if ( search ) {
                 params.search = searchTerm

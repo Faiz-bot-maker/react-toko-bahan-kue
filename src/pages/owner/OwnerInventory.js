@@ -162,7 +162,7 @@ const OwnerInventory = () => {
                 </div>
 
                 {/* Search & Filter */ }
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                <div className="flex flex-col md:flex-row gap-3 mb-4">
                     <input
                         type="text"
                         placeholder="Cari produk, SKU, atau cabang..."

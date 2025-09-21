@@ -64,8 +64,22 @@ const OwnerLaporanPiutang = () => {
             params.append( 'page', page );
             params.append( 'size', 10 );
             if ( branchFilter ) params.append( 'branch_id', branchFilter );
-            if ( appliedDateRange[ 0 ] ) params.append( 'start_at', appliedDateRange[ 0 ].toISOString().split( 'T' )[ 0 ] );
-            if ( appliedDateRange[ 1 ] ) params.append( 'end_at', appliedDateRange[ 1 ].toISOString().split( 'T' )[ 0 ] );
+
+            if ( startDate && endDate ) {
+                const formatLocal = ( date ) => {
+                    const d = new Date( date );
+                    const year = d.getFullYear();
+                    const month = String( d.getMonth() + 1 ).padStart( 2, "0" );
+                    const day = String( d.getDate() ).padStart( 2, "0" );
+                    return `${year}-${month}-${day}`;
+                }
+
+                params.append( "start_at", formatLocal( startDate ) );
+                params.append( "end_at", formatLocal( endDate ) );
+            }
+
+            // if ( appliedDateRange[ 0 ] ) params.append( 'start_at', appliedDateRange[ 0 ].toISOString().split( 'T' )[ 0 ] );
+            // if ( appliedDateRange[ 1 ] ) params.append( 'end_at', appliedDateRange[ 1 ].toISOString().split( 'T' )[ 0 ] );
             if ( search ) params.append( 'search', search );
 
             const res = await axios.get( API_URL, { headers: getHeaders(), params } );

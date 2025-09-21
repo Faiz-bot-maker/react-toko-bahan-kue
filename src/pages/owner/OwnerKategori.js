@@ -215,7 +215,7 @@ const OwnerKategori = () => {
                 </div>
 
                 {/* 🔍 Search Input */ }
-                <div className="mb-4 flex justify-between items-center">
+                {/* <div className="mb-4 flex justify-between items-center">
                     <input
                         type="text"
                         placeholder="Cari kategori..."
@@ -225,6 +225,20 @@ const OwnerKategori = () => {
                             setCurrentPage( 1 ); // reset ke halaman pertama
                         } }
                         className="border px-4 py-2 rounded-lg text-sm w-64 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                </div> */}
+
+                {/* 🔎 Search Input */ }
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        placeholder="Cari kategori..."
+                        className="w-full md:w-1/3 px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-green-300 focus:border-green-500"
+                        value={ search }
+                        onChange={ ( e ) => {
+                            setSearch( e.target.value );
+                            setCurrentPage( 1 );
+                        } }
                     />
                 </div>
 
