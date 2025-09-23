@@ -67,6 +67,7 @@ const menus = [
 ];
 
 const adminMenus = [
+
   {
     section: 'Inventori',
     icon: <HiOutlineCube className="text-xs" />,
