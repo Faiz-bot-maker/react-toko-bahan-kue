@@ -1,4 +1,3 @@
-// src/pages/admin/AdminAlurKas.js
 import React, { useState, useEffect } from "react";
 import { HiOutlineCurrencyDollar } from "react-icons/hi";
 import axios from "axios";
@@ -8,64 +7,74 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const API_URL = `${process.env.REACT_APP_API_URL}/cash-bank-transactions`;
 
-const getHeaders = () => ({
-    Authorization: localStorage.getItem("authToken"),
+const getHeaders = () => ( {
+    Authorization: localStorage.getItem( "authToken" ),
     "ngrok-skip-browser-warning": "true",
-});
+} );
 
 const AdminAlurKas = () => {
-    const [transactions, setTransactions] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [ transactions, setTransactions ] = useState( [] );
+    const [ loading, setLoading ] = useState( true );
 
     // Filter tanggal
-    const [dateRange, setDateRange] = useState([null, null]);
-    const [startDate, endDate] = dateRange;
+    const [ dateRange, setDateRange ] = useState( [ null, null ] );
+    const [ startDate, endDate ] = dateRange;
 
-    // Ambil cabang admin dari localStorage
-    const adminBranchId = localStorage.getItem("branch_id");
+    // Search
+    const [ search, setSearch ] = useState( "" );
 
-    useEffect(() => {
-        fetchTransactions();
-    }, []);
+    // Pagination
+    const [ page, setPage ] = useState( 1 );
+    const [ size ] = useState( 10 );
+    const [ totalPage, setTotalPage ] = useState( 1 );
+    const [ totalItems, setTotalItems ] = useState( 0 );
 
-    const fetchTransactions = async () => {
+    const adminBranchId = localStorage.getItem( "branch_id" );
+
+    const fetchTransactions = async ( targetPage = page ) => {
         try {
-            setLoading(true);
+            setLoading( true );
             let params = {
-                branch_id: adminBranchId, // otomatis filter cabang admin
+                branch_id: adminBranchId,
+                page: targetPage,
+                size,
             };
-            if (startDate)
-                params.start_date = startDate.toISOString().split("T")[0];
-            if (endDate)
-                params.end_date = endDate.toISOString().split("T")[0];
+            if ( startDate ) params.start_date = startDate.toISOString().split( "T" )[ 0 ];
+            if ( endDate ) params.end_date = endDate.toISOString().split( "T" )[ 0 ];
+            if ( search ) params.search = search;
 
-            const res = await axios.get(API_URL, {
-                headers: getHeaders(),
-                params,
-            });
+            const res = await axios.get( API_URL, { headers: getHeaders(), params } );
+            setTransactions( res.data?.data || [] );
 
-            setTransactions(res.data?.data || []);
-        } catch (err) {
-            console.error("Failed to fetch transactions:", err);
-            setTransactions([]);
+            if ( res.data?.paging ) {
+                setTotalPage( res.data.paging.total_page );
+                setTotalItems( res.data.paging.total_item );
+            }
+        } catch ( err ) {
+            console.error( "Failed to fetch transactions:", err );
+            setTransactions( [] );
         } finally {
-            setLoading(false);
+            setLoading( false );
         }
     };
 
-    const formatDate = (timestamp) => {
-        const d = new Date(timestamp);
-        return d.toLocaleDateString("id-ID", {
+    useEffect( () => {
+        fetchTransactions();
+    }, [ endDate, search, page ] );
+
+    const formatDate = ( timestamp ) => {
+        const d = new Date( timestamp );
+        return d.toLocaleDateString( "id-ID", {
             year: "numeric",
-            month: "long",
+            month: "numeric",
             day: "numeric",
-        });
+        } );
     };
 
     return (
         <Layout>
             <div className="w-full max-w-6xl mx-auto">
-                {/* Header */}
+                {/* Header */ }
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-green-100 rounded-lg">
@@ -80,50 +89,51 @@ const AdminAlurKas = () => {
                     </div>
                 </div>
 
-                {/* Filter Tanggal */}
+                {/* Filter Tanggal + Search */ }
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
+                    {/* Search */ }
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Rentang Tanggal
-                        </label>
+                        <input
+                            type="text"
+                            placeholder="Cari deskripsi..."
+                            value={ search }
+                            onChange={ ( e ) => { setSearch( e.target.value ); setPage( 1 ); } }
+                            className="border rounded px-3 py-2 text-sm w-64"
+                        />
+                    </div>
+
+                    {/* Filter Tanggal */ }
+                    <div>
                         <DatePicker
-                            selectsRange={true}
-                            startDate={startDate}
-                            endDate={endDate}
-                            onChange={(update) => setDateRange(update)}
-                            isClearable={true}
+                            selectsRange
+                            startDate={ startDate }
+                            endDate={ endDate }
+                            onChange={ ( update ) => { setDateRange( update ); setPage( 1 ); } }
+                            isClearable
                             dateFormat="dd/MM/yyyy"
                             className="border rounded px-3 py-2 text-sm w-60"
                             placeholderText="Pilih rentang tanggal"
                         />
                     </div>
-                    <button
-                        onClick={fetchTransactions}
-                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    >
-                        Terapkan
-                    </button>
                 </div>
 
-                {/* Table */}
+                {/* Table */ }
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
                             <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">No</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Deskripsi</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Cabang</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tipe</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Sumber</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Deskripsi</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Jumlah</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {loading ? (
+                                { loading ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center">
+                                        <td colSpan={ 5 } className="px-6 py-12 text-center">
                                             <div className="flex items-center justify-center">
                                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                                                 <span className="ml-3 text-gray-600 text-sm">Memuat data...</span>
@@ -132,31 +142,39 @@ const AdminAlurKas = () => {
                                     </tr>
                                 ) : transactions.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-16 text-center">
-                                            <div className="flex flex-col items-center">
-                                                <HiOutlineCurrencyDollar className="text-6xl text-gray-300 mb-4" />
-                                                <h3 className="text-lg font-medium text-gray-900 mb-2">Data tidak ada</h3>
-                                                <p className="text-gray-500 text-sm">Tidak ditemukan transaksi sesuai filter</p>
-                                            </div>
+                                        <td colSpan={ 5 } className="px-6 py-16 text-center text-gray-500">
+                                            Tidak ditemukan transaksi
                                         </td>
                                     </tr>
                                 ) : (
-                                    transactions.map((trx) => (
-                                        <tr key={trx.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 font-medium text-gray-900">{trx.id}</td>
-                                            <td className="px-6 py-4 text-gray-600">{formatDate(trx.transaction_date)}</td>
-                                            <td className="px-6 py-4 text-gray-600">{trx.branch_name}</td>
-                                            <td className={`px-6 py-4 font-semibold ${trx.type === "IN" ? "text-green-600" : "text-red-600"}`}>
-                                                {trx.type === "IN" ? "Masuk" : "Keluar"}
+                                    transactions.map( ( trx ) => (
+                                        <tr key={ trx.id } className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 text-gray-600">{ trx.description }</td>
+                                            <td className="px-6 py-4 text-gray-600">{ formatDate( trx.transaction_date ) }</td>
+                                            <td className={ `px-6 py-4 font-semibold ${trx.type === "IN" ? "text-green-600" : "text-red-600"}` }>
+                                                { trx.type === "IN" ? "Masuk" : "Keluar" }
                                             </td>
-                                            <td className="px-6 py-4 text-gray-600">{trx.source}</td>
-                                            <td className="px-6 py-4 text-gray-600">{trx.description}</td>
-                                            <td className="px-6 py-4 text-gray-900 font-medium">Rp {trx.amount.toLocaleString("id-ID")}</td>
+                                            <td className="px-6 py-4 text-gray-600">{ trx.source }</td>
+                                            <td className="px-6 py-4 text-gray-900 font-medium">Rp { trx.amount.toLocaleString( "id-ID" ) }</td>
                                         </tr>
-                                    ))
-                                )}
+                                    ) )
+                                ) }
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Pagination */ }
+                    <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+                        <div className="text-xs text-gray-500">
+                            Menampilkan { ( page - 1 ) * size + 1 }–{ Math.min( page * size, totalItems ) } dari { totalItems } data
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={ () => setPage( 1 ) } disabled={ page === 1 } className={ `px-2.5 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>«</button>
+                            <button onClick={ () => setPage( p => Math.max( 1, p - 1 ) ) } disabled={ page === 1 } className={ `px-3 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Prev</button>
+                            <span className="text-sm text-gray-700">{ page } / { totalPage }</span>
+                            <button onClick={ () => setPage( p => Math.min( totalPage, p + 1 ) ) } disabled={ page === totalPage || totalPage === 0 } className={ `px-3 py-1.5 rounded border ${page === totalPage || totalPage === 0 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Next</button>
+                            <button onClick={ () => setPage( totalPage ) } disabled={ page === totalPage || totalPage === 0 } className={ `px-2.5 py-1.5 rounded border ${page === totalPage || totalPage === 0 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>»</button>
+                        </div>
                     </div>
                 </div>
             </div>

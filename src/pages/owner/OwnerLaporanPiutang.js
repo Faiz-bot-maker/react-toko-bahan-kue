@@ -8,7 +8,7 @@ const statusColor = {
     PENDING: 'bg-yellow-100 text-yellow-800',
     LUNAS: 'bg-green-100 text-green-800',
     VOID: 'bg-gray-100 text-gray-600',
-    PAID: 'bg-green-100 text-green-800', // tambahan
+    PAID: 'bg-green-100 text-green-800',
 };
 
 const formatRupiah = ( angka ) => 'Rp ' + angka.toLocaleString( 'id-ID' );
@@ -22,7 +22,7 @@ const OwnerLaporanPiutang = () => {
     const [ data, setData ] = useState( [] );
     const [ loading, setLoading ] = useState( true );
 
-    // Modal
+    // Modal detail
     const [ showModal, setShowModal ] = useState( false );
     const [ detailData, setDetailData ] = useState( null );
     const [ loadingDetail, setLoadingDetail ] = useState( false );
@@ -42,7 +42,7 @@ const OwnerLaporanPiutang = () => {
 
     const API_URL = `${process.env.REACT_APP_API_URL}/debt`;
 
-    // Fetch branch list
+    // Fetch branch list (Admin bisa lihat semua cabang)
     useEffect( () => {
         const fetchBranches = async () => {
             try {
@@ -79,7 +79,6 @@ const OwnerLaporanPiutang = () => {
                     const day = String( d.getDate() ).padStart( 2, "0" );
                     return `${year}-${month}-${day}`;
                 };
-
                 params.append( "start_at", formatLocal( startDate ) );
                 params.append( "end_at", formatLocal( endDate ) );
             }
@@ -129,9 +128,6 @@ const OwnerLaporanPiutang = () => {
         return d.toLocaleDateString( "id-ID" );
     };
 
-    const totalPiutang = 0;
-    const totalLunas = 0;
-
     // Pagination component
     const Pagination = ( { page, setPage, totalPages, total, perPage } ) => {
         const startIndex = ( page - 1 ) * perPage;
@@ -153,10 +149,66 @@ const OwnerLaporanPiutang = () => {
         );
     };
 
+    // Summary values
+    const totalPiutang = data.reduce( ( acc, d ) => acc + ( d.total_amount || 0 ), 0 );
+    const totalLunas = data.filter( d => d.status === 'LUNAS' ).reduce( ( acc, d ) => acc + ( d.total_amount || 0 ), 0 );
+    const totalPending = data.filter( d => d.status === 'PENDING' ).reduce( ( acc, d ) => acc + ( d.total_amount || 0 ), 0 );
+
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
-                {/* ... bagian summary & filters tetap ... */ }
+                {/* Judul Section */ }
+                <div className="mb-4">
+                    <h1 className="text-2xl font-bold text-gray-800">Laporan Piutang</h1>
+                    <p className="text-sm text-gray-500">Ringkasan piutang untuk periode yang dipilih</p>
+                </div>
+
+                {/* Card Summary */ }
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-white shadow rounded-lg p-4 flex flex-col justify-between">
+                        <p className="text-sm font-medium text-gray-500">Total Piutang</p>
+                        <p className="mt-2 text-2xl font-bold text-gray-800">{ formatRupiah( totalPiutang ) }</p>
+                    </div>
+                    <div className="bg-white shadow rounded-lg p-4 flex flex-col justify-between">
+                        <p className="text-sm font-medium text-gray-500">Total Lunas</p>
+                        <p className="mt-2 text-2xl font-bold text-green-600">{ formatRupiah( totalLunas ) }</p>
+                    </div>
+                    <div className="bg-white shadow rounded-lg p-4 flex flex-col justify-between">
+                        <p className="text-sm font-medium text-gray-500">Total Pending</p>
+                        <p className="mt-2 text-2xl font-bold text-yellow-600">{ formatRupiah( totalPending ) }</p>
+                    </div>
+                </div>
+
+                {/* Filters */ }
+                <div className="flex flex-wrap gap-4 mb-6 bg-white p-4 rounded shadow">
+                    <input
+                        type="text"
+                        placeholder="Cari piutang..."
+                        value={ searchTerm }
+                        onChange={ ( e ) => { setSearchTerm( e.target.value ); setCurrentPage( 1 ); } }
+                        className="border px-3 py-2 rounded w-64"
+                    />
+                    <select
+                        value={ branchFilter }
+                        onChange={ ( e ) => { setBranchFilter( e.target.value ); setCurrentPage( 1 ); } }
+                        className="border px-3 py-2 rounded w-60"
+                    >
+                        <option value="">Semua Cabang</option>
+                        { branches.map( b => <option key={ b.id } value={ b.id }>{ b.name }</option> ) }
+                    </select>
+                    <DatePicker
+                        selectsRange
+                        startDate={ startDate }
+                        endDate={ endDate }
+                        onChange={ ( range ) => setDateRange( range ) }
+                        isClearable
+                        dateFormat="dd/MM/yyyy"
+                        placeholderText="Pilih rentang tanggal"
+                        className="border px-3 py-2 rounded w-60"
+                    />
+                    <button onClick={ () => { setAppliedDateRange( dateRange ); setCurrentPage( 1 ); } } className="bg-blue-600 text-white px-4 py-2 rounded">Terapkan</button>
+                    <button onClick={ resetFilters } className="bg-gray-300 px-4 py-2 rounded">Reset</button>
+                </div>
 
                 {/* Table */ }
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
@@ -164,14 +216,14 @@ const OwnerLaporanPiutang = () => {
                         <table className="min-w-full">
                             <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Nama Pelanggan</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Referensi</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Jumlah Piutang</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Cabang</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Hutang</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Bayar</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Aksi</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">Nama Pelanggan</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">Referensi</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">Jumlah Piutang</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">Status</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">Cabang</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">Tanggal Hutang</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">Tanggal Bayar</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
@@ -189,12 +241,7 @@ const OwnerLaporanPiutang = () => {
                                         <td className="px-6 py-4">{ d.due_date ? formatDate( d.due_date ) : '-' }</td>
                                         <td className="px-6 py-4">{ d.created_at ? formatDate( d.created_at ) : '-' }</td>
                                         <td className="px-6 py-4">
-                                            <button
-                                                onClick={ () => fetchDetail( d.id ) }
-                                                className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-[#11493E]"
-                                            >
-                                                Detail
-                                            </button>
+                                            <button onClick={ () => fetchDetail( d.id ) } className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-[#11493E]">Detail</button>
                                         </td>
                                     </tr>
                                 ) ) }
@@ -205,28 +252,17 @@ const OwnerLaporanPiutang = () => {
 
                 {/* Pagination */ }
                 { totalPages > 1 && (
-                    <Pagination
-                        page={ currentPage }
-                        setPage={ setCurrentPage }
-                        totalPages={ totalPages }
-                        total={ totalItems }
-                        perPage={ data.length }
-                    />
+                    <Pagination page={ currentPage } setPage={ setCurrentPage } totalPages={ totalPages } total={ totalItems } perPage={ 10 } />
                 ) }
 
                 {/* Modal Detail */ }
-                { showModal && (
+                { showModal && detailData && (
                     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative">
-                            <button
-                                onClick={ () => setShowModal( false ) }
-                                className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
-                            >
-                                ✕
-                            </button>
+                            <button onClick={ () => setShowModal( false ) } className="absolute top-3 right-3 text-gray-500 hover:text-gray-800">✕</button>
                             { loadingDetail ? (
                                 <p>Memuat detail...</p>
-                            ) : detailData ? (
+                            ) : (
                                 <div className="space-y-4">
                                     <h2 className="text-lg font-bold">Detail Piutang</h2>
                                     <div className="grid grid-cols-2 gap-4 text-sm">
@@ -283,13 +319,9 @@ const OwnerLaporanPiutang = () => {
                                                     ) ) }
                                                 </tbody>
                                             </table>
-                                        ) : (
-                                            <p className="text-sm text-gray-500">Belum ada pembayaran</p>
-                                        ) }
+                                        ) : <p className="text-sm text-gray-500">Belum ada pembayaran</p> }
                                     </div>
                                 </div>
-                            ) : (
-                                <p>Tidak ada detail ditemukan</p>
                             ) }
                         </div>
                     </div>

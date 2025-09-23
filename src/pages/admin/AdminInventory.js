@@ -5,57 +5,71 @@ import Layout from "../../components/Layout";
 
 const API_URL = `${process.env.REACT_APP_API_URL}/branch-inventory`;
 
-const getHeaders = () => ({
-    Authorization: localStorage.getItem("authToken"),
+const getHeaders = () => ( {
+    Authorization: localStorage.getItem( "authToken" ),
     "ngrok-skip-browser-warning": "true",
-});
+} );
 
 const AdminInventory = () => {
-    const [inventories, setInventories] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [ inventories, setInventories ] = useState( [] );
+    const [ loading, setLoading ] = useState( true );
 
     // Modal state
-    const [showModal, setShowModal] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
-    const [sizes, setSizes] = useState([]);
-    const [loadingSizes, setLoadingSizes] = useState(false);
+    const [ showModal, setShowModal ] = useState( false );
+    const [ selectedProduct, setSelectedProduct ] = useState( null );
+    const [ sizes, setSizes ] = useState( [] );
+    const [ loadingSizes, setLoadingSizes ] = useState( false );
 
-    useEffect(() => {
+    // Pagination & Search
+    const [ page, setPage ] = useState( 1 );
+    const [ perPage ] = useState( 10 );
+    const [ totalPages, setTotalPages ] = useState( 1 );
+    const [ totalItems, setTotalItems ] = useState( 0 );
+    const [ search, setSearch ] = useState( "" );
+
+    useEffect( () => {
         fetchInventories();
-    }, []);
+    }, [ page, search ] );
 
     const fetchInventories = async () => {
         try {
-            setLoading(true);
-            const res = await axios.get(API_URL, { headers: getHeaders() });
-            const data = res.data?.data || res.data;
-            if (Array.isArray(data)) setInventories(data);
-        } catch (err) {
-            console.error("Failed to fetch inventories:", err);
+            setLoading( true );
+            const res = await axios.get( API_URL, {
+                headers: getHeaders(),
+                params: { page, size: perPage, search }, // backend handle pagination & search
+            } );
+
+            const data = res.data?.data || [];
+            const paging = res.data?.paging || {};
+
+            setInventories( data );
+            setTotalPages( paging.total_page || 1 );
+            setTotalItems( paging.total_item || 0 );
+        } catch ( err ) {
+            console.error( "Failed to fetch inventories:", err );
         } finally {
-            setLoading(false);
+            setLoading( false );
         }
     };
 
-    const fetchSizes = async (sku, name, sizes) => {
+    const fetchSizes = async ( sku, name, sizes ) => {
         try {
-            setLoadingSizes(true);
-            setSelectedProduct({ sku, name });
-            setShowModal(true);
-
-            setSizes(sizes || []);
-        } catch (err) {
-            console.error("Failed to fetch sizes:", err);
+            setLoadingSizes( true );
+            setSelectedProduct( { sku, name } );
+            setShowModal( true );
+            setSizes( sizes || [] );
+        } catch ( err ) {
+            console.error( "Failed to fetch sizes:", err );
         } finally {
-            setLoadingSizes(false);
+            setLoadingSizes( false );
         }
     };
 
     return (
         <Layout>
-            <div className="w-full max-w-5xl mx-auto">
-                {/* Header */}
-                <div className="flex items-center gap-3 mb-8">
+            <div className="w-full max-w-7xl mx-auto">
+                {/* Header */ }
+                <div className="flex items-center gap-3 mb-6">
                     <div className="p-3 bg-green-100 rounded-lg">
                         <HiOutlineOfficeBuilding className="text-2xl text-green-600" />
                     </div>
@@ -65,11 +79,25 @@ const AdminInventory = () => {
                     </div>
                 </div>
 
-                {/* Table */}
+                {/* Search */ }
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        placeholder="Cari nama atau SKU..."
+                        value={ search }
+                        onChange={ ( e ) => {
+                            setSearch( e.target.value );
+                            setPage( 1 ); // reset ke page pertama saat search
+                        } }
+                        className="w-full md:w-80 px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:outline-none text-sm"
+                    />
+                </div>
+
+                {/* Table */ }
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
-                            <thead className="bg-gradient-to-r from-green-700 to-green-800 text-white">
+                            <thead class="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
                                 <tr>
                                     <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
                                         Nama Barang
@@ -83,9 +111,9 @@ const AdminInventory = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {loading ? (
+                                { loading ? (
                                     <tr>
-                                        <td colSpan={3} className="px-6 py-12 text-center">
+                                        <td colSpan={ 3 } className="px-6 py-12 text-center">
                                             <div className="flex items-center justify-center">
                                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                                                 <span className="ml-3 text-gray-600 text-sm">
@@ -96,26 +124,26 @@ const AdminInventory = () => {
                                     </tr>
                                 ) : inventories.length === 0 ? (
                                     <tr>
-                                        <td colSpan={3} className="px-6 py-16 text-center">
+                                        <td colSpan={ 3 } className="px-6 py-16 text-center">
                                             <div className="flex flex-col items-center">
                                                 <HiOutlineOfficeBuilding className="text-6xl text-gray-300 mb-4" />
                                                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                                    Belum ada data inventory
+                                                    Tidak ada data
                                                 </h3>
                                                 <p className="text-gray-500 mb-4 text-sm">
-                                                    Data inventory akan muncul di sini setelah tersedia
+                                                    Coba ubah pencarian atau cek data inventory
                                                 </p>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : (
-                                    inventories.map((item) => (
-                                        <tr key={item.sku} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 text-gray-900 font-medium">{item.name}</td>
-                                            <td className="px-6 py-4 text-gray-600">{item.sku}</td>
+                                    inventories.map( ( item ) => (
+                                        <tr key={ item.sku } className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 text-gray-900 font-medium">{ item.name }</td>
+                                            <td className="px-6 py-4 text-gray-600">{ item.sku }</td>
                                             <td className="px-6 py-4 text-right">
                                                 <button
-                                                    onClick={() => fetchSizes(item.sku, item.name, item.sizes)}
+                                                    onClick={ () => fetchSizes( item.sku, item.name, item.sizes ) }
                                                     className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                                 >
                                                     <HiOutlineEye className="text-lg" />
@@ -123,30 +151,83 @@ const AdminInventory = () => {
                                                 </button>
                                             </td>
                                         </tr>
-                                    ))
-                                )}
+                                    ) )
+                                ) }
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination */ }
+                    <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+                        <div className="text-xs text-gray-500">
+                            Menampilkan { ( page - 1 ) * perPage + 1 }–
+                            { Math.min( page * perPage, totalItems ) } dari { totalItems } data
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={ () => setPage( 1 ) }
+                                disabled={ page === 1 }
+                                className={ `px-2.5 py-1.5 rounded border ${page === 1
+                                    ? "text-gray-400 border-gray-200"
+                                    : "text-gray-700 border-gray-300 hover:bg-gray-50"
+                                    }` }
+                            >
+                                «
+                            </button>
+                            <button
+                                onClick={ () => setPage( ( p ) => Math.max( 1, p - 1 ) ) }
+                                disabled={ page === 1 }
+                                className={ `px-3 py-1.5 rounded border ${page === 1
+                                    ? "text-gray-400 border-gray-200"
+                                    : "text-gray-700 border-gray-300 hover:bg-gray-50"
+                                    }` }
+                            >
+                                Prev
+                            </button>
+                            <span className="text-sm text-gray-700">
+                                { page } / { totalPages || 1 }
+                            </span>
+                            <button
+                                onClick={ () => setPage( ( p ) => Math.min( totalPages, p + 1 ) ) }
+                                disabled={ page === totalPages || totalPages === 0 }
+                                className={ `px-3 py-1.5 rounded border ${page === totalPages || totalPages === 0
+                                    ? "text-gray-400 border-gray-200"
+                                    : "text-gray-700 border-gray-300 hover:bg-gray-50"
+                                    }` }
+                            >
+                                Next
+                            </button>
+                            <button
+                                onClick={ () => setPage( totalPages ) }
+                                disabled={ page === totalPages || totalPages === 0 }
+                                className={ `px-2.5 py-1.5 rounded border ${page === totalPages || totalPages === 0
+                                    ? "text-gray-400 border-gray-200"
+                                    : "text-gray-700 border-gray-300 hover:bg-gray-50"
+                                    }` }
+                            >
+                                »
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Modal Sizes */}
-                {showModal && (
+                {/* Modal Sizes */ }
+                { showModal && (
                     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
                         <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
-                            {/* Close Button */}
+                            {/* Close Button */ }
                             <button
-                                onClick={() => setShowModal(false)}
+                                onClick={ () => setShowModal( false ) }
                                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
                             >
                                 <HiOutlineX className="w-6 h-6" />
                             </button>
 
                             <h2 className="text-xl font-bold mb-4 text-gray-800">
-                                Ukuran Produk – {selectedProduct?.name} ({selectedProduct?.sku})
+                                Ukuran Produk – { selectedProduct?.name } ({ selectedProduct?.sku })
                             </h2>
 
-                            {loadingSizes ? (
+                            { loadingSizes ? (
                                 <div className="flex items-center justify-center py-12">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                                     <span className="ml-3 text-gray-600 text-sm">Memuat ukuran...</span>
@@ -171,21 +252,21 @@ const AdminInventory = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {sizes.map((s) => (
-                                            <tr key={s.size_id} className="border-t">
-                                                <td className="px-4 py-2 text-gray-800">{s.size}</td>
-                                                <td className="px-4 py-2 text-gray-600">{s.stock}</td>
+                                        { sizes.map( ( s ) => (
+                                            <tr key={ s.size_id } className="border-t">
+                                                <td className="px-4 py-2 text-gray-800">{ s.size }</td>
+                                                <td className="px-4 py-2 text-gray-600">{ s.stock }</td>
                                                 <td className="px-4 py-2 text-gray-600">
-                                                    Rp {s.sell_price.toLocaleString("id-ID")}
+                                                    Rp { s.sell_price.toLocaleString( "id-ID" ) }
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) ) }
                                     </tbody>
                                 </table>
-                            )}
+                            ) }
                         </div>
                     </div>
-                )}
+                ) }
             </div>
         </Layout>
     );
