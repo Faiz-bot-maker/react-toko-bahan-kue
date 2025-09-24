@@ -1,3 +1,4 @@
+// src/pages/admin/AdminModal.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { HiOutlinePlus } from "react-icons/hi";
@@ -5,9 +6,21 @@ import { FiEdit, FiTrash } from "react-icons/fi";
 import { MdAccountBalanceWallet } from "react-icons/md";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import Layout from '../../components/Layout';
+import Layout from "../../components/Layout";
 
 const API_URL = `${process.env.REACT_APP_API_URL}/capitals`;
+
+const getHeaders = () => ( {
+    Authorization: localStorage.getItem( "authToken" ),
+    "ngrok-skip-browser-warning": "true",
+} );
+
+const formatLocalDate = ( date ) => {
+    if ( !date ) return null;
+    const d = new Date( date );
+    d.setMinutes( d.getMinutes() - d.getTimezoneOffset() );
+    return d.toISOString().split( "T" )[ 0 ];
+};
 
 const AdminModal = () => {
     const [ modals, setModals ] = useState( [] );
@@ -17,6 +30,7 @@ const AdminModal = () => {
 
     // Filter tanggal
     const [ dateRange, setDateRange ] = useState( [ null, null ] );
+    const [ appliedDateRange, setAppliedDateRange ] = useState( [ null, null ] );
     const [ startDate, endDate ] = dateRange;
 
     // Search dengan debounce
@@ -33,43 +47,39 @@ const AdminModal = () => {
     const [ totalPage, setTotalPage ] = useState( 1 );
     const [ totalItems, setTotalItems ] = useState( 0 );
 
-    useEffect( () => {
-        fetchModals( page );
-    }, [ endDate, debouncedSearch, page ] );
-
-    // Fungsi helper untuk format tanggal lokal (hindari masalah timezone)
-    const formatLocalDate = ( date ) => {
-        const year = date.getFullYear();
-        const month = String( date.getMonth() + 1 ).padStart( 2, "0" );
-        const day = String( date.getDate() ).padStart( 2, "0" );
-        return `${year}-${month}-${day}`;
-    };
-
-    const fetchModals = async ( targetPage = 1 ) => {
+    const fetchModals = async ( targetPage = 1, searchTerm = debouncedSearch ) => {
         try {
             setLoading( true );
             let params = { page: targetPage, size };
-            if ( startDate ) params.start_at = formatLocalDate( startDate );
-            if ( endDate ) params.end_at = formatLocalDate( endDate );
-            if ( debouncedSearch ) params.search = debouncedSearch;
+            const [ appliedStart, appliedEnd ] = appliedDateRange;
+            if ( appliedStart && appliedEnd ) {
+                params.start_at = formatLocalDate( appliedStart );
+                params.end_at = formatLocalDate( appliedEnd );
+            }
+            if ( searchTerm ) params.search = searchTerm;
 
-            const res = await axios.get( API_URL, {
-                headers: { Authorization: localStorage.getItem( "authToken" ), "ngrok-skip-browser-warning": "true" },
-                params,
-            } );
-
+            const res = await axios.get( API_URL, { headers: getHeaders(), params } );
             setModals( res.data?.data || [] );
             if ( res.data?.paging ) {
                 setTotalPage( res.data.paging.total_page );
                 setTotalItems( res.data.paging.total_item );
+            } else {
+                setTotalPage( 1 );
+                setTotalItems( res.data?.data?.length || 0 );
             }
         } catch ( err ) {
             console.error( "Gagal fetch modal:", err );
             setModals( [] );
+            setTotalPage( 1 );
+            setTotalItems( 0 );
         } finally {
             setLoading( false );
         }
     };
+
+    useEffect( () => {
+        fetchModals( page );
+    }, [ appliedDateRange, debouncedSearch, page ] );
 
     const openAdd = () => {
         setForm( { id: null, type: "OUT", note: "", amount: "" } );
@@ -86,17 +96,12 @@ const AdminModal = () => {
     const handleSubmit = async ( e ) => {
         e.preventDefault();
         if ( !form.type || !form.note || !form.amount ) return;
-
         try {
             if ( modal.mode === "add" ) {
-                await axios.post( API_URL, { ...form, amount: Number( form.amount ) }, {
-                    headers: { Authorization: localStorage.getItem( "authToken" ), "ngrok-skip-browser-warning": "true" }
-                } );
+                await axios.post( API_URL, { ...form, amount: Number( form.amount ) }, { headers: getHeaders() } );
                 alert( "Modal berhasil ditambahkan" );
             } else if ( form.id ) {
-                await axios.put( `${API_URL}/${form.id}`, { ...form, amount: Number( form.amount ) }, {
-                    headers: { Authorization: localStorage.getItem( "authToken" ), "ngrok-skip-browser-warning": "true" }
-                } );
+                await axios.put( `${API_URL}/${form.id}`, { ...form, amount: Number( form.amount ) }, { headers: getHeaders() } );
                 alert( "Modal berhasil diperbarui" );
             }
             fetchModals( page );
@@ -112,9 +117,7 @@ const AdminModal = () => {
         if ( !id ) return;
         if ( window.confirm( "Yakin ingin menghapus modal ini?" ) ) {
             try {
-                await axios.delete( `${API_URL}/${id}`, {
-                    headers: { Authorization: localStorage.getItem( "authToken" ), "ngrok-skip-browser-warning": "true" }
-                } );
+                await axios.delete( `${API_URL}/${id}`, { headers: getHeaders() } );
                 alert( "Modal berhasil dihapus" );
                 fetchModals( page );
             } catch ( err ) {
@@ -122,6 +125,14 @@ const AdminModal = () => {
                 alert( "Gagal menghapus modal" );
             }
         }
+    };
+
+    const resetFilters = () => {
+        setSearch( "" );
+        setDateRange( [ null, null ] );
+        setAppliedDateRange( [ null, null ] );
+        setPage( 1 );
+        fetchModals( 1, "" );
     };
 
     return (
@@ -138,30 +149,46 @@ const AdminModal = () => {
                             <p className="text-sm text-gray-600">Kelola modal untuk cabang ini</p>
                         </div>
                     </div>
-                    <button onClick={ openAdd } className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all duration-200 hover:shadow-xl">
+                    <button
+                        onClick={ openAdd }
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all duration-200 hover:shadow-xl"
+                    >
                         <HiOutlinePlus className="text-lg" /> Tambah Modal
                     </button>
                 </div>
 
-                {/* Filter Tanggal + Search */ }
+                {/* Filter + Search */ }
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
                     <input
                         type="text"
                         placeholder="Cari catatan..."
                         value={ search }
-                        onChange={ ( e ) => { setSearch( e.target.value ); setPage( 1 ); } }
+                        onChange={ ( e ) => {
+                            setSearch( e.target.value );
+                            setPage( 1 );
+                        } }
                         className="border rounded px-3 py-2 text-sm w-64"
                     />
                     <DatePicker
                         selectsRange
                         startDate={ startDate }
                         endDate={ endDate }
-                        onChange={ ( range ) => { setDateRange( range ); setPage( 1 ); } }
+                        onChange={ ( range ) => {
+                            setDateRange( range );
+                            const [ start, end ] = range;
+                            if ( start && end ) {
+                                setAppliedDateRange( [ start, end ] );
+                                setPage( 1 );
+                            }
+                        } }
                         isClearable
                         dateFormat="dd/MM/yyyy"
                         className="border rounded px-3 py-2 text-sm w-60"
                         placeholderText="Pilih rentang tanggal"
                     />
+                    <button onClick={ resetFilters } className="bg-gray-300 px-4 py-2 rounded">
+                        Reset
+                    </button>
                 </div>
 
                 {/* Table */ }
@@ -179,19 +206,49 @@ const AdminModal = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 { loading ? (
-                                    <tr><td colSpan={ 5 } className="text-center py-8">Memuat data...</td></tr>
+                                    <tr>
+                                        <td colSpan={ 5 } className="text-center py-8">
+                                            Memuat data...
+                                        </td>
+                                    </tr>
                                 ) : modals.length === 0 ? (
-                                    <tr><td colSpan={ 5 } className="text-center py-8">Tidak ada data untuk tanggal yang dipilih</td></tr>
+                                    <tr>
+                                        <td colSpan={ 5 } className="text-center py-8">
+                                            Tidak ada data untuk tanggal yang dipilih
+                                        </td>
+                                    </tr>
                                 ) : (
                                     modals.map( ( m, idx ) => (
                                         <tr key={ m.id }>
-                                            <td className="px-6 py-3 font-medium">{ m.type === "IN" ? <span className="text-green-600">Deposit</span> : <span className="text-red-600">Withdraw</span> }</td>
+                                            <td className="px-6 py-3 font-medium">
+                                                { m.type === "IN" ? (
+                                                    <span className="text-green-600">Deposit</span>
+                                                ) : (
+                                                    <span className="text-red-600">Withdraw</span>
+                                                ) }
+                                            </td>
                                             <td className="px-6 py-3 text-gray-700">{ m.note }</td>
-                                            <td className="px-6 py-3 text-gray-900 font-semibold">Rp { Number( m.amount ).toLocaleString( "id-ID" ) }</td>
-                                            <td className="px-6 py-3 text-gray-600 text-sm">{ new Date( m.created_at ).toLocaleDateString( "id-ID" ) }</td>
+                                            <td className="px-6 py-3 text-gray-900 font-semibold">
+                                                Rp { Number( m.amount ).toLocaleString( "id-ID" ) }
+                                            </td>
+                                            <td className="px-6 py-3 text-gray-600 text-sm">
+                                                { new Date( m.created_at ).toLocaleDateString( "id-ID" ) }
+                                            </td>
                                             <td className="px-6 py-3 flex justify-end gap-2">
-                                                <button onClick={ () => openEdit( idx ) } className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg" title="Edit"><FiEdit size={ 18 } /></button>
-                                                <button onClick={ () => handleDelete( idx ) } className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg" title="Hapus"><FiTrash size={ 18 } /></button>
+                                                <button
+                                                    onClick={ () => openEdit( idx ) }
+                                                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
+                                                    title="Edit"
+                                                >
+                                                    <FiEdit size={ 18 } />
+                                                </button>
+                                                <button
+                                                    onClick={ () => handleDelete( idx ) }
+                                                    className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                                                    title="Hapus"
+                                                >
+                                                    <FiTrash size={ 18 } />
+                                                </button>
                                             </td>
                                         </tr>
                                     ) )
@@ -201,18 +258,54 @@ const AdminModal = () => {
                     </div>
 
                     {/* Pagination */ }
-                    <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
-                        <div className="text-xs text-gray-500">
-                            Menampilkan { ( page - 1 ) * size + 1 }–{ Math.min( page * size, totalItems ) } dari { totalItems } data
+                    { modals.length > 0 && totalItems > 0 && (
+                        <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+                            <div className="text-xs text-gray-500">
+                                Menampilkan { ( page - 1 ) * size + 1 }–{ Math.min( page * size, totalItems ) } dari { totalItems } data
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={ () => setPage( 1 ) }
+                                    disabled={ page === 1 }
+                                    className={ `px-2.5 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200 cursor-not-allowed" : "text-gray-700 border-gray-300"
+                                        }` }
+                                >
+                                    «
+                                </button>
+                                <button
+                                    onClick={ () => setPage( ( p ) => Math.max( 1, p - 1 ) ) }
+                                    disabled={ page === 1 }
+                                    className={ `px-3 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200 cursor-not-allowed" : "text-gray-700 border-gray-300"
+                                        }` }
+                                >
+                                    Prev
+                                </button>
+                                <span className="text-sm text-gray-700">
+                                    { page } / { totalPage }
+                                </span>
+                                <button
+                                    onClick={ () => setPage( ( p ) => Math.min( totalPage, p + 1 ) ) }
+                                    disabled={ page === totalPage || totalPage === 0 }
+                                    className={ `px-3 py-1.5 rounded border ${page === totalPage || totalPage === 0
+                                        ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                                        : "text-gray-700 border-gray-300"
+                                        }` }
+                                >
+                                    Next
+                                </button>
+                                <button
+                                    onClick={ () => setPage( totalPage ) }
+                                    disabled={ page === totalPage || totalPage === 0 }
+                                    className={ `px-2.5 py-1.5 rounded border ${page === totalPage || totalPage === 0
+                                        ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                                        : "text-gray-700 border-gray-300"
+                                        }` }
+                                >
+                                    »
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <button onClick={ () => setPage( 1 ) } disabled={ page === 1 } className={ `px-2.5 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>«</button>
-                            <button onClick={ () => setPage( p => Math.max( 1, p - 1 ) ) } disabled={ page === 1 } className={ `px-3 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Prev</button>
-                            <span className="text-sm text-gray-700">{ page } / { totalPage }</span>
-                            <button onClick={ () => setPage( p => Math.min( totalPage, p + 1 ) ) } disabled={ page === totalPage || totalPage === 0 } className={ `px-3 py-1.5 rounded border ${page === totalPage || totalPage === 0 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Next</button>
-                            <button onClick={ () => setPage( totalPage ) } disabled={ page === totalPage || totalPage === 0 } className={ `px-2.5 py-1.5 rounded border ${page === totalPage || totalPage === 0 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>»</button>
-                        </div>
-                    </div>
+                    ) }
                 </div>
 
                 {/* Modal Form */ }
@@ -224,22 +317,45 @@ const AdminModal = () => {
                                 <form onSubmit={ handleSubmit } className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-semibold mb-1">Jenis</label>
-                                        <select value={ form.type } onChange={ ( e ) => setForm( { ...form, type: e.target.value } ) } className="w-full border px-3 py-2 rounded-lg" required>
+                                        <select
+                                            value={ form.type }
+                                            onChange={ ( e ) => setForm( { ...form, type: e.target.value } ) }
+                                            className="w-full border px-3 py-2 rounded-lg"
+                                            required
+                                        >
                                             <option value="IN">Deposit</option>
                                             <option value="OUT">Withdraw</option>
                                         </select>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold mb-1">Catatan</label>
-                                        <input type="text" value={ form.note } onChange={ ( e ) => setForm( { ...form, note: e.target.value } ) } className="w-full border px-3 py-2 rounded-lg" placeholder="Masukkan catatan modal" required />
+                                        <input
+                                            type="text"
+                                            value={ form.note }
+                                            onChange={ ( e ) => setForm( { ...form, note: e.target.value } ) }
+                                            className="w-full border px-3 py-2 rounded-lg"
+                                            placeholder="Masukkan catatan modal"
+                                            required
+                                        />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold mb-1">Jumlah (Rp)</label>
-                                        <input type="number" value={ form.amount } onChange={ ( e ) => setForm( { ...form, amount: Number( e.target.value ) } ) } className="w-full border px-3 py-2 rounded-lg" placeholder="Masukkan jumlah" required />
+                                        <input
+                                            type="number"
+                                            value={ form.amount }
+                                            onChange={ ( e ) => setForm( { ...form, amount: Number( e.target.value ) } ) }
+                                            className="w-full border px-3 py-2 rounded-lg"
+                                            placeholder="Masukkan jumlah"
+                                            required
+                                        />
                                     </div>
                                     <div className="flex justify-end gap-3 pt-3 border-t">
-                                        <button type="button" onClick={ closeModal } className="px-4 py-2 border rounded-lg">Batal</button>
-                                        <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg">Simpan</button>
+                                        <button type="button" onClick={ closeModal } className="px-4 py-2 border rounded-lg">
+                                            Batal
+                                        </button>
+                                        <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                                            Simpan
+                                        </button>
                                     </div>
                                 </form>
                             </div>

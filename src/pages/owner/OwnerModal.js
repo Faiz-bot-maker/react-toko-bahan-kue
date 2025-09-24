@@ -85,6 +85,11 @@ const OwnerModal = () => {
     const [ searchNote, setSearchNote ] = useState( "" );
     const [ dateRange, setDateRange ] = useState( [ null, null ] );
     const [ startDate, endDate ] = dateRange;
+    const [ branchFilter, setBranchFilter ] = useState( "" ); // ✅ perbaikan
+    const [ branches, setBranches ] = useState( [
+        { id: 1, name: "Cabang Utama" },
+        { id: 2, name: "Cabang Kedua" },
+    ] ); // ✅ dummy, ideally fetch dari API
 
     // Pagination
     const [ currentPage, setCurrentPage ] = useState( 1 );
@@ -94,7 +99,7 @@ const OwnerModal = () => {
 
     useEffect( () => {
         fetchModals( currentPage );
-    }, [ currentPage ] );
+    }, [ currentPage, searchNote, startDate, endDate, branchFilter ] );
 
     const fetchModals = async ( page = 1 ) => {
         try {
@@ -104,11 +109,9 @@ const OwnerModal = () => {
                     page,
                     size: perPage,
                     note: searchNote || undefined,
+                    branch_id: branchFilter || undefined,
                 },
-                headers: {
-                    Authorization: localStorage.getItem( "authToken" ),
-                    "ngrok-skip-browser-warning": "true",
-                },
+                headers: getHeaders(),
             } );
 
             const { data, paging } = res.data;
@@ -178,7 +181,10 @@ const OwnerModal = () => {
         }
     };
 
-    const handleFilter = () => {
+    const resetFilters = () => {
+        setSearchNote( "" );
+        setDateRange( [ null, null ] );
+        setBranchFilter( "" ); // ✅ reset juga cabang
         setCurrentPage( 1 );
         fetchModals( 1 );
     };
@@ -212,31 +218,58 @@ const OwnerModal = () => {
                     </button>
                 </div>
 
-                {/* Filter */ }
-                <div className="flex flex-col md:flex-row items-end md:items-center gap-4 mb-4">
-                    <input
-                        type="text"
-                        placeholder="Cari catatan..."
-                        value={ searchNote }
-                        onChange={ ( e ) => setSearchNote( e.target.value ) }
-                        className="border px-3 py-2 rounded-lg w-full md:w-1/3"
-                    />
-                    <DatePicker
-                        selectsRange
-                        startDate={ startDate }
-                        endDate={ endDate }
-                        onChange={ ( update ) => setDateRange( update ) }
-                        isClearable
-                        dateFormat="dd/MM/yyyy"
-                        className="border border-gray-300 px-4 py-2 rounded-lg text-sm w-full"
-                        placeholderText="Pilih rentang tanggal"
-                    />
-                    <button
-                        onClick={ handleFilter }
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        Cari
-                    </button>
+                {/* Filters */ }
+                <div className="bg-white rounded-lg shadow p-6 mb-6">
+                    <div className="flex flex-wrap items-end gap-6">
+                        {/* Cabang */ }
+                        <div className="flex flex-col">
+                            <label className="text-sm font-medium text-gray-700 mb-2">Cabang</label>
+                            <select
+                                value={ branchFilter }
+                                onChange={ ( e ) => {
+                                    setBranchFilter( e.target.value );
+                                    setCurrentPage( 1 );
+                                } }
+                                className="border rounded-lg px-4 py-2 text-sm w-56"
+                            >
+                                <option value="">Semua Cabang</option>
+                                { branches.map( ( b ) => (
+                                    <option key={ b.id } value={ b.id }>
+                                        { b.name }
+                                    </option>
+                                ) ) }
+                            </select>
+                        </div>
+
+                        {/* Tanggal */ }
+                        <div className="flex flex-col">
+                            <label className="text-sm font-medium text-gray-700 mb-2">Rentang Tanggal</label>
+                            <DatePicker
+                                selectsRange
+                                startDate={ startDate }
+                                endDate={ endDate }
+                                onChange={ ( range ) => {
+                                    setDateRange( range );
+                                    setCurrentPage( 1 );
+                                } }
+                                isClearable
+                                dateFormat="dd/MM/yyyy"
+                                placeholderText="Pilih rentang tanggal"
+                                className="border rounded-lg px-4 py-2 text-sm w-56"
+                                maxDate={ new Date() }
+                            />
+                        </div>
+
+                        {/* Tombol reset langsung samping filter */ }
+                        <div className="flex items-end">
+                            <button
+                                onClick={ resetFilters }
+                                className="px-5 py-2 bg-gray-200 text-sm rounded-lg hover:bg-gray-300 transition"
+                            >
+                                Reset
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Table */ }
@@ -287,7 +320,10 @@ const OwnerModal = () => {
                                             </td>
                                             <td className="px-6 py-3 text-gray-700">{ m.note }</td>
                                             <td className="px-6 py-3 text-gray-900 font-semibold">
-                                                Rp { m.amount.toLocaleString( "id-ID" ) }
+                                                Rp{ " " }
+                                                { Number( m.amount ).toLocaleString( "id-ID", {
+                                                    minimumFractionDigits: 0,
+                                                } ) }
                                             </td>
                                             <td className="px-6 py-3 text-gray-600 text-sm">
                                                 { new Date( m.created_at ).toLocaleDateString( "id-ID" ) }
@@ -326,83 +362,81 @@ const OwnerModal = () => {
                         perPage={ perPage }
                     />
                 ) }
+            </div>
 
-                {/* Modal Form */ }
-                { modal.open && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                        <div className="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4 border border-gray-200">
-                            <div className="p-6">
-                                <h2 className="text-xl font-bold mb-4">
-                                    { modal.mode === "add" ? "Tambah" : "Edit" } Modal
-                                </h2>
-                                <form onSubmit={ handleSubmit } className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-semibold mb-1">
-                                            Jenis
-                                        </label>
-                                        <select
-                                            value={ form.type }
-                                            onChange={ ( e ) =>
-                                                setForm( { ...form, type: e.target.value } )
-                                            }
-                                            className="w-full border px-3 py-2 rounded-lg"
-                                            required
-                                        >
-                                            <option value="IN">Deposit</option>
-                                            <option value="OUT">Withdraw</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold mb-1">
-                                            Catatan
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={ form.note }
-                                            onChange={ ( e ) =>
-                                                setForm( { ...form, note: e.target.value } )
-                                            }
-                                            className="w-full border px-3 py-2 rounded-lg"
-                                            placeholder="Masukkan catatan modal"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold mb-1">
-                                            Jumlah (Rp)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={ form.amount }
-                                            onChange={ ( e ) =>
-                                                setForm( { ...form, amount: Number( e.target.value ) } )
-                                            }
-                                            className="w-full border px-3 py-2 rounded-lg"
-                                            placeholder="Masukkan jumlah"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="flex justify-end gap-3 pt-3 border-t">
-                                        <button
-                                            type="button"
-                                            onClick={ closeModal }
-                                            className="px-4 py-2 border rounded-lg"
-                                        >
-                                            Batal
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-                                        >
-                                            Simpan
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+            {/* Modal Form */ }
+            { modal.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4 border border-gray-200">
+                        <div className="p-6">
+                            <h2 className="text-xl font-bold mb-4">
+                                { modal.mode === "add" ? "Tambah" : "Edit" } Modal
+                            </h2>
+                            <form onSubmit={ handleSubmit } className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-semibold mb-1">
+                                        Jenis
+                                    </label>
+                                    <select
+                                        value={ form.type }
+                                        onChange={ ( e ) => setForm( { ...form, type: e.target.value } ) }
+                                        className="w-full border px-3 py-2 rounded-lg"
+                                        required
+                                    >
+                                        <option value="IN">Deposit</option>
+                                        <option value="OUT">Withdraw</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold mb-1">
+                                        Catatan
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={ form.note }
+                                        onChange={ ( e ) =>
+                                            setForm( { ...form, note: e.target.value } )
+                                        }
+                                        className="w-full border px-3 py-2 rounded-lg"
+                                        placeholder="Masukkan catatan modal"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold mb-1">
+                                        Jumlah (Rp)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={ form.amount }
+                                        onChange={ ( e ) =>
+                                            setForm( { ...form, amount: Number( e.target.value ) } )
+                                        }
+                                        className="w-full border px-3 py-2 rounded-lg"
+                                        placeholder="Masukkan jumlah"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-3 pt-3 border-t">
+                                    <button
+                                        type="button"
+                                        onClick={ closeModal }
+                                        className="px-4 py-2 border rounded-lg"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                                    >
+                                        Simpan
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                ) }
-            </div>
+                </div>
+            ) }
         </Layout>
     );
 };

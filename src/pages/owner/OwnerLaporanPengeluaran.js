@@ -11,7 +11,59 @@ const getHeaders = () => ( {
   "ngrok-skip-browser-warning": "true",
 } );
 
-const formatRupiah = ( angka ) => "Rp " + ( angka || 0 ).toLocaleString( "id-ID" );
+const formatRupiah = ( angka ) =>
+  "Rp " + ( angka || 0 ).toLocaleString( "id-ID" );
+
+// 🔹 Pagination Component Reusable
+const Pagination = ( { page, setPage, totalPages, totalItems, perPage } ) => {
+  if ( totalPages <= 1 ) return null;
+
+  const startIndex = ( page - 1 ) * perPage + 1;
+  const endIndex = Math.min( page * perPage, totalItems );
+
+  return (
+    <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 mt-6">
+      <div className="text-sm text-gray-600">
+        Menampilkan { totalItems === 0 ? 0 : startIndex }-{ endIndex } dari { totalItems } data
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={ () => setPage( 1 ) }
+          disabled={ page === 1 }
+          className={ `px-3 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"
+            }` }
+        >
+          «
+        </button>
+        <button
+          onClick={ () => setPage( ( p ) => Math.max( 1, p - 1 ) ) }
+          disabled={ page === 1 }
+          className={ `px-3 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"
+            }` }
+        >
+          Prev
+        </button>
+        <span className="text-sm text-gray-700">{ page } / { totalPages }</span>
+        <button
+          onClick={ () => setPage( ( p ) => Math.min( totalPages, p + 1 ) ) }
+          disabled={ page === totalPages }
+          className={ `px-3 py-1.5 rounded border ${page === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"
+            }` }
+        >
+          Next
+        </button>
+        <button
+          onClick={ () => setPage( totalPages ) }
+          disabled={ page === totalPages }
+          className={ `px-3 py-1.5 rounded border ${page === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"
+            }` }
+        >
+          »
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const OwnerLaporanPengeluaran = () => {
   const [ summaryRows, setSummaryRows ] = useState( [] );
@@ -27,6 +79,7 @@ const OwnerLaporanPengeluaran = () => {
   const [ page, setPage ] = useState( 1 );
   const [ size ] = useState( 10 );
   const [ totalPage, setTotalPage ] = useState( 1 );
+  const [ totalItems, setTotalItems ] = useState( 0 );
 
   // filter state
   const [ dateRange, setDateRange ] = useState( [ null, null ] );
@@ -89,25 +142,23 @@ const OwnerLaporanPengeluaran = () => {
           const month = String( d.getMonth() + 1 ).padStart( 2, "0" );
           const day = String( d.getDate() ).padStart( 2, "0" );
           return `${year}-${month}-${day}`;
-        }
+        };
 
         params.append( "start_at", formatLocal( startDate ) );
         params.append( "end_at", formatLocal( endDate ) );
       }
-      if ( branchFilter ) {
-        params.append( "branch_id", branchFilter );
-      }
-      if ( search ) {
-        params.append( "search", search );
-      }
+      if ( branchFilter ) params.append( "branch_id", branchFilter );
+      if ( search ) params.append( "search", search );
 
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}/expenses?${params.toString()}`,
         { headers: getHeaders() }
       );
+
       const payload = res.data || {};
       setDetailRows( Array.isArray( payload.data ) ? payload.data : [] );
       setTotalPage( payload.paging?.total_page || 1 );
+      setTotalItems( payload.paging?.total_item || ( Array.isArray( payload.data ) ? payload.data.length : 0 ) );
     } catch ( err ) {
       console.error( "Gagal memuat detail:", err );
     } finally {
@@ -193,10 +244,8 @@ const OwnerLaporanPengeluaran = () => {
           </table>
         </div>
 
-        {/* Detail */ }
-        <h2 className="text-xl font-semibold mb-3">Detail Pengeluaran</h2>
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          {/* Tanggal */ }
+        {/* Filter & Reset */ }
+        <div className="bg-white rounded-lg shadow p-6 mb-6 flex flex-wrap gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Periode</label>
             <DatePicker
@@ -205,10 +254,6 @@ const OwnerLaporanPengeluaran = () => {
               endDate={ endDate }
               onChange={ ( update ) => {
                 setDateRange( update );
-
-                // Reset page & fetch
-                if ( !update[ 0 ] && !update[ 1 ] ) fetchDetail( 1 );
-                if ( update[ 0 ] && update[ 1 ] ) fetchDetail( 1 );
                 setPage( 1 );
               } }
               isClearable
@@ -219,7 +264,6 @@ const OwnerLaporanPengeluaran = () => {
             />
           </div>
 
-          {/* Cabang */ }
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cabang</label>
             <select
@@ -227,20 +271,16 @@ const OwnerLaporanPengeluaran = () => {
               onChange={ ( e ) => {
                 setBranchFilter( e.target.value );
                 setPage( 1 );
-                if ( e.target.value === "" ) fetchDetail( 1 );
               } }
               className="border rounded-md px-3 py-2 text-sm"
             >
               <option value="">Semua Cabang</option>
               { branches.map( ( b ) => (
-                <option key={ b.id } value={ b.id }>
-                  { b.name }
-                </option>
+                <option key={ b.id } value={ b.id }>{ b.name }</option>
               ) ) }
             </select>
           </div>
 
-          {/* Search */ }
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cari Deskripsi</label>
             <input
@@ -255,14 +295,12 @@ const OwnerLaporanPengeluaran = () => {
             />
           </div>
 
-          {/* Reset */ }
           <button
             onClick={ () => {
               setDateRange( [ null, null ] );
               setBranchFilter( "" );
               setSearch( "" );
               setPage( 1 );
-              fetchDetail( 1 );
             } }
             className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
           >
@@ -297,7 +335,7 @@ const OwnerLaporanPengeluaran = () => {
                       { row.created_at ? new Date( row.created_at ).toLocaleDateString( "id-ID" ) : "-" }
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-800">
-                      { branches.find( ( b ) => b.id === row.branch_name )?.name || row.branch_name }
+                      { branches.find( ( b ) => b.id === row.branch_id )?.name || row.branch_name || "-" }
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-800">{ row.description || "-" }</td>
                     <td className="px-6 py-4 text-sm text-gray-800 text-right font-semibold">{ formatRupiah( row.amount ) }</td>
@@ -309,33 +347,13 @@ const OwnerLaporanPengeluaran = () => {
         </div>
 
         {/* Pagination */ }
-        { !loadingDetail && totalPage > 1 && (
-          <div className="flex items-center justify-between mt-6">
-            <button
-              onClick={ () => setPage( ( prev ) => Math.max( prev - 1, 1 ) ) }
-              disabled={ page === 1 }
-              className={ `px-4 py-2 rounded-lg text-sm font-medium ${page === 1
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-gray-700 text-white hover:bg-gray-800"}` }
-            >
-              Sebelumnya
-            </button>
-
-            <div className="text-sm text-gray-600">
-              Halaman <span className="font-semibold">{ page }</span> dari <span className="font-semibold">{ totalPage }</span>
-            </div>
-
-            <button
-              onClick={ () => setPage( ( prev ) => Math.min( prev + 1, totalPage ) ) }
-              disabled={ page === totalPage }
-              className={ `px-4 py-2 rounded-lg text-sm font-medium ${page === totalPage
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-gray-700 text-white hover:bg-gray-800"}` }
-            >
-              Berikutnya
-            </button>
-          </div>
-        ) }
+        <Pagination
+          page={ page }
+          setPage={ setPage }
+          totalPages={ totalPage }
+          totalItems={ totalItems }
+          perPage={ size }
+        />
       </div>
     </Layout>
   );

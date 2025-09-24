@@ -1,3 +1,4 @@
+// src/pages/admin/AdminLaporanPengeluaran.js
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
 import axios from "axios";
@@ -11,13 +12,18 @@ const getHeaders = () => ( {
     "ngrok-skip-browser-warning": "true",
 } );
 
+const formatLocalDate = ( date ) => {
+    if ( !date ) return null;
+    const d = new Date( date );
+    const year = d.getFullYear();
+    const month = String( d.getMonth() + 1 ).padStart( 2, "0" );
+    const day = String( d.getDate() ).padStart( 2, "0" );
+    return `${year}-${month}-${day}`;
+};
+
 const formatDate = ( timestamp ) => {
     const d = new Date( timestamp );
-    return d.toLocaleDateString( "id-ID", {
-        year: "numeric",
-        month: "numeric",
-        day: "numeric",
-    } );
+    return d.toLocaleDateString( "id-ID", { year: "numeric", month: "numeric", day: "numeric" } );
 };
 
 const formatRupiah = ( angka ) => "Rp " + ( angka || 0 ).toLocaleString( "id-ID" );
@@ -25,7 +31,6 @@ const formatRupiah = ( angka ) => "Rp " + ( angka || 0 ).toLocaleString( "id-ID"
 const AdminLaporanPengeluaran = () => {
     const [ expenses, setExpenses ] = useState( [] );
     const [ loading, setLoading ] = useState( false );
-
     const [ modal, setModal ] = useState( { open: false, mode: "add", data: null } );
     const [ form, setForm ] = useState( { description: "", amount: "" } );
 
@@ -42,6 +47,7 @@ const AdminLaporanPengeluaran = () => {
 
     useEffect( () => {
         fetchExpenses();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ page, search, startDate, endDate ] );
 
     const fetchExpenses = async ( targetPage = page ) => {
@@ -49,8 +55,8 @@ const AdminLaporanPengeluaran = () => {
             setLoading( true );
             let params = { page: targetPage, size };
             if ( search ) params.search = search;
-            if ( startDate ) params.start_at = startDate.toISOString().split( "T" )[ 0 ];
-            if ( endDate ) params.end_at = endDate.toISOString().split( "T" )[ 0 ];
+            if ( startDate ) params.start_at = formatLocalDate( startDate );
+            if ( endDate ) params.end_at = formatLocalDate( endDate );
 
             const res = await axios.get( `${process.env.REACT_APP_API_URL}/expenses`, {
                 headers: getHeaders(),
@@ -62,10 +68,15 @@ const AdminLaporanPengeluaran = () => {
             if ( res.data?.paging ) {
                 setTotalPage( res.data.paging.total_page );
                 setTotalItems( res.data.paging.total_item );
+            } else {
+                setTotalPage( 1 );
+                setTotalItems( rows.length );
             }
         } catch ( err ) {
             console.error( "Gagal mengambil data:", err );
             setExpenses( [] );
+            setTotalPage( 1 );
+            setTotalItems( 0 );
         } finally {
             setLoading( false );
         }
@@ -90,13 +101,11 @@ const AdminLaporanPengeluaran = () => {
         e.preventDefault();
         try {
             const payload = { description: form.description, amount: Number( form.amount ) || 0 };
-
             if ( modal.mode === "add" ) {
                 await axios.post( `${process.env.REACT_APP_API_URL}/expenses`, payload, { headers: getHeaders() } );
             } else {
                 await axios.put( `${process.env.REACT_APP_API_URL}/expenses/${modal.data.id}`, payload, { headers: getHeaders() } );
             }
-
             closeModal();
             fetchExpenses();
         } catch ( err ) {
@@ -116,9 +125,16 @@ const AdminLaporanPengeluaran = () => {
         }
     };
 
+    const resetFilters = () => {
+        setDateRange( [ null, null ] );
+        setSearch( "" );
+        setPage( 1 );
+    };
+
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
+                {/* Header */ }
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-red-100 rounded-lg">
@@ -159,6 +175,9 @@ const AdminLaporanPengeluaran = () => {
                             className="border rounded px-3 py-2 text-sm w-80"
                         />
                     </div>
+                    <div className="mt-5">
+                        <button onClick={ resetFilters } className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">Reset</button>
+                    </div>
                 </div>
 
                 {/* Tabel Expenses */ }
@@ -188,7 +207,7 @@ const AdminLaporanPengeluaran = () => {
                                         <td colSpan={ 4 } className="px-6 py-12 text-center text-gray-500">Tidak ada data</td>
                                     </tr>
                                 ) : (
-                                    expenses.map( ( row, index ) => (
+                                    expenses.map( ( row ) => (
                                         <tr key={ row.id } className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 text-sm text-gray-800">{ formatDate( row.created_at ) }</td>
                                             <td className="px-6 py-4 text-sm text-gray-800">{ row.description }</td>
@@ -209,18 +228,20 @@ const AdminLaporanPengeluaran = () => {
                     </div>
 
                     {/* Pagination */ }
-                    <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
-                        <div className="text-xs text-gray-500">
-                            Menampilkan { ( page - 1 ) * size + 1 }–{ Math.min( page * size, totalItems ) } dari { totalItems } data
+                    { expenses.length > 0 && totalItems > 0 && (
+                        <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+                            <div className="text-xs text-gray-500">
+                                Menampilkan { ( page - 1 ) * size + 1 }–{ Math.min( page * size, totalItems ) } dari { totalItems } data
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button onClick={ () => setPage( 1 ) } disabled={ page === 1 } className={ `px-2.5 py-1.5 rounded border ${page === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>«</button>
+                                <button onClick={ () => setPage( p => Math.max( 1, p - 1 ) ) } disabled={ page === 1 } className={ `px-3 py-1.5 rounded border ${page === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>Prev</button>
+                                <span className="text-sm text-gray-700">{ page } / { totalPage }</span>
+                                <button onClick={ () => setPage( p => Math.min( totalPage, p + 1 ) ) } disabled={ page === totalPage || totalPage === 0 } className={ `px-3 py-1.5 rounded border ${page === totalPage || totalPage === 0 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>Next</button>
+                                <button onClick={ () => setPage( totalPage ) } disabled={ page === totalPage || totalPage === 0 } className={ `px-2.5 py-1.5 rounded border ${page === totalPage || totalPage === 0 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>»</button>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <button onClick={ () => setPage( 1 ) } disabled={ page === 1 } className={ `px-2.5 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>«</button>
-                            <button onClick={ () => setPage( p => Math.max( 1, p - 1 ) ) } disabled={ page === 1 } className={ `px-3 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Prev</button>
-                            <span className="text-sm text-gray-700">{ page } / { totalPage }</span>
-                            <button onClick={ () => setPage( p => Math.min( totalPage, p + 1 ) ) } disabled={ page === totalPage || totalPage === 0 } className={ `px-3 py-1.5 rounded border ${page === totalPage || totalPage === 0 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>Next</button>
-                            <button onClick={ () => setPage( totalPage ) } disabled={ page === totalPage || totalPage === 0 } className={ `px-2.5 py-1.5 rounded border ${page === totalPage || totalPage === 0 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}` }>»</button>
-                        </div>
-                    </div>
+                    ) }
                 </div>
 
                 {/* Modal Add/Edit */ }

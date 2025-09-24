@@ -171,16 +171,14 @@ const OwnerLaporanPenjualan = () => {
 
         {/* Filters */ }
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Filter Laporan</h2> */ }
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="flex flex-wrap items-end gap-6">
             {/* Cabang */ }
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-2">Cabang</label>
               <select
                 value={ branchFilter || '' }
                 onChange={ ( e ) => { setBranchFilter( e.target.value ); setCurrentPage( 1 ); } }
-                className="border rounded-lg px-4 py-2 text-sm w-full"
+                className="border rounded-lg px-4 py-2 text-sm w-56"
               >
                 <option value="">Semua Cabang</option>
                 { branches.map( b => (
@@ -203,12 +201,12 @@ const OwnerLaporanPenjualan = () => {
                 isClearable
                 dateFormat="dd/MM/yyyy"
                 placeholderText="Pilih rentang tanggal"
-                className="border rounded-lg px-4 py-2 text-sm w-full"
+                className="border rounded-lg px-4 py-2 text-sm w-56"
                 maxDate={ new Date() }
               />
             </div>
 
-            {/* Tombol reset */ }
+            {/* Tombol reset langsung samping filter */ }
             <div className="flex items-end">
               <button
                 onClick={ resetFilters }
@@ -219,6 +217,7 @@ const OwnerLaporanPenjualan = () => {
             </div>
           </div>
         </div>
+
 
         {/* Table */ }
         <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">

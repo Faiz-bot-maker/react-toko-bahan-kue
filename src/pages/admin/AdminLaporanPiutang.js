@@ -1,3 +1,4 @@
+// src/pages/admin/AdminLaporanPiutang.js
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import DatePicker from "react-datepicker";
@@ -11,7 +12,7 @@ const statusColor = {
     PAID: 'bg-green-100 text-green-800',
 };
 
-const formatRupiah = ( angka ) => 'Rp ' + angka.toLocaleString( 'id-ID' );
+const formatRupiah = ( angka ) => 'Rp ' + ( angka || 0 ).toLocaleString( 'id-ID' );
 
 const getHeaders = () => ( {
     Authorization: localStorage.getItem( 'authToken' ),
@@ -29,8 +30,6 @@ const AdminLaporanPiutang = () => {
 
     // Filter
     const [ searchTerm, setSearchTerm ] = useState( '' );
-    const [ branchFilter, setBranchFilter ] = useState( '' );
-    const [ branches, setBranches ] = useState( [] );
     const [ dateRange, setDateRange ] = useState( [ null, null ] );
     const [ appliedDateRange, setAppliedDateRange ] = useState( [ null, null ] );
     const [ startDate, endDate ] = dateRange;
@@ -42,36 +41,22 @@ const AdminLaporanPiutang = () => {
 
     const API_URL = `${process.env.REACT_APP_API_URL}/debt`;
 
-    // Fetch branch list (Admin bisa lihat semua cabang)
+    // Fetch data saat page, search, atau appliedDateRange berubah
     useEffect( () => {
-        const fetchBranches = async () => {
-            try {
-                const res = await axios.get( `${process.env.REACT_APP_API_URL}/branches`, { headers: getHeaders() } );
-                setBranches( res.data?.data || [] );
-            } catch ( err ) {
-                console.error( "Gagal fetch branch:", err );
-            }
-        };
-        fetchBranches();
-    }, [] );
-
-    // Fetch data otomatis saat filter/pagination berubah
-    useEffect( () => {
-        if ( ( startDate && !endDate ) || ( !startDate && endDate ) ) return;
         fetchData( currentPage, searchTerm );
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ currentPage, searchTerm, branchFilter, appliedDateRange ] );
+    }, [ currentPage, appliedDateRange, searchTerm ] );
 
     const fetchData = async ( page = 1, search = '' ) => {
         try {
             setLoading( true );
-
             const params = new URLSearchParams();
             params.append( 'page', page );
             params.append( 'size', 10 );
-            if ( branchFilter ) params.append( 'branch_id', branchFilter );
 
-            if ( startDate && endDate ) {
+            // Gunakan appliedDateRange untuk filter
+            const [ appliedStart, appliedEnd ] = appliedDateRange;
+            if ( appliedStart && appliedEnd ) {
                 const formatLocal = ( date ) => {
                     const d = new Date( date );
                     const year = d.getFullYear();
@@ -79,8 +64,8 @@ const AdminLaporanPiutang = () => {
                     const day = String( d.getDate() ).padStart( 2, "0" );
                     return `${year}-${month}-${day}`;
                 };
-                params.append( "start_at", formatLocal( startDate ) );
-                params.append( "end_at", formatLocal( endDate ) );
+                params.append( "start_at", formatLocal( appliedStart ) );
+                params.append( "end_at", formatLocal( appliedEnd ) );
             }
 
             if ( search ) params.append( 'search', search );
@@ -116,11 +101,10 @@ const AdminLaporanPiutang = () => {
 
     const resetFilters = () => {
         setSearchTerm( '' );
-        setBranchFilter( '' );
         setDateRange( [ null, null ] );
         setAppliedDateRange( [ null, null ] );
         setCurrentPage( 1 );
-        fetchData( 1 );
+        fetchData( 1, '' ); // langsung fetch tanpa filter
     };
 
     const formatDate = ( timestamp ) => {
@@ -128,7 +112,6 @@ const AdminLaporanPiutang = () => {
         return d.toLocaleDateString( "id-ID" );
     };
 
-    // Pagination component
     const Pagination = ( { page, setPage, totalPages, total, perPage } ) => {
         const startIndex = ( page - 1 ) * perPage;
         const endIndex = Math.min( startIndex + perPage, total );
@@ -139,11 +122,11 @@ const AdminLaporanPiutang = () => {
                     Menampilkan { total === 0 ? 0 : startIndex + 1 }-{ endIndex } dari total { total } piutang
                 </div>
                 <div className="flex items-center gap-2">
-                    <button onClick={ () => setPage( 1 ) } disabled={ page === 1 } className="px-2.5 py-1.5 rounded border">{ '«' }</button>
-                    <button onClick={ () => setPage( p => Math.max( 1, p - 1 ) ) } disabled={ page === 1 } className="px-3 py-1.5 rounded border">Prev</button>
+                    <button onClick={ () => setPage( 1 ) } disabled={ page === 1 } className={ `px-2.5 py-1.5 rounded border ${page === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>«</button>
+                    <button onClick={ () => setPage( p => Math.max( 1, p - 1 ) ) } disabled={ page === 1 } className={ `px-3 py-1.5 rounded border ${page === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>Prev</button>
                     <span className="text-sm text-gray-700">{ page } / { totalPages }</span>
-                    <button onClick={ () => setPage( p => Math.min( totalPages, p + 1 ) ) } disabled={ page === totalPages } className="px-3 py-1.5 rounded border">Next</button>
-                    <button onClick={ () => setPage( totalPages ) } disabled={ page === totalPages } className="px-2.5 py-1.5 rounded border">{ '»' }</button>
+                    <button onClick={ () => setPage( p => Math.min( totalPages, p + 1 ) ) } disabled={ page === totalPages } className={ `px-3 py-1.5 rounded border ${page === totalPages ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>Next</button>
+                    <button onClick={ () => setPage( totalPages ) } disabled={ page === totalPages } className={ `px-2.5 py-1.5 rounded border ${page === totalPages ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>»</button>
                 </div>
             </div>
         );
@@ -152,6 +135,9 @@ const AdminLaporanPiutang = () => {
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
+                {/* Judul */ }
+                <h1 className="text-2xl font-bold mb-4">Laporan Piutang</h1>
+
                 {/* Filters */ }
                 <div className="flex flex-wrap gap-4 mb-6 bg-white p-4 rounded shadow">
                     <input
@@ -161,25 +147,23 @@ const AdminLaporanPiutang = () => {
                         onChange={ ( e ) => { setSearchTerm( e.target.value ); setCurrentPage( 1 ); } }
                         className="border px-3 py-2 rounded w-64"
                     />
-                    <select
-                        value={ branchFilter }
-                        onChange={ ( e ) => { setBranchFilter( e.target.value ); setCurrentPage( 1 ); } }
-                        className="border px-3 py-2 rounded w-60"
-                    >
-                        <option value="">Semua Cabang</option>
-                        { branches.map( b => <option key={ b.id } value={ b.id }>{ b.name }</option> ) }
-                    </select>
                     <DatePicker
                         selectsRange
                         startDate={ startDate }
                         endDate={ endDate }
-                        onChange={ ( range ) => setDateRange( range ) }
+                        onChange={ ( range ) => {
+                            setDateRange( range );
+                            const [ start, end ] = range;
+                            if ( start && end ) {
+                                setAppliedDateRange( [ start, end ] );
+                                setCurrentPage( 1 );
+                            }
+                        } }
                         isClearable
                         dateFormat="dd/MM/yyyy"
                         placeholderText="Pilih rentang tanggal"
                         className="border px-3 py-2 rounded w-60"
                     />
-                    <button onClick={ () => { setAppliedDateRange( dateRange ); setCurrentPage( 1 ); } } className="bg-blue-600 text-white px-4 py-2 rounded">Terapkan</button>
                     <button onClick={ resetFilters } className="bg-gray-300 px-4 py-2 rounded">Reset</button>
                 </div>
 
@@ -204,12 +188,14 @@ const AdminLaporanPiutang = () => {
                                     <tr><td colSpan={ 8 } className="px-6 py-12 text-center">Memuat data...</td></tr>
                                 ) : data.length === 0 ? (
                                     <tr><td colSpan={ 8 } className="px-6 py-12 text-center">Tidak ada data</td></tr>
-                                ) : data.map( ( d ) => (
+                                ) : data.map( d => (
                                     <tr key={ d.id } className="hover:bg-gray-50">
                                         <td className="px-6 py-4">{ d.related }</td>
                                         <td className="px-6 py-4">{ d.reference_code }</td>
-                                        <td className="px-6 py-4">{ formatRupiah( d.total_amount || 0 ) }</td>
-                                        <td className="px-6 py-4"><span className={ `px-3 py-1 rounded-full text-xs ${statusColor[ d.status ]}` }>{ d.status }</span></td>
+                                        <td className="px-6 py-4">{ formatRupiah( d.total_amount ) }</td>
+                                        <td className="px-6 py-4">
+                                            <span className={ `px-3 py-1 rounded-full text-xs ${statusColor[ d.status ]}` }>{ d.status }</span>
+                                        </td>
                                         <td className="px-6 py-4">{ d.branch_name }</td>
                                         <td className="px-6 py-4">{ d.due_date ? formatDate( d.due_date ) : '-' }</td>
                                         <td className="px-6 py-4">{ d.created_at ? formatDate( d.created_at ) : '-' }</td>
@@ -221,12 +207,12 @@ const AdminLaporanPiutang = () => {
                             </tbody>
                         </table>
                     </div>
-                </div>
 
-                {/* Pagination */ }
-                { totalPages > 1 && (
-                    <Pagination page={ currentPage } setPage={ setCurrentPage } totalPages={ totalPages } total={ totalItems } perPage={ 10 } />
-                ) }
+                    {/* Pagination */ }
+                    { totalPages > 1 && (
+                        <Pagination page={ currentPage } setPage={ setCurrentPage } totalPages={ totalPages } total={ totalItems } perPage={ 10 } />
+                    ) }
+                </div>
 
                 {/* Modal Detail */ }
                 { showModal && detailData && (
@@ -247,7 +233,6 @@ const AdminLaporanPiutang = () => {
                                         <p><span className="font-medium">Status:</span> <span className={ `px-2 py-1 rounded text-xs ${statusColor[ detailData.status ]}` }>{ detailData.status }</span></p>
                                     </div>
 
-                                    {/* Items */ }
                                     <div>
                                         <h3 className="font-semibold mb-2">Items</h3>
                                         <table className="w-full text-sm border">
@@ -272,7 +257,6 @@ const AdminLaporanPiutang = () => {
                                         </table>
                                     </div>
 
-                                    {/* Payments */ }
                                     <div>
                                         <h3 className="font-semibold mb-2">Pembayaran</h3>
                                         { detailData.payments?.length > 0 ? (
@@ -284,7 +268,7 @@ const AdminLaporanPiutang = () => {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    { detailData.payments.map( ( p ) => (
+                                                    { detailData.payments.map( p => (
                                                         <tr key={ p.id }>
                                                             <td className="px-3 py-2 border">{ formatDate( p.payment_date ) }</td>
                                                             <td className="px-3 py-2 border">{ formatRupiah( p.amount ) }</td>
