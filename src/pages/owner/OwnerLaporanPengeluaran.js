@@ -195,7 +195,7 @@ const OwnerLaporanPengeluaran = () => {
 
         {/* Detail */ }
         <h2 className="text-xl font-semibold mb-3">Detail Pengeluaran</h2>
-        <div className="flex flex-wrap items-end gap-4 mb-4">
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
           {/* Tanggal */ }
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Periode</label>

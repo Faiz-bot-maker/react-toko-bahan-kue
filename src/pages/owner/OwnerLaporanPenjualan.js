@@ -20,22 +20,21 @@ const OwnerLaporanPenjualan = () => {
   const [ totalPages, setTotalPages ] = useState( 1 );
   const [ totalItems, setTotalItems ] = useState( 0 );
 
-  // Filter branch
+  // Filter
   const [ branchFilter, setBranchFilter ] = useState( null );
-  const [ branchOptions, setBranchOptions ] = useState( [] );
-
-  // Filter tanggal
+  const [ branches, setBranchOptions ] = useState( [] );
   const [ dateRange, setDateRange ] = useState( [ null, null ] );
-  const [ appliedDateRange, setAppliedDateRange ] = useState( [ null, null ] );
+  const [ searchTerm, setSearchTerm ] = useState( '' );
   const [ startDate, endDate ] = dateRange;
-
-  const today = new Date();
 
   // Ambil daftar cabang
   useEffect( () => {
     const fetchBranches = async () => {
       try {
-        const res = await axios.get( `${process.env.REACT_APP_API_URL}/branches`, { headers: getHeaders() } );
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_URL}/branches`,
+          { headers: getHeaders() }
+        );
         if ( res.data?.data ) setBranchOptions( res.data.data );
       } catch ( err ) {
         console.error( "Gagal mengambil daftar cabang:", err );
@@ -51,23 +50,21 @@ const OwnerLaporanPenjualan = () => {
       const params = new URLSearchParams();
       params.append( 'page', page );
       params.append( 'size', 10 );
+
       if ( branchFilter ) params.append( 'branch_id', branchFilter );
+      if ( searchTerm ) params.append( 'search', searchTerm );
 
       if ( startDate && endDate ) {
         const formatLocal = ( date ) => {
           const d = new Date( date );
-          const year = d.getFullYear();
-          const month = String( d.getMonth() + 1 ).padStart( 2, "0" );
-          const day = String( d.getDate() ).padStart( 2, "0" );
-          return `${year}-${month}-${day}`;
-        }
-
+          return `${d.getFullYear()}-${String( d.getMonth() + 1 ).padStart( 2, "0" )}-${String( d.getDate() ).padStart( 2, "0" )}`;
+        };
         params.append( "start_at", formatLocal( startDate ) );
         params.append( "end_at", formatLocal( endDate ) );
       }
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/sales-and-product-reports/daily?${params.toString()}`,
+        `${process.env.REACT_APP_API_URL}/sales-reports/daily?${params.toString()}`,
         { headers: getHeaders() }
       );
 
@@ -86,15 +83,12 @@ const OwnerLaporanPenjualan = () => {
 
   useEffect( () => {
     fetchSalesData( currentPage );
-  }, [ currentPage, branchFilter, startDate, endDate ] );
+  }, [ currentPage, branchFilter, startDate, endDate, searchTerm ] );
 
   // Summary
   const totalTransactions = salesData.reduce( ( sum, item ) => sum + ( item.total_transactions || 0 ), 0 );
   const totalProductsSold = salesData.reduce( ( sum, item ) => sum + ( item.total_products_sold || 0 ), 0 );
   const totalRevenue = salesData.reduce( ( sum, item ) => sum + ( item.total_revenue || 0 ), 0 );
-
-  // const startIndex = ( currentPage - 1 ) * 10;
-  // const endIndex = Math.min( startIndex + salesData.length, totalItems );
 
   // Pagination
   const Pagination = ( { page, setPage, totalPages, total, perPage } ) => {
@@ -107,59 +101,21 @@ const OwnerLaporanPenjualan = () => {
           Menampilkan { total === 0 ? 0 : startIndex + 1 }-{ endIndex } dari total { total } produk
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={ () => setPage( 1 ) }
-            disabled={ page === 1 }
-            className={ `px-2.5 py-1.5 rounded border ${page === 1
-              ? 'text-gray-400 border-gray-200'
-              : 'text-gray-700 border-gray-300 hover:bg-gray-50'
-              }` }
-          >
-            «
-          </button>
-          <button
-            onClick={ () => setPage( ( p ) => Math.max( 1, p - 1 ) ) }
-            disabled={ page === 1 }
-            className={ `px-3 py-1.5 rounded border ${page === 1
-              ? 'text-gray-400 border-gray-200'
-              : 'text-gray-700 border-gray-300 hover:bg-gray-50'
-              }` }
-          >
-            Prev
-          </button>
-          <span className="text-sm text-gray-700">
-            { page } / { totalPages }
-          </span>
-          <button
-            onClick={ () => setPage( ( p ) => Math.min( totalPages, p + 1 ) ) }
-            disabled={ page === totalPages }
-            className={ `px-3 py-1.5 rounded border ${page === totalPages
-              ? 'text-gray-400 border-gray-200'
-              : 'text-gray-700 border-gray-300 hover:bg-gray-50'
-              }` }
-          >
-            Next
-          </button>
-          <button
-            onClick={ () => setPage( totalPages ) }
-            disabled={ page === totalPages }
-            className={ `px-2.5 py-1.5 rounded border ${page === totalPages
-              ? 'text-gray-400 border-gray-200'
-              : 'text-gray-700 border-gray-300 hover:bg-gray-50'
-              }` }
-          >
-            »
-          </button>
+          <button onClick={ () => setPage( 1 ) } disabled={ page === 1 } className="px-2.5 py-1.5 rounded border">«</button>
+          <button onClick={ () => setPage( ( p ) => Math.max( 1, p - 1 ) ) } disabled={ page === 1 } className="px-3 py-1.5 rounded border">Prev</button>
+          <span className="text-sm text-gray-700">{ page } / { totalPages }</span>
+          <button onClick={ () => setPage( ( p ) => Math.min( totalPages, p + 1 ) ) } disabled={ page === totalPages } className="px-3 py-1.5 rounded border">Next</button>
+          <button onClick={ () => setPage( totalPages ) } disabled={ page === totalPages } className="px-2.5 py-1.5 rounded border">»</button>
         </div>
       </div>
     );
   };
 
-  // Reset semua filter
+  // Reset filter
   const resetFilters = () => {
     setBranchFilter( null );
     setDateRange( [ null, null ] );
-    setAppliedDateRange( [ null, null ] );
+    setSearchTerm( '' );
     setCurrentPage( 1 );
   };
 
@@ -213,43 +169,50 @@ const OwnerLaporanPenjualan = () => {
           </div>
         </div>
 
-        {/* Filter */ }
-        <div className="flex mb-6 gap-3 items-end">
-          <select
-            value={ branchFilter || '' }
-            onChange={ e => {
-              const val = e.target.value;
-              setBranchFilter( val || null );
-              setCurrentPage( 1 );
-            } }
-            className="px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-blue-300 focus:border-blue-500"
-          >
-            <option value="">Semua Cabang</option>
-            { branchOptions.map( branch => (
-              <option key={ branch.id } value={ branch.id }>{ branch.name }</option>
-            ) ) }
-          </select>
+        {/* Filters */ }
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Filter Laporan</h2> */ }
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Rentang Tanggal</label>
-            <div className="flex gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Cabang */ }
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-2">Cabang</label>
+              <select
+                value={ branchFilter || '' }
+                onChange={ ( e ) => { setBranchFilter( e.target.value ); setCurrentPage( 1 ); } }
+                className="border rounded-lg px-4 py-2 text-sm w-full"
+              >
+                <option value="">Semua Cabang</option>
+                { branches.map( b => (
+                  <option key={ b.id } value={ b.id }>{ b.name }</option>
+                ) ) }
+              </select>
+            </div>
+
+            {/* Tanggal */ }
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-2">Rentang Tanggal</label>
               <DatePicker
-                selectsRange={ true }
+                selectsRange
                 startDate={ startDate }
                 endDate={ endDate }
-                onChange={ ( update ) => {
-                  setDateRange( update )
+                onChange={ ( range ) => {
+                  setDateRange( range );
                   setCurrentPage( 1 );
                 } }
-                isClearable={ true }
-                maxDate={ today }
+                isClearable
                 dateFormat="dd/MM/yyyy"
-                className="border rounded px-3 py-2 text-sm w-60"
                 placeholderText="Pilih rentang tanggal"
+                className="border rounded-lg px-4 py-2 text-sm w-full"
+                maxDate={ new Date() }
               />
+            </div>
+
+            {/* Tombol reset */ }
+            <div className="flex items-end">
               <button
                 onClick={ resetFilters }
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600"
+                className="px-5 py-2 bg-gray-200 text-sm rounded-lg hover:bg-gray-300 transition"
               >
                 Reset
               </button>
@@ -301,7 +264,7 @@ const OwnerLaporanPenjualan = () => {
             setPage={ setCurrentPage }
             totalPages={ totalPages }
             total={ totalItems }
-            perPage={ salesData.length }
+            perPage={ 10 }
           />
         ) }
       </div>

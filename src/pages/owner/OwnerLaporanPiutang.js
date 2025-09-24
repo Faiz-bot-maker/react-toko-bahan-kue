@@ -42,7 +42,7 @@ const OwnerLaporanPiutang = () => {
 
     const API_URL = `${process.env.REACT_APP_API_URL}/debt`;
 
-    // Fetch branch list (Admin bisa lihat semua cabang)
+    // Fetch branch list
     useEffect( () => {
         const fetchBranches = async () => {
             try {
@@ -55,7 +55,7 @@ const OwnerLaporanPiutang = () => {
         fetchBranches();
     }, [] );
 
-    // Fetch data otomatis saat filter/pagination berubah
+    // Fetch data otomatis
     useEffect( () => {
         if ( ( startDate && !endDate ) || ( !startDate && endDate ) ) return;
         fetchData( currentPage, searchTerm );
@@ -200,13 +200,23 @@ const OwnerLaporanPiutang = () => {
                         selectsRange
                         startDate={ startDate }
                         endDate={ endDate }
-                        onChange={ ( range ) => setDateRange( range ) }
+                        onChange={ ( range ) => {
+                            setDateRange( range );
+                            const [ start, end ] = range;
+                            if ( start && end ) {
+                                setAppliedDateRange( range );
+                                setCurrentPage( 1 );
+                            }
+                            if ( !start && !end ) {
+                                resetFilters();
+                            }
+                        } }
                         isClearable
                         dateFormat="dd/MM/yyyy"
                         placeholderText="Pilih rentang tanggal"
                         className="border px-3 py-2 rounded w-60"
+                        maxDate={ new Date() }
                     />
-                    <button onClick={ () => { setAppliedDateRange( dateRange ); setCurrentPage( 1 ); } } className="bg-blue-600 text-white px-4 py-2 rounded">Terapkan</button>
                     <button onClick={ resetFilters } className="bg-gray-300 px-4 py-2 rounded">Reset</button>
                 </div>
 

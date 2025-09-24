@@ -221,7 +221,7 @@ const OwnerTransaksiKeluar = () => {
                         <select
                             value={ branchFilter }
                             onChange={ ( e ) => setBranchFilter( e.target.value ) }
-                            className="border rounded px-3 py-2 text-sm"
+                            className="border px-3 py-2 rounded w-60"
                         >
                             <option value="">Semua Cabang</option>
                             { branches.map( ( b ) => (
