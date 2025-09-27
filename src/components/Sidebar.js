@@ -38,7 +38,7 @@ const menus = [
     icon: <HiOutlineDocumentReport className="text-xs" />,
     items: [
       { name: 'Laporan Barang Terlaris', path: '/laporan-produk-terlaris' },
-      // { name: 'Laporan Barang Keluar', path: '/barang-keluar' },
+      { name: 'Laporan Pembelian', path: '/own-laporan-pembelian' },
       { name: 'Laporan Pergerakan Stok', path: '/own-pergerakan-stok' },
       { name: 'Laporan Transaksi Keluar', path: '/own-transaksi-keluar' },
       { name: 'Laporan Piutang', path: '/laporan-piutang' },
