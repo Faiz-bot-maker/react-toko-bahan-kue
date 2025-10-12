@@ -48,6 +48,7 @@ import AdminTransaksiKeluar from './pages/admin/AdminTransaksiKeluar';
 import AdminLaporanPiutang from './pages/admin/AdminLaporanPiutang';
 import AdminAlurKas from './pages/admin/AdminAlurKas';
 import AdminPergerakanStok from './pages/admin/AdminPergerakanStok';
+import AdminLaporanPembelian from './pages/admin/AdminLaporanPembelian';
 
 
 function App() {
@@ -331,6 +332,13 @@ function App() {
             <LoginCheck>
               <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
                 <AdminPergerakanStok />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/admin/adm-laporan-pembelian" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+                <AdminLaporanPembelian />
               </RoleGuard>
             </LoginCheck>
           } />

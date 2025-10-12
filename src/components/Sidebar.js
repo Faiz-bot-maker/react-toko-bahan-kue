@@ -99,6 +99,7 @@ const adminMenus = [
     icon: <HiOutlineDocumentReport className="text-xs" />,
     items: [
       { name: 'Laporan Penjualan', path: '/admin/laporan-penjualan' },
+      { name: 'Laporan Pembelian', path: '/admin/adm-laporan-pembelian' },
       { name: 'Laporan Pergerakan Stok', path: '/admin/adm-pergerakan-stok' },
       { name: 'Laporan Pengeluaran', path: '/admin/out-report' },
       { name: 'Laporan Piutang', path: '/admin/adm-piutang' },
@@ -231,7 +232,7 @@ const Sidebar = () => {
             }` }
         >
           <HiOutlineHome className="text-xs" />
-          <span>Beranda</span>
+          <span>Dashboard</span>
         </Link>
 
         {/* Show menus based on user role */ }

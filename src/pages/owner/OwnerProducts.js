@@ -216,7 +216,7 @@ const OwnerProducts = () => {
         </div>
 
         {/* 🔎 Search Input */ }
-        <div className="mb-4">
+        <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
           <input
             type="text"
             placeholder="Cari produk atau SKU..."

@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { HiOutlineOfficeBuilding, HiOutlineEye, HiOutlineX } from "react-icons/hi";
+import {
+    HiOutlineOfficeBuilding,
+    HiOutlineEye,
+    HiOutlineX,
+    HiOutlinePlus,
+} from "react-icons/hi";
+import { FiEdit, FiTrash } from "react-icons/fi";
 import axios from "axios";
 import Layout from "../../components/Layout";
 
 const API_URL = `${process.env.REACT_APP_API_URL}/branch-inventory`;
+const API_PRODUCTS = `${process.env.REACT_APP_API_URL}/products`;
+const API_BRANCHES = `${process.env.REACT_APP_API_URL}/branches`;
 
 const getHeaders = () => ( {
     Authorization: localStorage.getItem( "authToken" ),
@@ -14,40 +22,62 @@ const OwnerInventory = () => {
     const [ inventories, setInventories ] = useState( [] );
     const [ loading, setLoading ] = useState( true );
 
+    // Modal state
     const [ showModal, setShowModal ] = useState( false );
-    const [ selectedProduct, setSelectedProduct ] = useState( null );
     const [ sizes, setSizes ] = useState( [] );
     const [ loadingSizes, setLoadingSizes ] = useState( false );
 
+    // CRUD Modal
+    const [ crudModal, setCrudModal ] = useState( { open: false, mode: "add", data: null } );
+    const [ formData, setFormData ] = useState( {
+        product_sku: "",
+        sku: "",
+        branch_id: "",
+        sell_price: "",
+        size_id: "",
+    } );
+
+    // Data untuk filter & dropdown
     const [ searchTerm, setSearchTerm ] = useState( "" );
     const [ branchFilter, setBranchFilter ] = useState( null );
     const [ currentPage, setCurrentPage ] = useState( 1 );
     const [ totalPages, setTotalPages ] = useState( 1 );
     const [ totalItems, setTotalItems ] = useState( 0 );
-    const [ branchOptions, setBranchOptions ] = useState( [] );
 
-    // Fetch branch options
+    const [ branchOptions, setBranchOptions ] = useState( [] );
+    const [ productOptions, setProductOptions ] = useState( [] );
+    const [ sizeOptions, setSizeOptions ] = useState( [] );
+
+    // Fetch Branches
     const fetchBranches = async () => {
         try {
-            const res = await axios.get( `${process.env.REACT_APP_API_URL}/branches`, {
-                headers: getHeaders(),
-            } );
-            if ( res.data?.data ) {
-                setBranchOptions( res.data.data );
-            }
+            const res = await axios.get( API_BRANCHES, { headers: getHeaders() } );
+            if ( res.data?.data ) setBranchOptions( res.data.data );
         } catch ( err ) {
             console.error( "Failed to fetch branches:", err );
         }
     };
 
-    // Fetch inventories
+    // Fetch Products
+    const fetchProducts = async () => {
+        try {
+            const res = await axios.get( API_PRODUCTS, {
+                headers: getHeaders(),
+                params: { exclude_sizes: true },
+            } );
+            if ( Array.isArray( res.data?.data ) ) setProductOptions( res.data.data );
+        } catch ( err ) {
+            console.error( "Failed to fetch products:", err );
+        }
+    };
+
+    // Fetch Inventories
     const fetchInventories = async ( page = 1, branch = null, search = "" ) => {
         try {
             setLoading( true );
-
             const params = new URLSearchParams();
             params.append( "page", page );
-            if ( branch !== null ) params.append( "branch_id", branch );
+            if ( branch ) params.append( "branch_id", branch );
             if ( search ) params.append( "search", search );
 
             const res = await axios.get( `${API_URL}?${params.toString()}`, {
@@ -56,7 +86,6 @@ const OwnerInventory = () => {
 
             const data = res.data?.data || [];
             const paging = res.data?.paging || {};
-
             setInventories( data );
             setCurrentPage( paging.page || 1 );
             setTotalPages( paging.total_page || 1 );
@@ -68,16 +97,82 @@ const OwnerInventory = () => {
         }
     };
 
-    const fetchSizes = async ( sku, name, branch, sizes ) => {
-        setLoadingSizes( true );
-        setSelectedProduct( { sku, name, branch } );
-        setShowModal( true );
-        setSizes( sizes || [] );
-        setLoadingSizes( false );
+    // Fetch Sizes (API /products/{sku}/sizes)
+    const fetchSizes = async ( sizes ) => {
+        try {
+            setLoadingSizes( true );
+            setShowModal( true );
+
+            if ( Array.isArray( sizes ) ) {
+                setSizes( sizes );
+            } else {
+                setSizes( [] );
+            }
+        } catch ( err ) {
+            console.error( "Failed to fetch sizes:", err );
+            setSizes( [] );
+        } finally {
+            setLoadingSizes( false );
+        }
     };
 
+    // Fetch Sizes untuk CRUD (dropdown)
+    const fetchProductSizes = async ( sku ) => {
+        try {
+            const res = await axios.get(
+                `${process.env.REACT_APP_API_URL}/products/${sku}/sizes`,
+                { headers: getHeaders() }
+            );
+            if ( Array.isArray( res.data?.data ) ) {
+                setSizeOptions( res.data.data );
+            } else {
+                setSizeOptions( [] );
+            }
+        } catch ( err ) {
+            console.error( "Failed to fetch product sizes:", err );
+            setSizeOptions( [] );
+        }
+    };
+
+    // CRUD Handlers
+    const handleAdd = async () => {
+        try {
+            await axios.post( API_URL, formData, { headers: getHeaders() } );
+            setCrudModal( { open: false, mode: "add", data: null } );
+            fetchInventories( currentPage, branchFilter, searchTerm );
+        } catch ( err ) {
+            console.error( "Failed to add inventory:", err );
+            alert( "Gagal menambah data inventory" );
+        }
+    };
+
+    const handleEdit = async ( id ) => {
+        try {
+            await axios.put( `${API_URL}/${id}`, formData, { headers: getHeaders() } );
+            setCrudModal( { open: false, mode: "edit", data: null } );
+            fetchInventories( currentPage, branchFilter, searchTerm );
+        } catch ( err ) {
+            console.error( "Failed to edit inventory:", err );
+            alert( "Gagal mengubah data inventory" );
+        }
+    };
+
+    const handleDelete = async ( id ) => {
+        if ( window.confirm( "Yakin ingin menghapus data ini?" ) ) {
+            try {
+                await axios.delete( `${API_URL}/${id}`, { headers: getHeaders() } );
+                fetchInventories( currentPage, branchFilter, searchTerm );
+            } catch ( err ) {
+                console.error( "Failed to delete inventory:", err );
+                alert( "Gagal menghapus data" );
+            }
+        }
+    };
+
+    // Lifecycle
     useEffect( () => {
         fetchBranches();
+        fetchProducts();
     }, [] );
 
     useEffect( () => {
@@ -138,31 +233,39 @@ const OwnerInventory = () => {
         </div>
     );
 
-    // Hitung startIndex & endIndex berdasarkan paging API
+    // Hitung startIndex & endIndex
     const pageSize = inventories.length || 0;
     const startIndex = ( currentPage - 1 ) * pageSize;
     const endIndex = Math.min( startIndex + pageSize, totalItems );
 
     return (
         <Layout>
-            <div className="w-full max-w-6xl mx-auto">
+            <div className="w-full max-w-7xl mx-auto">
                 {/* Header */ }
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="p-3 bg-green-100 rounded-lg">
-                        <HiOutlineOfficeBuilding className="text-2xl text-green-600" />
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-green-100 rounded-lg">
+                            <HiOutlineOfficeBuilding className="text-2xl text-green-600" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-800">Inventory Semua Cabang</h1>
+                            <p className="text-sm text-gray-600">Lihat & Kelola data inventory cabang</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-800">
-                            Inventory Semua Cabang
-                        </h1>
-                        <p className="text-sm text-gray-600">
-                            Lihat daftar produk di semua cabang
-                        </p>
-                    </div>
+                    <button
+                        onClick={ () => {
+                            setCrudModal( { open: true, mode: "add", data: null } );
+                            setFormData( { product_sku: "", sku: "", branch_id: "", sell_price: "", size_id: "" } );
+                            setSizeOptions( [] );
+                        } }
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all"
+                    >
+                        <HiOutlinePlus className="text-lg" /> Tambah Inventory
+                    </button>
                 </div>
 
                 {/* Search & Filter */ }
-                <div className="flex flex-col md:flex-row gap-3 mb-4">
+                <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
                     <input
                         type="text"
                         placeholder="Cari produk, SKU, atau cabang..."
@@ -216,50 +319,57 @@ const OwnerInventory = () => {
                                         <td colSpan={ 4 } className="px-6 py-12 text-center">
                                             <div className="flex items-center justify-center">
                                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                                                <span className="ml-3 text-gray-600 text-sm">
-                                                    Memuat data...
-                                                </span>
+                                                <span className="ml-3 text-gray-600 text-sm">Memuat data...</span>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : inventories.length === 0 ? (
                                     <tr>
                                         <td colSpan={ 4 } className="px-6 py-16 text-center">
-                                            <div className="flex flex-col items-center">
-                                                <HiOutlineOfficeBuilding className="text-6xl text-gray-300 mb-4" />
-                                                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                                    Tidak ada data ditemukan
-                                                </h3>
-                                            </div>
+                                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                                Tidak ada data ditemukan
+                                            </h3>
                                         </td>
                                     </tr>
                                 ) : (
                                     inventories.map( ( item ) => (
-                                        <tr
-                                            key={ `${item.branch_id}-${item.sku}` }
-                                            className="hover:bg-gray-50"
-                                        >
+                                        <tr key={ `${item.branch_id}-${item.sku}` } className="hover:bg-gray-50">
                                             <td className="px-6 py-4 text-gray-900 font-medium">
                                                 { item.branch_name }
                                             </td>
-                                            <td className="px-6 py-4 text-gray-900 font-medium">
-                                                { item.name }
-                                            </td>
+                                            <td className="px-6 py-4 text-gray-900 font-medium">{ item.name }</td>
                                             <td className="px-6 py-4 text-gray-600">{ item.sku }</td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className="px-6 py-4 text-right flex gap-2 justify-end">
                                                 <button
-                                                    onClick={ () =>
-                                                        fetchSizes(
-                                                            item.sku,
-                                                            item.name,
-                                                            item.branch_name,
-                                                            item.sizes
-                                                        )
-                                                    }
-                                                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                                    onClick={ () => fetchSizes( item.sizes ) }
+                                                    className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg"
+                                                    title="Lihat Ukuran"
                                                 >
-                                                    <HiOutlineEye className="text-lg" />
-                                                    Lihat Ukuran
+                                                    <HiOutlineEye size={ 18 } />
+                                                </button>
+                                                <button
+                                                    onClick={ () => {
+                                                        setCrudModal( { open: true, mode: "edit", data: item } );
+                                                        setFormData( {
+                                                            product_sku: item.product_sku,
+                                                            sku: item.sku,
+                                                            branch_id: item.branch_id,
+                                                            sell_price: item.sell_price,
+                                                            size_id: item.size_id || "",
+                                                        } );
+                                                        fetchProductSizes( item.sku );
+                                                    } }
+                                                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
+                                                    title="Edit"
+                                                >
+                                                    <FiEdit size={ 18 } />
+                                                </button>
+                                                <button
+                                                    onClick={ () => handleDelete( item.id ) }
+                                                    className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                                                    title="Hapus"
+                                                >
+                                                    <FiTrash size={ 18 } />
                                                 </button>
                                             </td>
                                         </tr>
@@ -282,10 +392,143 @@ const OwnerInventory = () => {
                     />
                 ) }
 
-                {/* Modal Sizes */ }
+                {/* CRUD Modal */ }
+                { crudModal.open && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                        <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+                            <button
+                                onClick={ () => setCrudModal( { open: false, mode: "add", data: null } ) }
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                            >
+                                <HiOutlineX className="w-6 h-6" />
+                            </button>
+
+                            <h2 className="text-xl font-bold mb-6">
+                                { crudModal.mode === "add" ? "Tambah" : "Edit" } Inventory
+                            </h2>
+
+                            <div className="space-y-4">
+                                {/* Product */ }
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Nama Produk
+                                    </label>
+                                    <select
+                                        className="w-full border rounded-lg px-3 py-2"
+                                        value={ formData.product_sku }
+                                        onChange={ ( e ) => {
+                                            const product = productOptions.find(
+                                                ( p ) => p.sku === e.target.value
+                                            );
+                                            if ( product ) {
+                                                setFormData( {
+                                                    ...formData,
+                                                    product_sku: product.sku,
+                                                    sku: product.sku,
+                                                    size_id: "",
+                                                } );
+                                                fetchProductSizes( product.sku );
+                                            }
+                                        } }
+                                    >
+                                        <option value="">Pilih Produk</option>
+                                        { productOptions.map( ( p ) => (
+                                            <option key={ p.sku } value={ p.sku }>
+                                                { p.name }
+                                            </option>
+                                        ) ) }
+                                    </select>
+                                </div>
+
+                                {/* SKU */ }
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">SKU</label>
+                                    <input
+                                        type="text"
+                                        value={ formData.sku }
+                                        disabled
+                                        className="w-full border rounded-lg px-3 py-2 bg-gray-100"
+                                    />
+                                </div>
+
+                                {/* Size */ }
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Ukuran</label>
+                                    <select
+                                        className="w-full border rounded-lg px-3 py-2"
+                                        value={ formData.size_id }
+                                        onChange={ ( e ) => setFormData( { ...formData, size_id: e.target.value } ) }
+                                        disabled={ sizeOptions.length === 0 }
+                                    >
+                                        <option value="">Pilih Ukuran</option>
+                                        { sizeOptions.map( ( s ) => (
+                                            <option key={ s.id } value={ s.id }>
+                                                { s.name }
+                                            </option>
+                                        ) ) }
+                                    </select>
+                                </div>
+
+                                {/* Branch */ }
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Cabang</label>
+                                    <select
+                                        className="w-full border rounded-lg px-3 py-2"
+                                        value={ formData.branch_id }
+                                        onChange={ ( e ) => setFormData( { ...formData, branch_id: e.target.value } ) }
+                                    >
+                                        <option value="">Pilih Cabang</option>
+                                        { branchOptions.map( ( b ) => (
+                                            <option key={ b.id } value={ b.id }>
+                                                { b.name }
+                                            </option>
+                                        ) ) }
+                                    </select>
+                                </div>
+
+                                {/* Sell Price */ }
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Harga Jual
+                                    </label>
+                                    <input
+                                        type="number"
+                                        className="w-full border rounded-lg px-3 py-2"
+                                        value={ formData.sell_price }
+                                        onChange={ ( e ) =>
+                                            setFormData( { ...formData, sell_price: e.target.value } )
+                                        }
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Actions */ }
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button
+                                    onClick={ () => setCrudModal( { open: false, mode: "add", data: null } ) }
+                                    className="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-50"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={ () =>
+                                        crudModal.mode === "add"
+                                            ? handleAdd()
+                                            : handleEdit( crudModal.data.id )
+                                    }
+                                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold"
+                                >
+                                    { crudModal.mode === "add" ? "Tambah" : "Simpan" }
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ) }
+
+                {/* Size Modal */ }
                 { showModal && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-                        <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                        <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
                             <button
                                 onClick={ () => setShowModal( false ) }
                                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
@@ -293,51 +536,33 @@ const OwnerInventory = () => {
                                 <HiOutlineX className="w-6 h-6" />
                             </button>
 
-                            <h2 className="text-xl font-bold mb-4 text-gray-800">
-                                Ukuran Produk – { selectedProduct?.name } ({ selectedProduct?.sku })
-                                <span className="block text-sm text-gray-500">
-                                    Cabang: { selectedProduct?.branch }
-                                </span>
-                            </h2>
+                            <h2 className="text-xl font-bold mb-6">Daftar Ukuran</h2>
 
                             { loadingSizes ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                                    <span className="ml-3 text-gray-600 text-sm">
-                                        Memuat ukuran...
-                                    </span>
-                                </div>
+                                <div className="text-center py-10 text-gray-500">Memuat ukuran...</div>
                             ) : sizes.length === 0 ? (
-                                <p className="text-center text-gray-500 py-12">
-                                    Tidak ada ukuran untuk produk ini
-                                </p>
+                                <div className="text-center py-10 text-gray-500">
+                                    Tidak ada ukuran tersedia
+                                </div>
                             ) : (
-                                <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-                                    <thead className="bg-gray-100">
-                                        <tr>
-                                            <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
-                                                Ukuran
-                                            </th>
-                                            <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
-                                                Stok
-                                            </th>
-                                            <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
-                                                Harga Jual
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        { sizes.map( ( s ) => (
-                                            <tr key={ s.size_id } className="border-t">
-                                                <td className="px-4 py-2 text-gray-800">{ s.size }</td>
-                                                <td className="px-4 py-2 text-gray-600">{ s.stock }</td>
-                                                <td className="px-4 py-2 text-gray-600">
-                                                    Rp { s.sell_price.toLocaleString( "id-ID" ) }
-                                                </td>
-                                            </tr>
-                                        ) ) }
-                                    </tbody>
-                                </table>
+                                <ul className="space-y-2">
+                                    { sizes.map( ( size ) => (
+                                        <li
+                                            key={ size.size_id }
+                                            className="p-3 border rounded-lg hover:bg-gray-50 flex justify-between"
+                                        >
+                                            <div>
+                                                <p className="font-medium text-gray-800">Size: { size.size }</p>
+                                                <p className="text-sm text-gray-500">Stok: { size.stock }</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-green-600 font-semibold">
+                                                    Rp { Number( size.sell_price ).toLocaleString( "id-ID" ) }
+                                                </p>
+                                            </div>
+                                        </li>
+                                    ) ) }
+                                </ul>
                             ) }
                         </div>
                     </div>
