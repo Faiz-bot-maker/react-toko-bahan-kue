@@ -1,10 +1,12 @@
 // src/pages/Login.js
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { HiOutlineLockClosed, HiOutlineUser, HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
+import { useLocation } from 'react-router-dom';
 
 const Login = () => {
+  const location = useLocation();
   const [ username, setUsername ] = useState( '' );
   const [ password, setPassword ] = useState( '' );
   const [ showPassword, setShowPassword ] = useState( false );
@@ -13,6 +15,13 @@ const Login = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect( () => {
+    if ( location.state?.logoutError ) {
+      setError( location.state.logoutError );
+      window.history.replaceState( {}, document.title );
+    }
+  }, [ location.state ] );
 
   const handleSubmit = async ( e ) => {
     e.preventDefault();

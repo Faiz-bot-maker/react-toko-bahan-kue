@@ -98,22 +98,30 @@ export const AuthProvider = ( { children } ) => {
           {},
           {
             headers: {
-              'Authorization': 'token',
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
-            timeout: API_CONFIG.TIMEOUT
+            timeout: API_CONFIG.TIMEOUT,
           }
         );
       }
+      // kalau sukses
+      clearAuth();
+      return { success: true };
     } catch ( error ) {
       console.error( 'Logout error:', error );
-      // Lanjut Logout Tanpa Request dari server
-    } finally {
+      clearAuth();
+      return {
+        success: false,
+        message: 'Terjadi kesalahan saat logout. Silakan login kembali.',
+      };
+    }
+
+    function clearAuth() {
       setIsAuthenticated( false );
       setUser( null );
       localStorage.removeItem( 'authToken' );
       localStorage.removeItem( 'user' );
-      window.location.href = '/login';
     }
   };
 
