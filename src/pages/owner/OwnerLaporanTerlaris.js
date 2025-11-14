@@ -589,8 +589,8 @@ const OwnerLaporanTerlaris = () => {
                           <div className="p-4 bg-gray-100 rounded-full mb-4">
                             <MdCategory className="text-4xl text-gray-400" />
                           </div>
-                          <h3 className="text-lg font-semibold text-gray-700 mb-2">Belum ada data laporan kategori</h3>
-                          <p className="text-gray-500">Data akan muncul setelah ada transaksi penjualan</p>
+                          <h3 className="text-lg font-semibold text-gray-700 mb-2">tidak ada data</h3>
+                          {/* <p className="text-gray-500">Data akan muncul setelah ada transaksi penjualan</p> */}
                         </div>
                       </td>
                     </tr>

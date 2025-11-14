@@ -11,56 +11,56 @@ import Layout from "../../components/Layout";
 const API_URL = `${process.env.REACT_APP_API_URL}/capitals`;
 
 // 📌 Pagination Component
-const Pagination = ( { page, setPage, totalPages, total, perPage } ) => {
-    const startIndex = ( page - 1 ) * perPage;
-    const endIndex = Math.min( startIndex + perPage, total );
+const Pagination = ({ page, setPage, totalPages, total, perPage }) => {
+    const startIndex = (page - 1) * perPage;
+    const endIndex = Math.min(startIndex + perPage, total);
 
     return (
         <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 mt-6">
             <div className="text-xs text-gray-500">
-                Menampilkan { total === 0 ? 0 : startIndex + 1 }–{ endIndex } dari { total } data
+                Menampilkan {total === 0 ? 0 : startIndex + 1}–{endIndex} dari {total} data
             </div>
             <div className="flex items-center gap-2">
                 <button
-                    onClick={ () => setPage( 1 ) }
-                    disabled={ page === 1 }
-                    className={ `px-2.5 py-1.5 rounded border ${page === 1
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                    className={`px-2.5 py-1.5 rounded border ${page === 1
                         ? "text-gray-400 border-gray-200"
                         : "text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }` }
+                        }`}
                 >
                     «
                 </button>
                 <button
-                    onClick={ () => setPage( ( p ) => Math.max( 1, p - 1 ) ) }
-                    disabled={ page === 1 }
-                    className={ `px-3 py-1.5 rounded border ${page === 1
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className={`px-3 py-1.5 rounded border ${page === 1
                         ? "text-gray-400 border-gray-200"
                         : "text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }` }
+                        }`}
                 >
                     Prev
                 </button>
                 <span className="text-sm text-gray-700">
-                    { page } / { totalPages }
+                    {page} / {totalPages}
                 </span>
                 <button
-                    onClick={ () => setPage( ( p ) => Math.min( totalPages, p + 1 ) ) }
-                    disabled={ page === totalPages }
-                    className={ `px-3 py-1.5 rounded border ${page === totalPages
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className={`px-3 py-1.5 rounded border ${page === totalPages
                         ? "text-gray-400 border-gray-200"
                         : "text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }` }
+                        }`}
                 >
                     Next
                 </button>
                 <button
-                    onClick={ () => setPage( totalPages ) }
-                    disabled={ page === totalPages }
-                    className={ `px-2.5 py-1.5 rounded border ${page === totalPages
+                    onClick={() => setPage(totalPages)}
+                    disabled={page === totalPages}
+                    className={`px-2.5 py-1.5 rounded border ${page === totalPages
                         ? "text-gray-400 border-gray-200"
                         : "text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }` }
+                        }`}
                 >
                     »
                 </button>
@@ -70,41 +70,41 @@ const Pagination = ( { page, setPage, totalPages, total, perPage } ) => {
 };
 
 const OwnerModal = () => {
-    const [ modals, setModals ] = useState( [] );
-    const [ modal, setModal ] = useState( { open: false, mode: "add", idx: null } );
-    const [ form, setForm ] = useState( {
+    const [modals, setModals] = useState([]);
+    const [modal, setModal] = useState({ open: false, mode: "add", idx: null });
+    const [form, setForm] = useState({
         id: null,
         type: "OUT",
         note: "",
         amount: "",
         branch_id: 1,
-    } );
-    const [ loading, setLoading ] = useState( true );
+    });
+    const [loading, setLoading] = useState(true);
 
     // Filter
-    const [ searchNote, setSearchNote ] = useState( "" );
-    const [ dateRange, setDateRange ] = useState( [ null, null ] );
-    const [ startDate, endDate ] = dateRange;
-    const [ branchFilter, setBranchFilter ] = useState( "" ); // ✅ perbaikan
-    const [ branches, setBranches ] = useState( [
+    const [searchNote, setSearchNote] = useState("");
+    const [dateRange, setDateRange] = useState([null, null]);
+    const [startDate, endDate] = dateRange;
+    const [branchFilter, setBranchFilter] = useState(""); // ✅ perbaikan
+    const [branches, setBranches] = useState([
         { id: 1, name: "Cabang Utama" },
         { id: 2, name: "Cabang Kedua" },
-    ] ); // ✅ dummy, ideally fetch dari API
+    ]); // ✅ dummy, ideally fetch dari API
 
     // Pagination
-    const [ currentPage, setCurrentPage ] = useState( 1 );
-    const [ totalPages, setTotalPages ] = useState( 1 );
-    const [ totalItems, setTotalItems ] = useState( 0 );
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const perPage = 10;
 
-    useEffect( () => {
-        fetchModals( currentPage );
-    }, [ currentPage, searchNote, startDate, endDate, branchFilter ] );
+    useEffect(() => {
+        fetchModals(currentPage);
+    }, [currentPage, searchNote, startDate, endDate, branchFilter]);
 
-    const fetchModals = async ( page = 1 ) => {
+    const fetchModals = async (page = 1) => {
         try {
-            setLoading( true );
-            const res = await axios.get( API_URL, {
+            setLoading(true);
+            const res = await axios.get(API_URL, {
                 params: {
                     page,
                     size: perPage,
@@ -112,92 +112,92 @@ const OwnerModal = () => {
                     branch_id: branchFilter || undefined,
                 },
                 headers: getHeaders(),
-            } );
+            });
 
             const { data, paging } = res.data;
-            if ( Array.isArray( data ) ) {
+            if (Array.isArray(data)) {
                 let filtered = data;
 
                 // filter tanggal di frontend
-                if ( startDate && endDate ) {
-                    filtered = filtered.filter( ( m ) => {
-                        const createdAt = new Date( m.created_at );
+                if (startDate && endDate) {
+                    filtered = filtered.filter((m) => {
+                        const createdAt = new Date(m.created_at);
                         return createdAt >= startDate && createdAt <= endDate;
-                    } );
+                    });
                 }
 
-                setModals( filtered );
-                setTotalPages( paging?.total_page || 1 );
-                setTotalItems( paging?.total_item || 0 );
+                setModals(filtered);
+                setTotalPages(paging?.total_page || 1);
+                setTotalItems(paging?.total_item || 0);
             } else {
-                console.error( "Data modal tidak valid:", res.data );
+                console.error("Data modal tidak valid:", res.data);
             }
-        } catch ( err ) {
-            console.error( "Gagal fetch modal:", err );
+        } catch (err) {
+            console.error("Gagal fetch modal:", err);
         } finally {
-            setLoading( false );
+            setLoading(false);
         }
     };
 
     const openAdd = () => {
-        setForm( { id: null, type: "OUT", note: "", amount: "", branch_id: 1 } );
-        setModal( { open: true, mode: "add", idx: null } );
+        setForm({ id: null, type: "OUT", note: "", amount: "", branch_id: 1 });
+        setModal({ open: true, mode: "add", idx: null });
     };
 
-    const openEdit = ( idx ) => {
-        setForm( modals[ idx ] );
-        setModal( { open: true, mode: "edit", idx } );
+    const openEdit = (idx) => {
+        setForm(modals[idx]);
+        setModal({ open: true, mode: "edit", idx });
     };
 
-    const closeModal = () => setModal( { open: false, mode: "add", idx: null } );
+    const closeModal = () => setModal({ open: false, mode: "add", idx: null });
 
-    const handleSubmit = async ( e ) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if ( !form.type || !form.note || !form.amount ) return;
+        if (!form.type || !form.note || !form.amount) return;
 
         try {
-            if ( modal.mode === "add" ) {
-                await axios.post( API_URL, form, { headers: getHeaders() } );
+            if (modal.mode === "add") {
+                await axios.post(API_URL, form, { headers: getHeaders() });
             } else {
-                await axios.put( `${API_URL}/${form.id}`, form, { headers: getHeaders() } );
+                await axios.put(`${API_URL}/${form.id}`, form, { headers: getHeaders() });
             }
-            fetchModals( currentPage );
+            fetchModals(currentPage);
             closeModal();
-        } catch ( err ) {
-            console.error( "Gagal menyimpan modal:", err );
+        } catch (err) {
+            console.error("Gagal menyimpan modal:", err);
         }
     };
 
-    const handleDelete = async ( idx ) => {
-        const id = modals[ idx ].id;
-        if ( !id ) return;
-        if ( window.confirm( "Yakin ingin menghapus modal ini?" ) ) {
+    const handleDelete = async (idx) => {
+        const id = modals[idx].id;
+        if (!id) return;
+        if (window.confirm("Yakin ingin menghapus modal ini?")) {
             try {
-                await axios.delete( `${API_URL}/${id}`, { headers: getHeaders() } );
-                fetchModals( currentPage );
-            } catch ( err ) {
-                console.error( "Gagal menghapus modal:", err );
+                await axios.delete(`${API_URL}/${id}`, { headers: getHeaders() });
+                fetchModals(currentPage);
+            } catch (err) {
+                console.error("Gagal menghapus modal:", err);
             }
         }
     };
 
     const resetFilters = () => {
-        setSearchNote( "" );
-        setDateRange( [ null, null ] );
-        setBranchFilter( "" ); // ✅ reset juga cabang
-        setCurrentPage( 1 );
-        fetchModals( 1 );
+        setSearchNote("");
+        setDateRange([null, null]);
+        setBranchFilter(""); // ✅ reset juga cabang
+        setCurrentPage(1);
+        fetchModals(1);
     };
 
-    const getHeaders = () => ( {
-        Authorization: localStorage.getItem( "authToken" ),
+    const getHeaders = () => ({
+        Authorization: localStorage.getItem("authToken"),
         "ngrok-skip-browser-warning": "true",
-    } );
+    });
 
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
-                {/* Header */ }
+                {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-blue-100 rounded-lg">
@@ -211,59 +211,59 @@ const OwnerModal = () => {
                         </div>
                     </div>
                     <button
-                        onClick={ openAdd }
+                        onClick={openAdd}
                         className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all duration-200 hover:shadow-xl"
                     >
                         <HiOutlinePlus className="text-lg" /> Tambah Modal
                     </button>
                 </div>
 
-                {/* Filters */ }
+                {/* Filters */}
                 <div className="bg-white rounded-lg shadow p-6 mb-6">
                     <div className="flex flex-wrap items-end gap-6">
-                        {/* Cabang */ }
+                        {/* Cabang */}
                         <div className="flex flex-col">
                             <label className="text-sm font-medium text-gray-700 mb-2">Cabang</label>
                             <select
-                                value={ branchFilter }
-                                onChange={ ( e ) => {
-                                    setBranchFilter( e.target.value );
-                                    setCurrentPage( 1 );
-                                } }
+                                value={branchFilter}
+                                onChange={(e) => {
+                                    setBranchFilter(e.target.value);
+                                    setCurrentPage(1);
+                                }}
                                 className="border rounded-lg px-4 py-2 text-sm w-56"
                             >
                                 <option value="">Semua Cabang</option>
-                                { branches.map( ( b ) => (
-                                    <option key={ b.id } value={ b.id }>
-                                        { b.name }
+                                {branches.map((b) => (
+                                    <option key={b.id} value={b.id}>
+                                        {b.name}
                                     </option>
-                                ) ) }
+                                ))}
                             </select>
                         </div>
 
-                        {/* Tanggal */ }
+                        {/* Tanggal */}
                         <div className="flex flex-col">
                             <label className="text-sm font-medium text-gray-700 mb-2">Rentang Tanggal</label>
                             <DatePicker
                                 selectsRange
-                                startDate={ startDate }
-                                endDate={ endDate }
-                                onChange={ ( range ) => {
-                                    setDateRange( range );
-                                    setCurrentPage( 1 );
-                                } }
+                                startDate={startDate}
+                                endDate={endDate}
+                                onChange={(range) => {
+                                    setDateRange(range);
+                                    setCurrentPage(1);
+                                }}
                                 isClearable
                                 dateFormat="dd/MM/yyyy"
                                 placeholderText="Pilih rentang tanggal"
                                 className="border rounded-lg px-4 py-2 text-sm w-56"
-                                maxDate={ new Date() }
+                                maxDate={new Date()}
                             />
                         </div>
 
-                        {/* Tombol reset langsung samping filter */ }
+                        {/* Tombol reset langsung samping filter */}
                         <div className="flex items-end">
                             <button
-                                onClick={ resetFilters }
+                                onClick={resetFilters}
                                 className="px-5 py-2 bg-gray-200 text-sm rounded-lg hover:bg-gray-300 transition"
                             >
                                 Reset
@@ -272,7 +272,7 @@ const OwnerModal = () => {
                     </div>
                 </div>
 
-                {/* Table */ }
+                {/* Table */}
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
@@ -296,90 +296,114 @@ const OwnerModal = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                { loading ? (
+                                {loading ? (
                                     <tr>
-                                        <td colSpan={ 5 } className="text-center py-8">
-                                            Memuat data...
+                                        <td colSpan={5} className="px-6 py-12 text-center">
+                                            <div className="flex items-center justify-center">
+                                                <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-gray-700"></div>
+                                                <span className="ml-3 text-gray-600 text-sm">Memuat data...</span>
+                                            </div>
                                         </td>
                                     </tr>
                                 ) : modals.length === 0 ? (
                                     <tr>
-                                        <td colSpan={ 5 } className="text-center py-8">
-                                            Tidak ada data
+                                        <td colSpan={5} className="px-6 py-16 text-center">
+                                            <div className="flex flex-col items-center">
+                                                <div className="p-4 bg-gray-100 rounded-full mb-4">
+                                                    <svg
+                                                        className="w-10 h-10 text-gray-400"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="2"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path d="M3 3h18v4H3z" />
+                                                        <path d="M3 7l2 14h14l2-14H3z" />
+                                                    </svg>
+                                                </div>
+
+                                                <h3 className="text-lg font-semibold text-gray-700 mb-1">
+                                                    Tidak ada data modal
+                                                </h3>
+
+                                                {/* <p className="text-gray-500 text-sm">
+                                                    Coba ubah filter cabang, rentang tanggal, atau catatan.
+                                                </p> */}
+                                            </div>
                                         </td>
                                     </tr>
                                 ) : (
-                                    modals.map( ( m, idx ) => (
-                                        <tr key={ m.id }>
+                                    modals.map((m, idx) => (
+                                        <tr key={m.id}>
                                             <td className="px-6 py-3 font-medium">
-                                                { m.type === "IN" ? (
+                                                {m.type === "IN" ? (
                                                     <span className="text-green-600">Deposit</span>
                                                 ) : (
                                                     <span className="text-red-600">Withdraw</span>
-                                                ) }
+                                                )}
                                             </td>
-                                            <td className="px-6 py-3 text-gray-700">{ m.note }</td>
+                                            <td className="px-6 py-3 text-gray-700">{m.note}</td>
                                             <td className="px-6 py-3 text-gray-900 font-semibold">
-                                                Rp{ " " }
-                                                { Number( m.amount ).toLocaleString( "id-ID", {
+                                                Rp{" "}
+                                                {Number(m.amount).toLocaleString("id-ID", {
                                                     minimumFractionDigits: 0,
-                                                } ) }
+                                                })}
                                             </td>
                                             <td className="px-6 py-3 text-gray-600 text-sm">
-                                                { new Date( m.created_at ).toLocaleDateString( "id-ID" ) }
+                                                {new Date(m.created_at).toLocaleDateString("id-ID")}
                                             </td>
                                             <td className="px-6 py-3 flex justify-end gap-2">
                                                 <button
-                                                    onClick={ () => openEdit( idx ) }
+                                                    onClick={() => openEdit(idx)}
                                                     className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
                                                     title="Edit"
                                                 >
-                                                    <FiEdit size={ 18 } />
+                                                    <FiEdit size={18} />
                                                 </button>
                                                 <button
-                                                    onClick={ () => handleDelete( idx ) }
+                                                    onClick={() => handleDelete(idx)}
                                                     className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
                                                     title="Hapus"
                                                 >
-                                                    <FiTrash size={ 18 } />
+                                                    <FiTrash size={18} />
                                                 </button>
                                             </td>
                                         </tr>
-                                    ) )
-                                ) }
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                {/* Pagination */ }
-                { totalPages > 1 && (
+                {/* Pagination */}
+                {totalPages > 1 && (
                     <Pagination
-                        page={ currentPage }
-                        setPage={ setCurrentPage }
-                        totalPages={ totalPages }
-                        total={ totalItems }
-                        perPage={ perPage }
+                        page={currentPage}
+                        setPage={setCurrentPage}
+                        totalPages={totalPages}
+                        total={totalItems}
+                        perPage={perPage}
                     />
-                ) }
+                )}
             </div>
 
-            {/* Modal Form */ }
-            { modal.open && (
+            {/* Modal Form */}
+            {modal.open && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                     <div className="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4 border border-gray-200">
                         <div className="p-6">
                             <h2 className="text-xl font-bold mb-4">
-                                { modal.mode === "add" ? "Tambah" : "Edit" } Modal
+                                {modal.mode === "add" ? "Tambah" : "Edit"} Modal
                             </h2>
-                            <form onSubmit={ handleSubmit } className="space-y-4">
+                            <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-semibold mb-1">
                                         Jenis
                                     </label>
                                     <select
-                                        value={ form.type }
-                                        onChange={ ( e ) => setForm( { ...form, type: e.target.value } ) }
+                                        value={form.type}
+                                        onChange={(e) => setForm({ ...form, type: e.target.value })}
                                         className="w-full border px-3 py-2 rounded-lg"
                                         required
                                     >
@@ -393,9 +417,9 @@ const OwnerModal = () => {
                                     </label>
                                     <input
                                         type="text"
-                                        value={ form.note }
-                                        onChange={ ( e ) =>
-                                            setForm( { ...form, note: e.target.value } )
+                                        value={form.note}
+                                        onChange={(e) =>
+                                            setForm({ ...form, note: e.target.value })
                                         }
                                         className="w-full border px-3 py-2 rounded-lg"
                                         placeholder="Masukkan catatan modal"
@@ -408,9 +432,9 @@ const OwnerModal = () => {
                                     </label>
                                     <input
                                         type="number"
-                                        value={ form.amount }
-                                        onChange={ ( e ) =>
-                                            setForm( { ...form, amount: Number( e.target.value ) } )
+                                        value={form.amount}
+                                        onChange={(e) =>
+                                            setForm({ ...form, amount: Number(e.target.value) })
                                         }
                                         className="w-full border px-3 py-2 rounded-lg"
                                         placeholder="Masukkan jumlah"
@@ -420,7 +444,7 @@ const OwnerModal = () => {
                                 <div className="flex justify-end gap-3 pt-3 border-t">
                                     <button
                                         type="button"
-                                        onClick={ closeModal }
+                                        onClick={closeModal}
                                         className="px-4 py-2 border rounded-lg"
                                     >
                                         Batal
@@ -436,7 +460,7 @@ const OwnerModal = () => {
                         </div>
                     </div>
                 </div>
-            ) }
+            )}
         </Layout>
     );
 };

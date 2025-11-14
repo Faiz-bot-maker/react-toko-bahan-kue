@@ -24,3 +24,4 @@ const RoleBasedRedirect = () => {
 };
 
 export default RoleBasedRedirect;
+

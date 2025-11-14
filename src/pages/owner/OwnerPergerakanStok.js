@@ -307,11 +307,11 @@ const OwnerPergerakanStok = () => {
                                                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                                                     Data tidak ada
                                                 </h3>
-                                                <p className="text-gray-500 text-sm">
+                                                {/* <p className="text-gray-500 text-sm">
                                                     { searchTerm
                                                         ? "Tidak ditemukan hasil pencarian"
                                                         : "Tidak ditemukan pergerakan stok sesuai filter" }
-                                                </p>
+                                                </p> */}
                                             </div>
                                         </td>
                                     </tr>
