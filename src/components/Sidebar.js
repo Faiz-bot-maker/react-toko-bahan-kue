@@ -47,6 +47,7 @@ const menus = [
     section: 'Keuangan',
     icon: <HiOutlineCurrencyDollar className="text-sm" />,
     items: [
+      { name: 'Pengeluaran', path: '/pengeluaran' },
       { name: 'Alur Kas', path: '/own-alur-kas' },
       { name: 'Modal', path: '/Modal' },
       { name: 'Keuangan', path: '/keuangan' },
