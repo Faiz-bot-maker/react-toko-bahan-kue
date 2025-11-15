@@ -29,6 +29,8 @@ import OwnerPergerakanStok from './pages/owner/OwnerPergerakanStok';
 import OwnerTransaksiKeluar from './pages/owner/OwnerTransaksiKeluar';
 import OwnerInventory from './pages/owner/OwnerInventory';
 import OwnerPembelian from './pages/owner/OwnerLaporanPembelian';
+import OwnerOpname from './pages/owner/OwnerOpnameList';
+import OwnerReportLoss from './pages/owner/OwnerProfitLossReport';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -211,6 +213,20 @@ function App() {
             <LoginCheck>
               <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
                 <OwnerPembelian />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/opname-list" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+                <OwnerOpname />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/report-loss" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+                <OwnerReportLoss />
               </RoleGuard>
             </LoginCheck>
           } />

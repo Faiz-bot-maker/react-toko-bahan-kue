@@ -25,6 +25,10 @@ const OwnerAlurKas = () => {
     const [branchFilter, setBranchFilter] = useState("");
     const [search, setSearch] = useState("");
 
+    // 🔥 Tambahan filter baru
+    const [typeFilter, setTypeFilter] = useState("");
+    const [sourceFilter, setSourceFilter] = useState("");
+
     // Pagination
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -37,7 +41,7 @@ const OwnerAlurKas = () => {
 
     useEffect(() => {
         fetchTransactions(page);
-    }, [page, startDate, endDate, branchFilter, search]);
+    }, [page, startDate, endDate, branchFilter, search, typeFilter, sourceFilter]);
 
     const fetchBranches = async () => {
         try {
@@ -51,15 +55,23 @@ const OwnerAlurKas = () => {
     const fetchTransactions = async (pageNumber = page) => {
         try {
             setLoading(true);
+
             let params = { page: pageNumber, limit };
+
             if (startDate) params.start_at = startDate.toISOString().split("T")[0];
             if (endDate) params.end_at = endDate.toISOString().split("T")[0];
             if (branchFilter) params.branch_id = branchFilter;
             if (search) params.description = search;
 
+            // 🔥 Filter baru
+            if (typeFilter) params.type = typeFilter;
+            if (sourceFilter) params.source = sourceFilter;
+
             const res = await axios.get(API_URL, { headers: getHeaders(), params });
+
             const data = Array.isArray(res.data?.data) ? res.data.data : [];
             const paging = res.data?.paging || {};
+
             setTransactions(data);
             setPage(paging.page || 1);
             setTotalPages(paging.total_page || 1);
@@ -78,6 +90,8 @@ const OwnerAlurKas = () => {
         setDateRange([null, null]);
         setBranchFilter("");
         setSearch("");
+        setTypeFilter("");
+        setSourceFilter("");
         setPage(1);
     };
 
@@ -90,7 +104,7 @@ const OwnerAlurKas = () => {
         });
     };
 
-    // 📌 Pagination Component
+    // Pagination Component
     const Pagination = ({ page, setPage, totalPages, total, perPage }) => {
         const startIndex = (page - 1) * perPage;
         const endIndex = Math.min(startIndex + perPage, total);
@@ -159,6 +173,8 @@ const OwnerAlurKas = () => {
 
                 {/* Filters */}
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
+
+                    {/* Rentang tanggal */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Rentang Tanggal</label>
                         <DatePicker
@@ -174,6 +190,7 @@ const OwnerAlurKas = () => {
                         />
                     </div>
 
+                    {/* Cabang */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Cabang</label>
                         <select
@@ -190,6 +207,7 @@ const OwnerAlurKas = () => {
                         </select>
                     </div>
 
+                    {/* Deskripsi */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Cari Deskripsi</label>
                         <input
@@ -204,6 +222,39 @@ const OwnerAlurKas = () => {
                         />
                     </div>
 
+                    {/* 🔥 Filter TYPE */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tipe</label>
+                        <select
+                            value={typeFilter}
+                            onChange={(e) => {
+                                setTypeFilter(e.target.value);
+                                setPage(1);
+                            }}
+                            className="border rounded px-3 py-2 text-sm w-40"
+                        >
+                            <option value="">Semua</option>
+                            <option value="IN">Masuk</option>
+                            <option value="OUT">Keluar</option>
+                        </select>
+                    </div>
+
+                    {/* 🔥 Filter SOURCE */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Sumber</label>
+                        <input
+                            type="text"
+                            value={sourceFilter}
+                            onChange={(e) => {
+                                setSourceFilter(e.target.value);
+                                setPage(1);
+                            }}
+                            placeholder="Ketik sumber..."
+                            className="border rounded px-3 py-2 text-sm w-52"
+                        />
+                    </div>
+
+                    {/* Reset */}
                     <button
                         onClick={resetFilters}
                         className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors"
@@ -227,6 +278,7 @@ const OwnerAlurKas = () => {
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Jumlah</th>
                                 </tr>
                             </thead>
+
                             <tbody className="divide-y divide-gray-200">
                                 {loading ? (
                                     <tr>
@@ -257,10 +309,6 @@ const OwnerAlurKas = () => {
                                                 <h3 className="text-base font-semibold text-gray-700 mb-1">
                                                     Tidak ada transaksi
                                                 </h3>
-
-                                                {/* <p className="text-gray-500 text-sm">
-                                                    Coba ubah filter, rentang tanggal, atau kata kunci pencarian.
-                                                </p> */}
                                             </div>
                                         </td>
                                     </tr>

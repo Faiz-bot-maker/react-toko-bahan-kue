@@ -20,6 +20,7 @@ const menus = [
       { name: 'Produk', path: '/products' },
       { name: 'Kategori', path: '/categories' },
       { name: 'Inventory', path: '/own-inventory' },
+      { name: 'Opname', path: '/opname-list' },
     ],
   },
   {
@@ -41,6 +42,7 @@ const menus = [
       { name: 'Laporan Piutang', path: '/laporan-piutang' },
       { name: 'Laporan Penjualan', path: '/laporan-penjualan' },
       { name: 'Laporan Pengeluaran', path: '/laporan-pengeluaran' },
+      { name: 'Laporan Laba Rugi', path: '/report-loss' },
     ],
   },
   {
