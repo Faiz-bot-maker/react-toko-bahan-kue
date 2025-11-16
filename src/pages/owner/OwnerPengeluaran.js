@@ -141,15 +141,15 @@ const OwnerPengeluaran = () => {
 
     return (
       <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
-        <div className="text-xs text-gray-500">
+        <div className="text-sm text-gray-500">
           Menampilkan {total === 0 ? 0 : startIndex}-{endIndex} dari total {total} pengeluaran
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setPage(1)} disabled={page === 1} className="px-2.5 py-1.5 rounded border text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200">«</button>
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 rounded border text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200">Prev</button>
+          <button onClick={() => setPage(1)} disabled={page === 1} className="px-3 py-2 rounded border text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200">«</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-2 rounded border text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200">Prev</button>
           <span className="text-sm text-gray-700">{page} / {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 rounded border text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200">Next</button>
-          <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-2.5 py-1.5 rounded border text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200">»</button>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-2 rounded border text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200">Next</button>
+          <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-3 py-2 rounded border text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200">»</button>
         </div>
       </div>
     );
@@ -158,13 +158,14 @@ const OwnerPengeluaran = () => {
   return (
     <Layout>
       <div className="w-full max-w-7xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <HiOutlineDocumentReport className="text-2xl text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-800">Detail Pengeluaran</h1>
+        {/* Judul */}
+        <div className="flex items-center gap-4 mb-6">
+          <HiOutlineDocumentReport className="text-4xl text-blue-600" />
+          <h1 className="text-3xl font-bold text-gray-800">Detail Pengeluaran</h1>
         </div>
 
         {/* Filter */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6 flex flex-wrap items-end gap-3">
+        <div className="bg-white rounded-lg shadow p-6 mb-6 flex flex-wrap items-end gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Periode</label>
             <DatePicker
@@ -176,7 +177,7 @@ const OwnerPengeluaran = () => {
               maxDate={new Date()}
               dateFormat="dd/MM/yyyy"
               placeholderText="Pilih rentang tanggal"
-              className="border rounded-md px-2 py-1 text-sm w-56"
+              className="border rounded-md px-4 py-2 text-base w-64"
             />
           </div>
 
@@ -185,7 +186,7 @@ const OwnerPengeluaran = () => {
             <select
               value={branchFilter}
               onChange={(e) => { setBranchFilter(e.target.value); setPage(1); }}
-              className="border rounded-md px-2 py-1 text-sm w-56"
+              className="border rounded-md px-4 py-2 text-base w-64"
             >
               <option value="">Semua Cabang</option>
               {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -199,14 +200,14 @@ const OwnerPengeluaran = () => {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder="Masukkan kata kunci..."
-              className="border rounded-md px-2 py-1 text-sm w-56"
+              className="border rounded-md px-4 py-2 text-base w-64"
             />
           </div>
 
           {/* Tombol Reset */}
           <button
             onClick={() => { setDateRange([null, null]); setBranchFilter(""); setSearch(""); setPage(1); }}
-            className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm"
+            className="px-5 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-base"
           >
             Reset
           </button>
@@ -214,9 +215,9 @@ const OwnerPengeluaran = () => {
           {/* Tombol Tambah */}
           <button
             onClick={openAdd}
-            className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+            className="flex items-center gap-2 px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-base"
           >
-            <HiOutlinePlus className="w-4 h-4" /> Tambah
+            <HiOutlinePlus className="w-6 h-6" /> Tambah
           </button>
         </div>
 
@@ -242,7 +243,7 @@ const OwnerPengeluaran = () => {
                   <td colSpan={5} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center text-gray-500">
                       <div className="p-4 bg-gray-100 rounded-full mb-3">
-                        <HiOutlineDocumentReport className="w-10 h-10 text-gray-400" />
+                        <HiOutlineDocumentReport className="w-12 h-12 text-gray-400" />
                       </div>
                       <h3 className="text-base font-semibold text-gray-700 mb-1">
                         Tidak Ada Data Pengeluaran
@@ -258,8 +259,8 @@ const OwnerPengeluaran = () => {
                     <td className="px-6 py-4">{row.description || "-"}</td>
                     <td className="px-6 py-4 text-right font-semibold">{formatRupiah(row.amount)}</td>
                     <td className="px-6 py-4 text-right flex gap-2 justify-end">
-                      <button onClick={() => openEdit(row)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Edit</button>
-                      <button onClick={() => handleDelete(row.id)} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm">Hapus</button>
+                      <button onClick={() => openEdit(row)} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Edit</button>
+                      <button onClick={() => handleDelete(row.id)} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm">Hapus</button>
                     </td>
                   </tr>
                 ))

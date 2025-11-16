@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -105,7 +105,9 @@ const Sidebar = () => {
   const [openSections, setOpenSections] = useState([]);
   const [userRole, setUserRole] = useState(null);
   const isMounted = useRef(false);
+  const sidebarRef = useRef(null);
 
+  // Restore open sections
   useEffect(() => {
     if (!isMounted.current) {
       const stored = sessionStorage.getItem('openSections');
@@ -120,12 +122,14 @@ const Sidebar = () => {
     }
   }, []);
 
+  // Save open sections
   useEffect(() => {
     if (isMounted.current) {
       sessionStorage.setItem('openSections', JSON.stringify(openSections));
     }
   }, [openSections]);
 
+  // Ambil role user
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -137,6 +141,23 @@ const Sidebar = () => {
       }
     }
   }, [isAuthenticated]);
+
+  // Restore scroll setelah DOM dirender
+  useLayoutEffect(() => {
+    if (sidebarRef.current) {
+      const savedScroll = sessionStorage.getItem('sidebarScroll');
+      if (savedScroll) {
+        sidebarRef.current.scrollTop = parseInt(savedScroll, 10);
+      }
+    }
+  }, [openSections]);
+
+  // Simpan scroll
+  const handleScroll = () => {
+    if (sidebarRef.current) {
+      sessionStorage.setItem('sidebarScroll', sidebarRef.current.scrollTop);
+    }
+  };
 
   const toggleSection = (section) => {
     setOpenSections((prev) =>
@@ -154,7 +175,11 @@ const Sidebar = () => {
       </div>
 
       {/* Menu Section */}
-      <div className="flex-1 overflow-y-auto mt-3 pr-1 scrollbar-thin scrollbar-thumb-[#1f6350] scrollbar-track-transparent">
+      <div
+        ref={sidebarRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto mt-3 pr-1 scrollbar-thin scrollbar-thumb-[#1f6350] scrollbar-track-transparent"
+      >
         <Link
           to="/dashboard"
           className={`flex items-center px-6 py-2 rounded-md gap-2 font-medium text-xs transition-all duration-200 hover:bg-[#1B5E4B] hover:text-white ${
@@ -167,7 +192,6 @@ const Sidebar = () => {
           <span>Dashboard</span>
         </Link>
 
-        {/* Role-based Menus */}
         {(userRole?.toLowerCase() === 'admin' ||
           userRole?.toLowerCase() === 'super_admin'
           ? adminMenus

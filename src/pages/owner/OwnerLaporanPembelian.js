@@ -169,8 +169,12 @@ const OwnerLaporanPembelian = () => {
   return (
     <Layout>
       <div className="w-full max-w-7xl mx-auto">
+        {/* Judul dengan Icon */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-gray-800">Laporan Pembelian Harian</h1>
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <MdInventory className="text-3xl text-gray-700" />
+            Laporan Pembelian Harian
+          </h1>
         </div>
 
         {/* Filters */}
@@ -248,9 +252,6 @@ const OwnerLaporanPembelian = () => {
                         <h3 className="text-lg font-semibold text-gray-700 mb-2">
                           Tidak ada data
                         </h3>
-                        {/* <p className="text-gray-500">
-                          Data akan muncul setelah ada transaksi pembelian pada rentang tanggal atau cabang yang dipilih
-                        </p> */}
                       </div>
                     </td>
                   </tr>

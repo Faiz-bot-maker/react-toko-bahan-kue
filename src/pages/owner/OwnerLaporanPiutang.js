@@ -245,7 +245,7 @@ const OwnerLaporanPiutang = () => {
                         isClearable
                         dateFormat="dd/MM/yyyy"
                         placeholderText="Pilih rentang tanggal"
-                        className="border px-3 py-2 rounded w-60"
+                        className="border px-3 py-2 rounded w-64"
                         maxDate={new Date()}
                     />
 

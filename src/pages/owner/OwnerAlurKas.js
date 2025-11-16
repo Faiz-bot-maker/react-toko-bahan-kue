@@ -250,7 +250,7 @@ const OwnerAlurKas = () => {
                                 setPage(1);
                             }}
                             placeholder="Ketik sumber..."
-                            className="border rounded px-3 py-2 text-sm w-52"
+                            className="border rounded px-3 py-2 text-sm w-60"
                         />
                     </div>
 
