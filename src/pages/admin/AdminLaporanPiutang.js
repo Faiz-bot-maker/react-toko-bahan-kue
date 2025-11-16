@@ -4,6 +4,7 @@ import Layout from '../../components/Layout';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios';
+import { HiOutlineDocumentReport, HiOutlineClipboardList } from 'react-icons/hi';
 
 const statusColor = {
     PENDING: 'bg-yellow-100 text-yellow-800',
@@ -41,7 +42,6 @@ const AdminLaporanPiutang = () => {
 
     const API_URL = `${process.env.REACT_APP_API_URL}/debt`;
 
-    // Fetch data saat page, search, atau appliedDateRange berubah
     useEffect( () => {
         fetchData( currentPage, searchTerm );
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,7 +54,6 @@ const AdminLaporanPiutang = () => {
             params.append( 'page', page );
             params.append( 'size', 10 );
 
-            // Gunakan appliedDateRange untuk filter
             const [ appliedStart, appliedEnd ] = appliedDateRange;
             if ( appliedStart && appliedEnd ) {
                 const formatLocal = ( date ) => {
@@ -104,7 +103,7 @@ const AdminLaporanPiutang = () => {
         setDateRange( [ null, null ] );
         setAppliedDateRange( [ null, null ] );
         setCurrentPage( 1 );
-        fetchData( 1, '' ); // langsung fetch tanpa filter
+        fetchData( 1, '' );
     };
 
     const formatDate = ( timestamp ) => {
@@ -135,10 +134,15 @@ const AdminLaporanPiutang = () => {
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
-                {/* Judul */ }
-                <h1 className="text-2xl font-bold mb-4">Laporan Piutang</h1>
+                {/* Judul dengan Icon */}
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-green-100 rounded-lg">
+                        <HiOutlineClipboardList className="text-4xl text-green-600" />
+                    </div>
+                    <h1 className="text-2xl font-bold">Laporan Piutang</h1>
+                </div>
 
-                {/* Filters */ }
+                {/* Filters */}
                 <div className="flex flex-wrap gap-4 mb-6 bg-white p-4 rounded shadow">
                     <input
                         type="text"
@@ -167,7 +171,7 @@ const AdminLaporanPiutang = () => {
                     <button onClick={ resetFilters } className="bg-gray-300 px-4 py-2 rounded">Reset</button>
                 </div>
 
-                {/* Table */ }
+                {/* Table */}
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
@@ -187,7 +191,16 @@ const AdminLaporanPiutang = () => {
                                 { loading ? (
                                     <tr><td colSpan={ 8 } className="px-6 py-12 text-center">Memuat data...</td></tr>
                                 ) : data.length === 0 ? (
-                                    <tr><td colSpan={ 8 } className="px-6 py-12 text-center">Tidak ada data</td></tr>
+                                    <tr>
+                                        <td colSpan={ 8 }>
+                                            <div className="flex flex-col items-center justify-center py-16 text-gray-500 gap-3">
+                                                <HiOutlineDocumentReport className="text-5xl text-gray-300" />
+                                                <span className="text-xl font-semibold text-center">
+                                                    Tidak ada data piutang
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 ) : data.map( d => (
                                     <tr key={ d.id } className="hover:bg-gray-50">
                                         <td className="px-6 py-4">{ d.related }</td>
@@ -208,13 +221,13 @@ const AdminLaporanPiutang = () => {
                         </table>
                     </div>
 
-                    {/* Pagination */ }
+                    {/* Pagination */}
                     { totalPages > 1 && (
                         <Pagination page={ currentPage } setPage={ setCurrentPage } totalPages={ totalPages } total={ totalItems } perPage={ 10 } />
                     ) }
                 </div>
 
-                {/* Modal Detail */ }
+                {/* Modal Detail */}
                 { showModal && detailData && (
                     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative">
