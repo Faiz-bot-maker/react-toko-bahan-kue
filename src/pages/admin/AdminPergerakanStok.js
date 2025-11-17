@@ -171,7 +171,7 @@ const AdminPergerakanStok = () => {
                                             <div className="flex flex-col items-center">
                                                 <HiOutlineSwitchHorizontal className="text-6xl text-gray-300 mb-4" />
                                                 <h3 className="text-lg font-medium text-gray-900 mb-2">Data tidak ada</h3>
-                                                <p className="text-gray-500 text-sm">Tidak ditemukan pergerakan stok sesuai filter</p>
+                                                {/* <p className="text-gray-500 text-sm">Tidak ditemukan pergerakan stok sesuai filter</p> */}
                                             </div>
                                         </td>
                                     </tr>
