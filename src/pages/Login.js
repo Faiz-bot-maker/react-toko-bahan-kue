@@ -50,7 +50,7 @@ const Login = () => {
       <div className="relative z-10 grid min-h-screen grid-cols-1 md:grid-cols-2">
         <div className="relative hidden md:block">
           <img
-            src="../../public/img/login-page.png"
+            src="/login-page.png"
             alt="Bahan-bahan kue lengkap"
             className="absolute inset-0 h-full w-full object-cover"
             loading="lazy"

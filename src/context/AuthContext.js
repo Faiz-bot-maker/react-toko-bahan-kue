@@ -98,7 +98,7 @@ export const AuthProvider = ( { children } ) => {
           {},
           {
             headers: {
-              'Authorization': `Bearer ${token}`,
+              'Authorization': token,
               'Content-Type': 'application/json',
             },
             timeout: API_CONFIG.TIMEOUT,
