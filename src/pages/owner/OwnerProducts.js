@@ -32,7 +32,7 @@ const OwnerProducts = () => {
     });
     const [loading, setLoading] = useState(true);
 
-    // 🔎 Search & Pagination
+    // Search & Pagination
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -60,7 +60,6 @@ const OwnerProducts = () => {
 
             const data = res.data?.data || res.data;
             const paging = res.data?.paging || {};
-
             const items = Array.isArray(data) ? data : [];
 
             setProducts(items);
@@ -68,10 +67,8 @@ const OwnerProducts = () => {
             setTotalPages(paging.total_page || 1);
             setTotalItems(paging.total_item || 0);
 
- 
+            // Jika halaman melebihi data
             if (items.length === 0 && (paging.total_item || 0) > 0) {
-                alert("Tidak ada data pada halaman ini. Mengembalikan ke halaman pertama.");
-
                 setCurrentPage(1);
                 fetchProducts(1, searchTerm);
             }
@@ -83,7 +80,6 @@ const OwnerProducts = () => {
         }
     };
 
-
     const fetchCategories = async () => {
         try {
             const res = await axios.get(API_CATEGORIES, { headers: getHeaders() });
@@ -93,7 +89,6 @@ const OwnerProducts = () => {
             console.error('Failed to fetch categories:', err);
         }
     };
-
 
     const handleAddProduct = async () => {
         try {
@@ -116,7 +111,6 @@ const OwnerProducts = () => {
         }
     };
 
-
     const handleEditProduct = async (sku) => {
         try {
             const productData = {
@@ -130,10 +124,9 @@ const OwnerProducts = () => {
             fetchProducts(currentPage, searchTerm);
         } catch (err) {
             console.error('Failed to edit product:', err);
-            alert('Gagal mengedit produk. Periksa kembali data yang dimasukkan.');
+            alert('Gagal mengedit produk.');
         }
     };
-
 
     const handleDeleteProduct = async (sku) => {
         if (window.confirm('Yakin ingin menghapus produk ini?')) {
@@ -147,83 +140,62 @@ const OwnerProducts = () => {
         }
     };
 
-
     const openAdd = () => {
         setModal({ open: true, mode: 'add', data: null });
         setNewProduct({ name: '', category_id: '', sku: '', sizes: [] });
     };
 
+    // =========================================
+    // PAGINATION SAME AS OWNER INVENTORY
+    // =========================================
+    const pageSize = products.length || 0;
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalItems);
 
-    // =====================================================================
-    // Pagination Component
-    // =====================================================================
-    const Pagination = ({ page, setPage, totalPages, total, perPage }) => {
-        const startIndex = (page - 1) * perPage;
-        const endIndex = Math.min(startIndex + perPage, total);
-
-        return (
-            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
-                <div className="text-xs text-gray-500">
-                    Menampilkan {total === 0 ? 0 : startIndex + 1}-{endIndex} dari total {total} produk
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setPage(1)}
-                        disabled={page === 1}
-                        className={`px-2.5 py-1.5 rounded border ${page === 1
-                            ? 'text-gray-400 border-gray-200'
-                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
-                            }`}
-                    >
-                        «
-                    </button>
-
-                    <button
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        className={`px-3 py-1.5 rounded border ${page === 1
-                            ? 'text-gray-400 border-gray-200'
-                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
-                            }`}
-                    >
-                        Prev
-                    </button>
-
-                    <span className="text-sm text-gray-700">
-                        {page} / {totalPages}
-                    </span>
-
-                    <button
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={page === totalPages}
-                        className={`px-3 py-1.5 rounded border ${page === totalPages
-                            ? 'text-gray-400 border-gray-200'
-                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
-                            }`}
-                    >
-                        Next
-                    </button>
-
-                    <button
-                        onClick={() => setPage(totalPages)}
-                        disabled={page === totalPages}
-                        className={`px-2.5 py-1.5 rounded border ${page === totalPages
-                            ? 'text-gray-400 border-gray-200'
-                            : 'text-gray-700 border-gray-300 hover:bg-gray-50'
-                            }`}
-                    >
-                        »
-                    </button>
-                </div>
+    const Pagination = ({ page, setPage, totalPages, startIndex, endIndex, total }) => (
+        <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+            <div className="text-xs text-gray-500">
+                Menampilkan {total === 0 ? 0 : startIndex + 1}-{endIndex} dari total {total} produk
             </div>
-        );
-    };
 
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                    className="px-2.5 py-1.5 border rounded"
+                >
+                    «
+                </button>
 
-    // =====================================================================
-    // RETURN UI
-    // =====================================================================
+                <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-3 py-1.5 border rounded"
+                >
+                    Prev
+                </button>
+
+                <span className="text-sm">{page} / {totalPages}</span>
+
+                <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="px-3 py-1.5 border rounded"
+                >
+                    Next
+                </button>
+
+                <button
+                    onClick={() => setPage(totalPages)}
+                    disabled={page === totalPages}
+                    className="px-2.5 py-1.5 border rounded"
+                >
+                    »
+                </button>
+            </div>
+        </div>
+    );
+
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
@@ -242,19 +214,18 @@ const OwnerProducts = () => {
 
                     <button
                         onClick={openAdd}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all duration-200 hover:shadow-xl"
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow"
                     >
-                        <HiOutlinePlus className="text-lg" /> Tambah Produk
+                        <HiOutlinePlus /> Tambah Produk
                     </button>
                 </div>
 
-
                 {/* Search */}
-                <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
+                <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4">
                     <input
                         type="text"
                         placeholder="Cari produk atau SKU..."
-                        className="w-full md:w-1/3 px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-green-300 focus:border-green-500"
+                        className="w-full md:w-1/3 px-4 py-2 border rounded-lg text-sm"
                         value={searchTerm}
                         onChange={(e) => {
                             setSearchTerm(e.target.value);
@@ -263,17 +234,16 @@ const OwnerProducts = () => {
                     />
                 </div>
 
-
                 {/* Table */}
-                <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-lg shadow-lg border overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
-                            <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
+                            <thead className="bg-gray-800 text-white">
                                 <tr>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Nama Produk</th>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Kategori</th>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">SKU</th>
-                                    <th className="px-6 py-4 text-right font-semibold text-xs uppercase tracking-wider">Aksi</th>
+                                    <th className="px-6 py-4 text-left text-xs uppercase">Nama Produk</th>
+                                    <th className="px-6 py-4 text-left text-xs uppercase">Kategori</th>
+                                    <th className="px-6 py-4 text-left text-xs uppercase">SKU</th>
+                                    <th className="px-6 py-4 text-right text-xs uppercase">Aksi</th>
                                 </tr>
                             </thead>
 
@@ -283,72 +253,52 @@ const OwnerProducts = () => {
                                         <td colSpan={4} className="px-6 py-12 text-center">
                                             <div className="flex items-center justify-center">
                                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
-                                                <span className="ml-3 text-gray-600 text-sm">Memuat data...</span>
+                                                <span className="ml-3 text-gray-600">Memuat data...</span>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : products.length === 0 ? (
                                     <tr>
                                         <td colSpan={4} className="px-6 py-16 text-center">
-                                            <div className="flex flex-col items-center">
-                                                <MdInventory className="text-6xl text-gray-300 mb-4" />
-                                                <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada data produk</h3>
-                                                <p className="text-gray-500 mb-4 text-sm">Mulai dengan menambahkan produk pertama Anda</p>
-                                                <button
-                                                    onClick={openAdd}
-                                                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
-                                                >
-                                                    <HiOutlinePlus className="text-base" /> Tambah Produk Pertama
-                                                </button>
-                                            </div>
+                                            <MdInventory className="text-6xl text-gray-300 mb-3" />
+                                            <p className="text-gray-600">Tidak ada produk ditemukan</p>
                                         </td>
                                     </tr>
                                 ) : (
                                     products.map((product) => (
-                                        <tr key={product.sku} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="font-medium text-gray-900 text-sm">{product.name}</div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-gray-700 text-sm">{product.category?.name || '-'}</div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-gray-700 font-mono text-sm">{product.sku}</div>
-                                            </td>
+                                        <tr key={product.sku} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4">{product.name}</td>
+                                            <td className="px-6 py-4">{product.category?.name || '-'}</td>
+                                            <td className="px-6 py-4">{product.sku}</td>
 
-                                            <td className="px-6 py-4">
-                                                <div className="flex justify-end gap-2">
-                                                    <Link
-                                                        to={`/pages/sizeproduct?sku=${product.sku}`}
-                                                        className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Kelola Ukuran"
-                                                    >
-                                                        <TbRulerMeasure size={18} />
-                                                    </Link>
+                                            <td className="px-6 py-4 text-right flex justify-end gap-2">
+                                                <Link
+                                                    to={`/pages/sizeproduct?sku=${product.sku}`}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                                                >
+                                                    <TbRulerMeasure size={18} />
+                                                </Link>
 
-                                                    <button
-                                                        onClick={() => {
-                                                            setModal({ open: true, mode: 'edit', data: product });
-                                                            setEditValue({
-                                                                name: product.name,
-                                                                category_id: product.category?.id || '',
-                                                                sku: product.sku.replace('TKAZ-', ''),
-                                                            });
-                                                        }}
-                                                        className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Edit Produk"
-                                                    >
-                                                        <FiEdit size={18} />
-                                                    </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setModal({ open: true, mode: 'edit', data: product });
+                                                        setEditValue({
+                                                            name: product.name,
+                                                            category_id: product.category?.id || '',
+                                                            sku: product.sku.replace('TKAZ-', ''),
+                                                        });
+                                                    }}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                                                >
+                                                    <FiEdit size={18} />
+                                                </button>
 
-                                                    <button
-                                                        onClick={() => handleDeleteProduct(product.sku)}
-                                                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Hapus Produk"
-                                                    >
-                                                        <FiTrash size={18} />
-                                                    </button>
-                                                </div>
+                                                <button
+                                                    onClick={() => handleDeleteProduct(product.sku)}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                                                >
+                                                    <FiTrash size={18} />
+                                                </button>
                                             </td>
                                         </tr>
                                     ))
@@ -357,124 +307,105 @@ const OwnerProducts = () => {
                         </table>
                     </div>
 
-
                     {/* Pagination */}
                     {totalPages > 1 && (
                         <Pagination
                             page={currentPage}
                             setPage={setCurrentPage}
                             totalPages={totalPages}
+                            startIndex={startIndex}
+                            endIndex={endIndex}
                             total={totalItems}
-                            perPage={products.length}
                         />
                     )}
                 </div>
 
-
                 {/* Modal Add/Edit */}
                 {modal.open && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                        <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-4 border border-gray-200 max-h-[90vh] overflow-y-auto">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                        <div className="bg-white rounded-lg w-full max-w-xl shadow-lg p-6">
 
-                            <div className="p-6">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="p-2 bg-teal-100 rounded-lg">
-                                        <MdInventory className="text-xl text-teal-600" />
-                                    </div>
-                                    <h2 className="text-xl font-bold text-gray-800">
-                                        {modal.mode === 'add' ? 'Tambah' : 'Edit'} Produk
-                                    </h2>
+                            <h2 className="text-xl font-bold mb-6">
+                                {modal.mode === 'add' ? 'Tambah Produk' : 'Edit Produk'}
+                            </h2>
+
+                            {/* Fields */}
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-sm">Nama Produk</label>
+                                    <input
+                                        type="text"
+                                        className="w-full border px-3 py-2 rounded"
+                                        value={modal.mode === 'add' ? newProduct.name : editValue.name}
+                                        onChange={(e) =>
+                                            modal.mode === 'add'
+                                                ? setNewProduct({ ...newProduct, name: e.target.value })
+                                                : setEditValue({ ...editValue, name: e.target.value })
+                                        }
+                                    />
                                 </div>
 
-                                <div className="space-y-6">
+                                <div>
+                                    <label className="text-sm">Kategori</label>
+                                    <select
+                                        className="w-full border px-3 py-2 rounded"
+                                        value={
+                                            modal.mode === 'add'
+                                                ? newProduct.category_id
+                                                : editValue.category_id
+                                        }
+                                        onChange={(e) =>
+                                            modal.mode === 'add'
+                                                ? setNewProduct({ ...newProduct, category_id: parseInt(e.target.value) })
+                                                : setEditValue({ ...editValue, category_id: parseInt(e.target.value) })
+                                        }
+                                    >
+                                        <option value="">Pilih Kategori</option>
+                                        {categories.map((c) => (
+                                            <option key={c.id} value={c.id}>
+                                                {c.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                                    {/* Name */}
+                                {modal.mode === 'add' && (
                                     <div>
-                                        <label className="block text sm font-semibold text-gray-700 mb-2">
-                                            Nama Produk
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm transition-colors"
-                                            placeholder="Masukkan nama produk"
-                                            value={modal.mode === 'add' ? newProduct.name : editValue.name}
-                                            onChange={(e) =>
-                                                modal.mode === 'add'
-                                                    ? setNewProduct({ ...newProduct, name: e.target.value })
-                                                    : setEditValue({ ...editValue, name: e.target.value })
-                                            }
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Category */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Kategori
-                                        </label>
-                                        <select
-                                            className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm transition-colors"
-                                            value={modal.mode === 'add' ? newProduct.category_id : editValue.category_id}
-                                            onChange={(e) =>
-                                                modal.mode === 'add'
-                                                    ? setNewProduct({ ...newProduct, category_id: parseInt(e.target.value, 10) })
-                                                    : setEditValue({ ...editValue, category_id: parseInt(e.target.value, 10) })
-                                            }
-                                            required
-                                        >
-                                            <option value="">Pilih Kategori</option>
-                                            {categories.map((category) => (
-                                                <option key={category.id} value={category.id}>
-                                                    {category.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* SKU */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            SKU
-                                        </label>
+                                        <label className="text-sm">SKU</label>
                                         <div className="relative">
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm">
+                                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                                                 TKAZ-
                                             </span>
                                             <input
                                                 type="text"
-                                                className="pl-12 w-full border border-gray-300 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm transition-colors"
-                                                placeholder="Masukkan nomor SKU"
-                                                value={modal.mode === 'add' ? newProduct.sku : editValue.sku}
+                                                className="w-full border pl-16 px-3 py-2 rounded"
+                                                value={newProduct.sku}
                                                 onChange={(e) =>
-                                                    modal.mode === 'add'
-                                                        ? setNewProduct({ ...newProduct, sku: e.target.value })
-                                                        : setEditValue({ ...editValue, sku: e.target.value })
+                                                    setNewProduct({ ...newProduct, sku: e.target.value })
                                                 }
-                                                required
                                             />
                                         </div>
                                     </div>
-                                </div>
+                                )}
+                            </div>
 
-                                <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-200">
-                                    <button
-                                        type="button"
-                                        onClick={() => setModal({ open: false, mode: 'add', data: null })}
-                                        className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm"
-                                    >
-                                        Batal
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={modal.mode === 'add'
+                            <div className="flex justify-end gap-2 mt-6">
+                                <button
+                                    onClick={() => setModal({ open: false, mode: null, data: null })}
+                                    className="px-4 py-2 border rounded"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={
+                                        modal.mode === 'add'
                                             ? handleAddProduct
-                                            : () => handleEditProduct(modal.data.sku)}
-                                        className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-sm"
-                                    >
-                                        {modal.mode === 'add' ? 'Tambah Produk' : 'Simpan Perubahan'}
-                                    </button>
-                                </div>
+                                            : () => handleEditProduct(modal.data.sku)
+                                    }
+                                    className="px-4 py-2 bg-green-600 text-white rounded"
+                                >
+                                    {modal.mode === 'add' ? 'Tambah Produk' : 'Simpan'}
+                                </button>
                             </div>
 
                         </div>

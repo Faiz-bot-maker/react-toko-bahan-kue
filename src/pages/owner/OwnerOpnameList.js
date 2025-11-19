@@ -60,13 +60,15 @@ const OwnerOpnameList = () => {
     const fetchOpnames = async (page = 1, search = "") => {
         try {
             setLoading(true);
+
             let params = { page, search };
 
             if (startDate && endDate) {
-                const format = (d) => new Date(d).toISOString().split("T")[0];
-                params.start_at = format(startDate);
-                params.end_at = format(endDate);
+                const fmt = (d) => new Date(d).toISOString().split("T")[0];
+                params.start_at = fmt(startDate);
+                params.end_at = fmt(endDate);
             }
+
             if (branchFilter) params.branch_id = branchFilter;
 
             const res = await axios.get(API_URL, {
@@ -93,7 +95,8 @@ const OwnerOpnameList = () => {
         setDateRange([null, null]);
         setBranchFilter("");
         setSearchTerm("");
-        fetchOpnames();
+        setCurrentPage(1);
+        fetchOpnames(1);
     };
 
     const formatDate = (ts) => {
@@ -104,6 +107,11 @@ const OwnerOpnameList = () => {
             day: "numeric",
         });
     };
+
+    // Pagination indexing
+    const pageSize = opnames.length || 0;
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalItems);
 
     return (
         <Layout>
@@ -145,7 +153,10 @@ const OwnerOpnameList = () => {
                         <label className="block text-sm">Cabang</label>
                         <select
                             value={branchFilter}
-                            onChange={(e) => setBranchFilter(e.target.value)}
+                            onChange={(e) => {
+                                setCurrentPage(1);
+                                setBranchFilter(e.target.value);
+                            }}
                             className="border rounded px-3 py-2"
                         >
                             <option value="">Semua Cabang</option>
@@ -200,8 +211,43 @@ const OwnerOpnameList = () => {
                                 </tr>
                             ) : opnames.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="text-center py-10 text-gray-500">
-                                        Tidak ada data opname
+                                    <td colSpan="6" className="py-12">
+                                        <div className="flex flex-col items-center text-gray-500">
+
+                                            {/* ICON */}
+                                            <div className="mb-3 p-4 bg-gray-100 rounded-full">
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="h-10 w-10 text-gray-400"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth="1.5"
+                                                        d="M9 17v-6a2 2 0 012-2h2m4 0v6a2 2 0 01-2 2H9m0 0V9a2 2 0 012-2h2m4 0v6a2 2 0 01-2 2H9"
+                                                    />
+                                                </svg>
+                                            </div>
+
+                                            {/* TITLE */}
+                                            <h3 className="text-lg font-semibold">Data tidak ditemukan</h3>
+
+                                            {/* SUB TEXT */}
+                                            <p className="text-sm text-gray-400 mt-1">
+                                                Coba ubah filter atau reset pencarian.
+                                            </p>
+
+                                            {/* RESET BUTTON */}
+                                            <button
+                                                onClick={resetFilters}
+                                                className="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm"
+                                            >
+                                                Reset Filter
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : (
@@ -234,6 +280,56 @@ const OwnerOpnameList = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+
+                        <div className="text-xs text-gray-500">
+                            Menampilkan {totalItems === 0 ? 0 : startIndex + 1}-{endIndex} dari total {totalItems} data
+                        </div>
+
+                        <div className="flex items-center gap-2">
+
+                            <button
+                                onClick={() => setCurrentPage(1)}
+                                disabled={currentPage === 1}
+                                className="px-2.5 py-1.5 border rounded disabled:opacity-40"
+                            >
+                                «
+                            </button>
+
+                            <button
+                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1.5 border rounded disabled:opacity-40"
+                            >
+                                Prev
+                            </button>
+
+                            <span className="text-sm">
+                                {currentPage} / {totalPages}
+                            </span>
+
+                            <button
+                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-1.5 border rounded disabled:opacity-40"
+                            >
+                                Next
+                            </button>
+
+                            <button
+                                onClick={() => setCurrentPage(totalPages)}
+                                disabled={currentPage === totalPages}
+                                className="px-2.5 py-1.5 border rounded disabled:opacity-40"
+                            >
+                                »
+                            </button>
+
+                        </div>
+                    </div>
+                )}
 
             </div>
         </Layout>

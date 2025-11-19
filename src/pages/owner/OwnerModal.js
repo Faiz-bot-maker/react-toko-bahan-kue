@@ -79,17 +79,19 @@ const OwnerModal = () => {
         amount: "",
         branch_id: 1,
     });
+
     const [loading, setLoading] = useState(true);
 
     // Filter
     const [searchNote, setSearchNote] = useState("");
     const [dateRange, setDateRange] = useState([null, null]);
     const [startDate, endDate] = dateRange;
-    const [branchFilter, setBranchFilter] = useState(""); // ✅ perbaikan
+    const [branchFilter, setBranchFilter] = useState("");
+
     const [branches, setBranches] = useState([
         { id: 1, name: "Cabang Utama" },
-        { id: 2, name: "Cabang Kedua" },
-    ]); // ✅ dummy, ideally fetch dari API
+        { id: 2, name: "Cabang Kedua" }
+    ]);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -101,24 +103,31 @@ const OwnerModal = () => {
         fetchModals(currentPage);
     }, [currentPage, searchNote, startDate, endDate, branchFilter]);
 
+    const getHeaders = () => ({
+        Authorization: localStorage.getItem("authToken"),
+        "ngrok-skip-browser-warning": "true",
+    });
+
     const fetchModals = async (page = 1) => {
         try {
             setLoading(true);
+
             const res = await axios.get(API_URL, {
                 params: {
                     page,
                     size: perPage,
                     note: searchNote || undefined,
-                    branch_id: branchFilter || undefined,
+                    branch_id: branchFilter || undefined
                 },
                 headers: getHeaders(),
             });
 
             const { data, paging } = res.data;
+
             if (Array.isArray(data)) {
                 let filtered = data;
 
-                // filter tanggal di frontend
+                // filter by date frontend
                 if (startDate && endDate) {
                     filtered = filtered.filter((m) => {
                         const createdAt = new Date(m.created_at);
@@ -129,8 +138,6 @@ const OwnerModal = () => {
                 setModals(filtered);
                 setTotalPages(paging?.total_page || 1);
                 setTotalItems(paging?.total_item || 0);
-            } else {
-                console.error("Data modal tidak valid:", res.data);
             }
         } catch (err) {
             console.error("Gagal fetch modal:", err);
@@ -171,6 +178,7 @@ const OwnerModal = () => {
     const handleDelete = async (idx) => {
         const id = modals[idx].id;
         if (!id) return;
+
         if (window.confirm("Yakin ingin menghapus modal ini?")) {
             try {
                 await axios.delete(`${API_URL}/${id}`, { headers: getHeaders() });
@@ -184,19 +192,15 @@ const OwnerModal = () => {
     const resetFilters = () => {
         setSearchNote("");
         setDateRange([null, null]);
-        setBranchFilter(""); // ✅ reset juga cabang
+        setBranchFilter("");
         setCurrentPage(1);
         fetchModals(1);
     };
 
-    const getHeaders = () => ({
-        Authorization: localStorage.getItem("authToken"),
-        "ngrok-skip-browser-warning": "true",
-    });
-
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
+
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
@@ -205,14 +209,13 @@ const OwnerModal = () => {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">Data Modal</h1>
-                            <p className="text-sm text-gray-600">
-                                Kelola pemasukan dan pengeluaran modal
-                            </p>
+                            <p className="text-sm text-gray-600">Kelola pemasukan dan pengeluaran</p>
                         </div>
                     </div>
+
                     <button
                         onClick={openAdd}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all duration-200 hover:shadow-xl"
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg"
                     >
                         <HiOutlinePlus className="text-lg" /> Tambah Modal
                     </button>
@@ -221,6 +224,22 @@ const OwnerModal = () => {
                 {/* Filters */}
                 <div className="bg-white rounded-lg shadow p-6 mb-6">
                     <div className="flex flex-wrap items-end gap-6">
+
+                        {/* Search Note */}
+                        <div className="flex flex-col">
+                            <label className="text-sm font-medium text-gray-700 mb-2">Cari Catatan</label>
+                            <input
+                                type="text"
+                                value={searchNote}
+                                onChange={(e) => {
+                                    setSearchNote(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                placeholder="Cari berdasarkan catatan..."
+                                className="border rounded-lg px-4 py-2 text-sm w-56"
+                            />
+                        </div>
+
                         {/* Cabang */}
                         <div className="flex flex-col">
                             <label className="text-sm font-medium text-gray-700 mb-2">Cabang</label>
@@ -234,14 +253,12 @@ const OwnerModal = () => {
                             >
                                 <option value="">Semua Cabang</option>
                                 {branches.map((b) => (
-                                    <option key={b.id} value={b.id}>
-                                        {b.name}
-                                    </option>
+                                    <option key={b.id} value={b.id}>{b.name}</option>
                                 ))}
                             </select>
                         </div>
 
-                        {/* Tanggal */}
+                        {/* Rentang Tanggal */}
                         <div className="flex flex-col">
                             <label className="text-sm font-medium text-gray-700 mb-2">Rentang Tanggal</label>
                             <DatePicker
@@ -256,114 +273,72 @@ const OwnerModal = () => {
                                 dateFormat="dd/MM/yyyy"
                                 placeholderText="Pilih rentang tanggal"
                                 className="border rounded-lg px-4 py-2 text-sm w-56"
-                                maxDate={new Date()}
                             />
                         </div>
 
-                        {/* Tombol reset langsung samping filter */}
+                        {/* Reset */}
                         <div className="flex items-end">
                             <button
                                 onClick={resetFilters}
-                                className="px-5 py-2 bg-gray-200 text-sm rounded-lg hover:bg-gray-300 transition"
+                                className="px-5 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
                             >
                                 Reset
                             </button>
                         </div>
+
                     </div>
                 </div>
 
                 {/* Table */}
-                <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-lg shadow-lg border overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
-                            <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
+                            <thead className="bg-gray-800 text-white">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">
-                                        Jenis
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">
-                                        Catatan
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">
-                                        Jumlah
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase">
-                                        Tanggal
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase">
-                                        Aksi
-                                    </th>
+                                    <th className="px-6 py-4">Jenis</th>
+                                    <th className="px-6 py-4">Catatan</th>
+                                    <th className="px-6 py-4">Jumlah</th>
+                                    <th className="px-6 py-4">Tanggal</th>
+                                    <th className="px-6 py-4 text-right">Aksi</th>
                                 </tr>
                             </thead>
+
                             <tbody className="divide-y divide-gray-200">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center">
-                                            <div className="flex items-center justify-center">
-                                                <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-gray-700"></div>
-                                                <span className="ml-3 text-gray-600 text-sm">Memuat data...</span>
-                                            </div>
-                                        </td>
+                                        <td colSpan={5} className="text-center py-10">Memuat...</td>
                                     </tr>
                                 ) : modals.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-16 text-center">
-                                            <div className="flex flex-col items-center">
-                                                <div className="p-4 bg-gray-100 rounded-full mb-4">
-                                                    <svg
-                                                        className="w-10 h-10 text-gray-400"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        strokeWidth="2"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path d="M3 3h18v4H3z" />
-                                                        <path d="M3 7l2 14h14l2-14H3z" />
-                                                    </svg>
-                                                </div>
-
-                                                <h3 className="text-lg font-semibold text-gray-700 mb-1">
-                                                    Tidak ada data modal
-                                                </h3>
-
-                                                {/* <p className="text-gray-500 text-sm">
-                                                    Coba ubah filter cabang, rentang tanggal, atau catatan.
-                                                </p> */}
-                                            </div>
+                                        <td colSpan={5} className="text-center py-10 text-gray-600">
+                                            Tidak ada data
                                         </td>
                                     </tr>
                                 ) : (
                                     modals.map((m, idx) => (
                                         <tr key={m.id}>
-                                            <td className="px-6 py-3 font-medium">
-                                                {m.type === "IN" ? (
-                                                    <span className="text-green-600">Deposit</span>
-                                                ) : (
-                                                    <span className="text-red-600">Withdraw</span>
-                                                )}
+                                            <td className="px-6 py-4 font-medium">
+                                                {m.type === "IN"
+                                                    ? <span className="text-green-600">Deposit</span>
+                                                    : <span className="text-red-600">Withdraw</span>}
                                             </td>
-                                            <td className="px-6 py-3 text-gray-700">{m.note}</td>
-                                            <td className="px-6 py-3 text-gray-900 font-semibold">
-                                                Rp{" "}
-                                                {Number(m.amount).toLocaleString("id-ID", {
-                                                    minimumFractionDigits: 0,
-                                                })}
+                                            <td className="px-6 py-4">{m.note}</td>
+                                            <td className="px-6 py-4 font-semibold">
+                                                Rp {Number(m.amount).toLocaleString("id-ID")}
                                             </td>
-                                            <td className="px-6 py-3 text-gray-600 text-sm">
+                                            <td className="px-6 py-4 text-sm">
                                                 {new Date(m.created_at).toLocaleDateString("id-ID")}
                                             </td>
-                                            <td className="px-6 py-3 flex justify-end gap-2">
+                                            <td className="px-6 py-4 flex justify-end gap-2">
                                                 <button
                                                     onClick={() => openEdit(idx)}
-                                                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
-                                                    title="Edit"
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded"
                                                 >
                                                     <FiEdit size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(idx)}
-                                                    className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
-                                                    title="Hapus"
+                                                    className="p-2 text-red-60 hover:bg-red-50 rounded"
                                                 >
                                                     <FiTrash size={18} />
                                                 </button>
@@ -374,90 +349,78 @@ const OwnerModal = () => {
                             </tbody>
                         </table>
                     </div>
-                </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <Pagination
-                        page={currentPage}
-                        setPage={setCurrentPage}
-                        totalPages={totalPages}
-                        total={totalItems}
-                        perPage={perPage}
-                    />
-                )}
+                    {totalPages > 1 && (
+                        <Pagination
+                            page={currentPage}
+                            setPage={setCurrentPage}
+                            totalPages={totalPages}
+                            total={totalItems}
+                            perPage={perPage}
+                        />
+                    )}
+                </div>
             </div>
 
             {/* Modal Form */}
             {modal.open && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4 border border-gray-200">
-                        <div className="p-6">
-                            <h2 className="text-xl font-bold mb-4">
-                                {modal.mode === "add" ? "Tambah" : "Edit"} Modal
-                            </h2>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-semibold mb-1">
-                                        Jenis
-                                    </label>
-                                    <select
-                                        value={form.type}
-                                        onChange={(e) => setForm({ ...form, type: e.target.value })}
-                                        className="w-full border px-3 py-2 rounded-lg"
-                                        required
-                                    >
-                                        <option value="IN">Deposit</option>
-                                        <option value="OUT">Withdraw</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold mb-1">
-                                        Catatan
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={form.note}
-                                        onChange={(e) =>
-                                            setForm({ ...form, note: e.target.value })
-                                        }
-                                        className="w-full border px-3 py-2 rounded-lg"
-                                        placeholder="Masukkan catatan modal"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold mb-1">
-                                        Jumlah (Rp)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={form.amount}
-                                        onChange={(e) =>
-                                            setForm({ ...form, amount: Number(e.target.value) })
-                                        }
-                                        className="w-full border px-3 py-2 rounded-lg"
-                                        placeholder="Masukkan jumlah"
-                                        required
-                                    />
-                                </div>
-                                <div className="flex justify-end gap-3 pt-3 border-t">
-                                    <button
-                                        type="button"
-                                        onClick={closeModal}
-                                        className="px-4 py-2 border rounded-lg"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-                                    >
-                                        Simpan
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+                        <h2 className="text-xl font-bold mb-4">
+                            {modal.mode === "add" ? "Tambah Modal" : "Edit Modal"}
+                        </h2>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block mb-1">Jenis</label>
+                                <select
+                                    value={form.type}
+                                    onChange={(e) => setForm({ ...form, type: e.target.value })}
+                                    className="w-full border px-3 py-2 rounded"
+                                >
+                                    <option value="IN">Deposit</option>
+                                    <option value="OUT">Withdraw</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block mb-1">Catatan</label>
+                                <input
+                                    className="w-full border px-3 py-2 rounded"
+                                    value={form.note}
+                                    onChange={(e) => setForm({ ...form, note: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block mb-1">Jumlah</label>
+                                <input
+                                    type="number"
+                                    className="w-full border px-3 py-2 rounded"
+                                    value={form.amount}
+                                    onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })}
+                                    required
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-2 mt-4 border-t pt-3">
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="px-4 py-2 border rounded"
+                                >
+                                    Batal
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded"
+                                >
+                                    Simpan
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

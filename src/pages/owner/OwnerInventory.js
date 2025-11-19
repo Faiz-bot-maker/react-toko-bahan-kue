@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {
     HiOutlineOfficeBuilding,
-    HiOutlineEye,
     HiOutlineX,
-    HiOutlinePlus,
 } from "react-icons/hi";
+
+import { TbRulerMeasure } from "react-icons/tb";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import axios from "axios";
 import Layout from "../../components/Layout";
@@ -97,17 +97,13 @@ const OwnerInventory = () => {
         }
     };
 
-    // Fetch Sizes (API /products/{sku}/sizes)
+    // Fetch Sizes
     const fetchSizes = async (sizes) => {
         try {
             setLoadingSizes(true);
             setShowModal(true);
-
-            if (Array.isArray(sizes)) {
-                setSizes(sizes);
-            } else {
-                setSizes([]);
-            }
+            if (Array.isArray(sizes)) setSizes(sizes);
+            else setSizes([]);
         } catch (err) {
             console.error("Failed to fetch sizes:", err);
             setSizes([]);
@@ -116,25 +112,22 @@ const OwnerInventory = () => {
         }
     };
 
-    // Fetch Sizes untuk CRUD (dropdown)
+    // Fetch Sizes hanya dropdown
     const fetchProductSizes = async (sku) => {
         try {
             const res = await axios.get(
                 `${process.env.REACT_APP_API_URL}/products/${sku}/sizes`,
                 { headers: getHeaders() }
             );
-            if (Array.isArray(res.data?.data)) {
-                setSizeOptions(res.data.data);
-            } else {
-                setSizeOptions([]);
-            }
+            if (Array.isArray(res.data?.data)) setSizeOptions(res.data.data);
+            else setSizeOptions([]);
         } catch (err) {
             console.error("Failed to fetch product sizes:", err);
             setSizeOptions([]);
         }
     };
 
-    // CRUD Handlers
+    // CRUD
     const handleAdd = async () => {
         try {
             await axios.post(API_URL, formData, { headers: getHeaders() });
@@ -153,7 +146,7 @@ const OwnerInventory = () => {
             fetchInventories(currentPage, branchFilter, searchTerm);
         } catch (err) {
             console.error("Failed to edit inventory:", err);
-            alert("Gagal mengubah data inventory");
+            alert("Gagal mengubah data");
         }
     };
 
@@ -179,61 +172,39 @@ const OwnerInventory = () => {
         fetchInventories(currentPage, branchFilter, searchTerm);
     }, [currentPage, branchFilter, searchTerm]);
 
-    // Pagination component
+    // Pagination
     const Pagination = ({ page, setPage, totalPages, startIndex, endIndex, total }) => (
         <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
             <div className="text-xs text-gray-500">
                 Menampilkan {total === 0 ? 0 : startIndex + 1}-{endIndex} dari total {total} data
             </div>
             <div className="flex items-center gap-2">
-                <button
-                    onClick={() => setPage(1)}
-                    disabled={page === 1}
-                    className={`px-2.5 py-1.5 rounded border ${page === 1
-                        ? "text-gray-400 border-gray-200"
-                        : "text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }`}
-                >
+                <button onClick={() => setPage(1)} disabled={page === 1} className="px-2.5 py-1.5 border rounded">
                     «
                 </button>
                 <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className={`px-3 py-1.5 rounded border ${page === 1
-                        ? "text-gray-400 border-gray-200"
-                        : "text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }`}
+                    className="px-3 py-1.5 border rounded"
                 >
                     Prev
                 </button>
-                <span className="text-sm text-gray-700">
-                    {page} / {totalPages}
-                </span>
+                <span className="text-sm">{page} / {totalPages}</span>
                 <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className={`px-3 py-1.5 rounded border ${page === totalPages
-                        ? "text-gray-400 border-gray-200"
-                        : "text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }`}
+                    className="px-3 py-1.5 border rounded"
                 >
                     Next
                 </button>
-                <button
-                    onClick={() => setPage(totalPages)}
-                    disabled={page === totalPages}
-                    className={`px-2.5 py-1.5 rounded border ${page === totalPages
-                        ? "text-gray-400 border-gray-200"
-                        : "text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }`}
-                >
+                <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-2.5 py-1.5 border rounded">
                     »
                 </button>
             </div>
         </div>
     );
 
-    // Hitung startIndex & endIndex
+    // Pagination index
     const pageSize = inventories.length || 0;
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = Math.min(startIndex + pageSize, totalItems);
@@ -241,7 +212,8 @@ const OwnerInventory = () => {
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
-                {/* Header */}
+
+                {/* HEADER */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-green-100 rounded-lg">
@@ -252,37 +224,31 @@ const OwnerInventory = () => {
                             <p className="text-sm text-gray-600">Lihat & Kelola data inventory cabang</p>
                         </div>
                     </div>
-                    <button
-                        onClick={() => {
-                            setCrudModal({ open: true, mode: "add", data: null });
-                            setFormData({ product_sku: "", sku: "", branch_id: "", sell_price: "", size_id: "" });
-                            setSizeOptions([]);
-                        }}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all"
-                    >
-                        <HiOutlinePlus className="text-lg" /> Tambah Inventory
-                    </button>
+
+                    {/* --- ADD BUTTON HIDDEN --- */}
+                    {/* (Dihapus sesuai permintaan) */}
                 </div>
 
-                {/* Search & Filter */}
+                {/* Search */}
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
                     <input
                         type="text"
                         placeholder="Cari produk, SKU, atau cabang..."
-                        className="w-full md:w-1/3 px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-green-300 focus:border-green-500"
+                        className="w-full md:w-1/3 px-4 py-2 border rounded-lg shadow-sm text-sm"
                         value={searchTerm}
                         onChange={(e) => {
                             setSearchTerm(e.target.value);
                             setCurrentPage(1);
                         }}
                     />
+
                     <select
                         value={branchFilter || ""}
                         onChange={(e) => {
                             setBranchFilter(e.target.value);
                             setCurrentPage(1);
                         }}
-                        className="w-full md:w-1/4 px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-green-300 focus:border-green-500"
+                        className="w-full md:w-1/4 px-4 py-2 border rounded-lg shadow-sm text-sm"
                     >
                         <option value="">Semua Cabang</option>
                         {branchOptions.map((branch) => (
@@ -293,84 +259,50 @@ const OwnerInventory = () => {
                     </select>
                 </div>
 
-                {/* Table */}
+                {/* TABLE */}
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
-                            <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
+                            <thead className="bg-gray-800 text-white">
                                 <tr>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                                        Cabang
-                                    </th>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                                        Nama Barang
-                                    </th>
-                                    <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">
-                                        SKU
-                                    </th>
-                                    <th className="px-6 py-4 text-right font-semibold text-xs uppercase tracking-wider">
-                                        Aksi
-                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold">Cabang</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold">Nama Barang</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold">SKU</th>
+                                    <th className="px-6 py-4 text-right text-xs font-semibold">Aksi</th>
                                 </tr>
                             </thead>
+
                             <tbody className="divide-y divide-gray-200">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-12 text-center">
-                                            <div className="flex items-center justify-center">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                                                <span className="ml-3 text-gray-600 text-sm">Memuat data...</span>
-                                            </div>
-                                        </td>
+                                        <td colSpan="4" className="text-center py-10">Memuat...</td>
                                     </tr>
                                 ) : inventories.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-20 text-center">
-                                            <div className="flex flex-col items-center">
-                                                <HiOutlineOfficeBuilding className="text-6xl text-gray-300 mb-4" />
-                                                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                                    Belum ada data inventory
-                                                </h3>
-                                                <p className="text-gray-500 text-sm mb-5">
-                                                    Silakan tambahkan data inventory pertama Anda
-                                                </p>
-
-                                                <button
-                                                    onClick={() => {
-                                                        setCrudModal({ open: true, mode: "add", data: null });
-                                                        setFormData({
-                                                            product_sku: "",
-                                                            sku: "",
-                                                            branch_id: "",
-                                                            sell_price: "",
-                                                            size_id: "",
-                                                        });
-                                                        setSizeOptions([]);
-                                                    }}
-                                                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow font-medium transition-all text-sm"
-                                                >
-                                                    <HiOutlinePlus className="text-base" />
-                                                    Tambah Inventory Pertama
-                                                </button>
-                                            </div>
+                                        <td colSpan="4" className="px-6 py-20 text-center">
+                                            <h3 className="text-lg font-semibold">Belum ada data inventory</h3>
+                                            
+                                            {/* --- ADD BUTTON FIRST TIME HIDDEN --- */}
+                                            {/* (Dihapus sesuai permintaan) */}
                                         </td>
                                     </tr>
                                 ) : (
                                     inventories.map((item) => (
                                         <tr key={`${item.branch_id}-${item.sku}`} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 text-gray-900 font-medium">
-                                                {item.branch_name}
-                                            </td>
-                                            <td className="px-6 py-4 text-gray-900 font-medium">{item.name}</td>
-                                            <td className="px-6 py-4 text-gray-600">{item.sku}</td>
+                                            <td className="px-6 py-4">{item.branch_name}</td>
+                                            <td className="px-6 py-4">{item.name}</td>
+                                            <td className="px-6 py-4">{item.sku}</td>
                                             <td className="px-6 py-4 text-right flex gap-2 justify-end">
+
+                                                {/* Lihat Size */}
                                                 <button
                                                     onClick={() => fetchSizes(item.sizes)}
-                                                    className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg"
-                                                    title="Lihat Ukuran"
+                                                    className="p-2 text-green-600 hover:text-green-700"
                                                 >
-                                                    <HiOutlineEye size={18} />
+                                                    <TbRulerMeasure size={18} />
                                                 </button>
+
+                                                {/* Edit */}
                                                 <button
                                                     onClick={() => {
                                                         setCrudModal({ open: true, mode: "edit", data: item });
@@ -383,18 +315,19 @@ const OwnerInventory = () => {
                                                         });
                                                         fetchProductSizes(item.sku);
                                                     }}
-                                                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
-                                                    title="Edit"
+                                                    className="p-2 text-blue-600 hover:text-blue-700"
                                                 >
                                                     <FiEdit size={18} />
                                                 </button>
+
+                                                {/* Delete */}
                                                 <button
                                                     onClick={() => handleDelete(item.id)}
-                                                    className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
-                                                    title="Hapus"
+                                                    className="p-2 text-red-600 hover:text-red-700"
                                                 >
                                                     <FiTrash size={18} />
                                                 </button>
+
                                             </td>
                                         </tr>
                                     ))
@@ -416,13 +349,14 @@ const OwnerInventory = () => {
                     />
                 )}
 
-                {/* CRUD Modal */}
+                {/* CRUD Modal (Masih aktif untuk Edit saja) */}
                 {crudModal.open && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                        <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 w-full max-w-lg relative">
+
                             <button
                                 onClick={() => setCrudModal({ open: false, mode: "add", data: null })}
-                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                                className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
                             >
                                 <HiOutlineX className="w-6 h-6" />
                             </button>
@@ -432,18 +366,13 @@ const OwnerInventory = () => {
                             </h2>
 
                             <div className="space-y-4">
-                                {/* Product */}
+                                {/* Produk */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Nama Produk
-                                    </label>
+                                    <label className="block text-sm mb-2">Nama Produk</label>
                                     <select
-                                        className="w-full border rounded-lg px-3 py-2"
                                         value={formData.product_sku}
                                         onChange={(e) => {
-                                            const product = productOptions.find(
-                                                (p) => p.sku === e.target.value
-                                            );
+                                            const product = productOptions.find(p => p.sku === e.target.value);
                                             if (product) {
                                                 setFormData({
                                                     ...formData,
@@ -454,6 +383,7 @@ const OwnerInventory = () => {
                                                 fetchProductSizes(product.sku);
                                             }
                                         }}
+                                        className="w-full border px-3 py-2 rounded"
                                     >
                                         <option value="">Pilih Produk</option>
                                         {productOptions.map((p) => (
@@ -466,23 +396,23 @@ const OwnerInventory = () => {
 
                                 {/* SKU */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">SKU</label>
+                                    <label className="block text-sm mb-2">SKU</label>
                                     <input
                                         type="text"
-                                        value={formData.sku}
                                         disabled
-                                        className="w-full border rounded-lg px-3 py-2 bg-gray-100"
+                                        value={formData.sku}
+                                        className="w-full border px-3 py-2 bg-gray-100 rounded"
                                     />
                                 </div>
 
-                                {/* Size */}
+                                {/* Ukuran */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Ukuran</label>
+                                    <label className="block text-sm mb-2">Ukuran</label>
                                     <select
-                                        className="w-full border rounded-lg px-3 py-2"
                                         value={formData.size_id}
                                         onChange={(e) => setFormData({ ...formData, size_id: e.target.value })}
                                         disabled={sizeOptions.length === 0}
+                                        className="w-full border px-3 py-2 rounded"
                                     >
                                         <option value="">Pilih Ukuran</option>
                                         {sizeOptions.map((s) => (
@@ -493,13 +423,13 @@ const OwnerInventory = () => {
                                     </select>
                                 </div>
 
-                                {/* Branch */}
+                                {/* Cabang */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Cabang</label>
+                                    <label className="block text-sm mb-2">Cabang</label>
                                     <select
-                                        className="w-full border rounded-lg px-3 py-2"
                                         value={formData.branch_id}
                                         onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
+                                        className="w-full border px-3 py-2 rounded"
                                     >
                                         <option value="">Pilih Cabang</option>
                                         {branchOptions.map((b) => (
@@ -510,52 +440,48 @@ const OwnerInventory = () => {
                                     </select>
                                 </div>
 
-                                {/* Sell Price */}
+                                {/* Harga */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Harga Jual
-                                    </label>
+                                    <label className="block text-sm mb-2">Harga Jual</label>
                                     <input
                                         type="number"
-                                        className="w-full border rounded-lg px-3 py-2"
                                         value={formData.sell_price}
-                                        onChange={(e) =>
-                                            setFormData({ ...formData, sell_price: e.target.value })
-                                        }
+                                        onChange={(e) => setFormData({ ...formData, sell_price: e.target.value })}
+                                        className="w-full border px-3 py-2 rounded"
                                     />
                                 </div>
                             </div>
 
-                            {/* Actions */}
+                            {/* Buttons */}
                             <div className="flex justify-end gap-3 mt-6">
                                 <button
                                     onClick={() => setCrudModal({ open: false, mode: "add", data: null })}
-                                    className="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-50"
+                                    className="px-4 py-2 border rounded"
                                 >
                                     Batal
                                 </button>
+
                                 <button
                                     onClick={() =>
-                                        crudModal.mode === "add"
-                                            ? handleAdd()
-                                            : handleEdit(crudModal.data.id)
+                                        crudModal.mode === "add" ? handleAdd() : handleEdit(crudModal.data.id)
                                     }
-                                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold"
+                                    className="px-4 py-2 bg-green-600 text-white rounded"
                                 >
                                     {crudModal.mode === "add" ? "Tambah" : "Simpan"}
                                 </button>
                             </div>
+
                         </div>
                     </div>
                 )}
 
-                {/* Size Modal */}
+                {/* Size modal */}
                 {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                        <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                        <div className="bg-white p-6 rounded-lg w-full max-w-md relative">
                             <button
                                 onClick={() => setShowModal(false)}
-                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                                className="absolute top-4 right-4 text-gray-500"
                             >
                                 <HiOutlineX className="w-6 h-6" />
                             </button>
@@ -563,27 +489,20 @@ const OwnerInventory = () => {
                             <h2 className="text-xl font-bold mb-6">Daftar Ukuran</h2>
 
                             {loadingSizes ? (
-                                <div className="text-center py-10 text-gray-500">Memuat ukuran...</div>
+                                <p className="text-center py-10">Memuat ukuran...</p>
                             ) : sizes.length === 0 ? (
-                                <div className="text-center py-10 text-gray-500">
-                                    Tidak ada ukuran tersedia
-                                </div>
+                                <p className="text-center py-10">Tidak ada ukuran tersedia</p>
                             ) : (
                                 <ul className="space-y-2">
                                     {sizes.map((size) => (
-                                        <li
-                                            key={size.size_id}
-                                            className="p-3 border rounded-lg hover:bg-gray-50 flex justify-between"
-                                        >
+                                        <li key={size.size_id} className="p-3 border rounded flex justify-between">
                                             <div>
-                                                <p className="font-medium text-gray-800">Size: {size.size}</p>
+                                                <p className="font-medium">Size: {size.size}</p>
                                                 <p className="text-sm text-gray-500">Stok: {size.stock}</p>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-green-600 font-semibold">
-                                                    Rp {Number(size.sell_price).toLocaleString("id-ID")}
-                                                </p>
-                                            </div>
+                                            <p className="text-green-600 font-semibold">
+                                                Rp {Number(size.sell_price).toLocaleString("id-ID")}
+                                            </p>
                                         </li>
                                     ))}
                                 </ul>
@@ -591,6 +510,7 @@ const OwnerInventory = () => {
                         </div>
                     </div>
                 )}
+
             </div>
         </Layout>
     );

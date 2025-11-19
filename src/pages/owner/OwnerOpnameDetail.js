@@ -1,3 +1,4 @@
+// components/pages/owner/OwnerOpnameDetail.js
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
 import { HiClipboardList } from "react-icons/hi";
@@ -89,25 +90,29 @@ const OwnerOpnameDetail = () => {
                 </div>
 
                 {/* Detail Table */}
-                <div className="bg-white shadow rounded overflow-hidden">
+                <div className="bg-white shadow rounded-lg overflow-hidden">
                     <table className="min-w-full">
                         <thead className="bg-gray-800 text-white">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-semibold">Produk</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold">System</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold">Fisik</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold">Selisih</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold">Catatan</th>
+                                <th className="px-6 py-3">Produk</th>
+                                <th className="px-6 py-3">Ukuran</th>
+                                <th className="px-6 py-3">System</th>
+                                <th className="px-6 py-3">Fisik</th>
+                                <th className="px-6 py-3">Selisih</th>
+                                <th className="px-6 py-3">Catatan</th>
                             </tr>
                         </thead>
 
                         <tbody className="divide-y">
                             {opname.details.map((d) => (
                                 <tr key={d.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4">{d.branch_inventory_id}</td>
+                                    <td className="px-6 py-4">{d.product_name}</td>
+                                    <td className="px-6 py-4">{d.size}</td>
                                     <td className="px-6 py-4">{d.system_qty}</td>
                                     <td className="px-6 py-4">{d.physical_qty}</td>
-                                    <td className={`px-6 py-4 font-semibold ${d.difference < 0 ? "text-red-600" : "text-green-600"}`}>
+                                    <td className={`px-6 py-4 font-semibold ${
+                                        d.difference < 0 ? "text-red-600" : "text-green-600"
+                                    }`}>
                                         {d.difference}
                                     </td>
                                     <td className="px-6 py-4">{d.notes || "-"}</td>

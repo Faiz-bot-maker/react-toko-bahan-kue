@@ -31,6 +31,7 @@ import OwnerInventory from './pages/owner/OwnerInventory';
 import OwnerPembelian from './pages/owner/OwnerLaporanPembelian';
 import OwnerOpname from './pages/owner/OwnerOpnameList';
 import OwnerReportLoss from './pages/owner/OwnerProfitLossReport';
+import OwnerOpnameDetail from './pages/owner/OwnerOpnameDetail';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -58,20 +59,20 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public Routes */ }
-          <Route path="/login" element={ <Login /> } />
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
 
-          {/* Protected Routes */ }
+          {/* Protected Routes */}
           <Route path="/dashboard" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <Dashboard />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/products" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <Products />
               </RoleGuard>
             </LoginCheck>
@@ -85,91 +86,91 @@ function App() {
           } /> */}
           <Route path="/users" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <Users />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/categories" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <Categories />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/laporan-penjualan" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <LaporanPenjualan />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/laporan-pengeluaran" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <LaporanPengeluaran />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/pengeluaran" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <Pengeluaran />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/keuangan" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <Keuangan />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/cabang" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <Cabang />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/distributor" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <Distributor />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/role" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <Role />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/laporan-produk-terlaris" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <LaporanTerlaris />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/laporan-piutang" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <LaporanPiutang />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/pages/sizeproduct" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <SizeProduct />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/modal" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <Modal />
               </RoleGuard>
             </LoginCheck>
@@ -183,186 +184,194 @@ function App() {
           } /> */}
           <Route path="/own-alur-kas" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <OwnerAlurKas />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/own-pergerakan-stok" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <OwnerPergerakanStok />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/own-transaksi-keluar" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <OwnerTransaksiKeluar />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/own-inventory" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <OwnerInventory />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/own-laporan-pembelian" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <OwnerPembelian />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/opname-list" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <OwnerOpname />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/report-loss" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'owner', 'user', 'manager' ] }>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
                 <OwnerReportLoss />
               </RoleGuard>
             </LoginCheck>
           } />
+          <Route path="/owner/opname/:id" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={['owner', 'user', 'manager']}>
+                <OwnerOpnameDetail />
+              </RoleGuard>
+            </LoginCheck>
+          } />
 
-          {/* Admin Routes */ }
+
+          {/* Admin Routes */}
           <Route path="/admin/dashboard" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminDashboard />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/products" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminProducts />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/categories" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminCategories />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/users" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminUsers />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/roles" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminRoles />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/cabang" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminCabang />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/keuangan" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminKeuangan />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/distributor" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminDistributor />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/laporan-penjualan" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminLaporanPenjualan />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/modal" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminModal />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/inventory" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminInventory />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/size-inventory" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <SizeInventory />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/out-report" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminPengeluaran />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/adm-transaksi-keluar" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminTransaksiKeluar />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/adm-piutang" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminLaporanPiutang />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/adm-alur-kas" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminAlurKas />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/adm-pergerakan-stok" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminPergerakanStok />
               </RoleGuard>
             </LoginCheck>
           } />
           <Route path="/admin/adm-laporan-pembelian" element={
             <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+              <RoleGuard allowedRoles={['admin', 'super_admin']}>
                 <AdminLaporanPembelian />
               </RoleGuard>
             </LoginCheck>
           } />
 
 
-          {/* Default redirect */ }
-          <Route path="/" element={ <RoleBasedRedirect /> } />
-          <Route path="*" element={ <RoleBasedRedirect /> } />
+          {/* Default redirect */}
+          <Route path="/" element={<RoleBasedRedirect />} />
+          <Route path="*" element={<RoleBasedRedirect />} />
         </Routes>
       </Router>
     </AuthProvider>
