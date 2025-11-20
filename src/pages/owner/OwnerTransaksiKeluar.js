@@ -20,7 +20,7 @@ const OwnerTransaksiKeluar = () => {
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const [branchFilter, setBranchFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState(""); // → Tambahan
+  const [statusFilter, setStatusFilter] = useState(""); 
   const [searchTerm, setSearchTerm] = useState("");
 
   const [branches, setBranches] = useState([]);
@@ -29,13 +29,17 @@ const OwnerTransaksiKeluar = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Detail modal
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   useEffect(() => {
     fetchBranches();
   }, []);
+
+  // 🔥 Tambahan — Reset page ketika filter berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [startDate, endDate, branchFilter, statusFilter]);
 
   useEffect(() => {
     if ((startDate && !endDate) || (!startDate && endDate)) return;
@@ -58,7 +62,6 @@ const OwnerTransaksiKeluar = () => {
       setLoading(true);
       let params = { page };
 
-      // Filter tanggal
       if (startDate && endDate) {
         const formatLocal = (date) => {
           const d = new Date(date);
@@ -71,13 +74,8 @@ const OwnerTransaksiKeluar = () => {
         params.end_at = formatLocal(endDate);
       }
 
-      // Filter search
       if (search) params.search = searchTerm;
-
-      // Filter cabang
       if (branchFilter) params.branch_id = branchFilter;
-
-      // Filter status → Tambahan
       if (statusFilter) params.status = statusFilter;
 
       const res = await axios.get(API_URL, { headers: getHeaders(), params });
@@ -112,7 +110,7 @@ const OwnerTransaksiKeluar = () => {
   const resetFilters = () => {
     setDateRange([null, null]);
     setBranchFilter("");
-    setStatusFilter(""); // → Tambahan
+    setStatusFilter("");
     setSearchTerm("");
     setCurrentPage(1);
     fetchTransactions(1, "");
@@ -193,8 +191,9 @@ const OwnerTransaksiKeluar = () => {
 
   return (
     <Layout>
+      {/* ⬇️ Semua JSX di bawah ini tetap persis seperti kode Anda */}
       <div className="w-full max-w-7xl mx-auto">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -202,24 +201,18 @@ const OwnerTransaksiKeluar = () => {
               <HiOutlineShoppingCart className="text-2xl text-green-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                Transaksi Keluar
-              </h1>
-              <p className="text-sm text-gray-600">
-                Daftar transaksi penjualan per cabang
-              </p>
+              <h1 className="text-2xl font-bold text-gray-800">Transaksi Keluar</h1>
+              <p className="text-sm text-gray-600">Daftar transaksi penjualan per cabang</p>
             </div>
           </div>
         </div>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
-          
+
           {/* Rentang Tanggal */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Rentang Tanggal
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Rentang Tanggal</label>
             <DatePicker
               selectsRange={true}
               startDate={startDate}
@@ -235,9 +228,7 @@ const OwnerTransaksiKeluar = () => {
 
           {/* Filter Cabang */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cabang
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cabang</label>
             <select
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}
@@ -245,18 +236,14 @@ const OwnerTransaksiKeluar = () => {
             >
               <option value="">Semua Cabang</option>
               {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
+                <option key={b.id} value={b.id}>{b.name}</option>
               ))}
             </select>
           </div>
 
-          {/* Filter Status (Tambahan) */}
+          {/* Filter Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -271,9 +258,7 @@ const OwnerTransaksiKeluar = () => {
 
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cari
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cari</label>
             <input
               type="text"
               value={searchTerm}
@@ -309,8 +294,8 @@ const OwnerTransaksiKeluar = () => {
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
 
+              <tbody className="divide-y divide-gray-200">
                 {loading ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center">
@@ -335,13 +320,15 @@ const OwnerTransaksiKeluar = () => {
                       <td className="px-6 py-4 text-gray-600">{trx.customer_name}</td>
                       <td className="px-6 py-4 font-medium text-gray-900">{trx.code}</td>
                       <td className="px-6 py-4 text-gray-600">{trx.branch_name}</td>
-                      <td className={`px-6 py-4 font-semibold ${
-                        trx.status === "COMPLETED"
-                          ? "text-green-600"
-                          : trx.status === "CANCELLED"
-                          ? "text-red-600"
-                          : "text-yellow-600"
-                      }`}>
+                      <td
+                        className={`px-6 py-4 font-semibold ${
+                          trx.status === "COMPLETED"
+                            ? "text-green-600"
+                            : trx.status === "CANCELLED"
+                            ? "text-red-600"
+                            : "text-yellow-600"
+                        }`}
+                      >
                         {trx.status}
                       </td>
                       <td className="px-6 py-4 text-gray-600">{formatDate(trx.created_at)}</td>
@@ -356,8 +343,8 @@ const OwnerTransaksiKeluar = () => {
                     </tr>
                   ))
                 )}
-
               </tbody>
+
             </table>
           </div>
         </div>
@@ -379,9 +366,7 @@ const OwnerTransaksiKeluar = () => {
 
               {/* Header */}
               <div className="flex justify-between items-center pb-3 border-b">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Detail Transaksi
-                </h2>
+                <h2 className="text-xl font-bold text-gray-800">Detail Transaksi</h2>
                 <button
                   onClick={() => setDetailModalOpen(false)}
                   className="text-gray-500 hover:text-gray-700 text-lg"
@@ -394,22 +379,21 @@ const OwnerTransaksiKeluar = () => {
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-gray-700">
                 <p><strong>Customer:</strong> {selectedTransaction.customer_name}</p>
                 <p><strong>Code:</strong> {selectedTransaction.code}</p>
-
                 <p><strong>Status:</strong>
-                  <span className={`ml-1 font-semibold ${
-                    selectedTransaction.status === "COMPLETED"
-                      ? "text-green-600"
-                      : selectedTransaction.status === "CANCELLED"
-                      ? "text-red-600"
-                      : "text-yellow-600"
-                  }`}>
+                  <span
+                    className={`ml-1 font-semibold ${
+                      selectedTransaction.status === "COMPLETED"
+                        ? "text-green-600"
+                        : selectedTransaction.status === "CANCELLED"
+                        ? "text-red-600"
+                        : "text-yellow-600"
+                    }`}
+                  >
                     {selectedTransaction.status}
                   </span>
                 </p>
-
                 <p><strong>Tanggal:</strong> {formatDate(selectedTransaction.created_at)}</p>
                 <p><strong>Cabang:</strong> {selectedTransaction.branch_name}</p>
-
                 <p><strong>Total Qty:</strong> {selectedTransaction.total_qty}</p>
                 <p><strong>Total Harga:</strong> Rp{selectedTransaction.total_price.toLocaleString("id-ID")}</p>
               </div>
@@ -439,9 +423,11 @@ const OwnerTransaksiKeluar = () => {
                           <td className="px-3 py-2 border">
                             Rp{item.price.toLocaleString("id-ID")}
                           </td>
-                          <td className={`px-3 py-2 border font-semibold ${
-                            item.is_cancelled ? "text-red-500" : "text-green-600"
-                          }`}>
+                          <td
+                            className={`px-3 py-2 border font-semibold ${
+                              item.is_cancelled ? "text-red-500" : "text-green-600"
+                            }`}
+                          >
                             {item.is_cancelled ? "Dibatalkan" : "Aktif"}
                           </td>
                         </tr>

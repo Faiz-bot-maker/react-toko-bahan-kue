@@ -21,6 +21,16 @@ const formatRupiah = (value) => {
     return "Rp " + intVal.toLocaleString("id-ID");
 };
 
+/* === FIX: Format tanggal manual TANPA UTC (toISOString) === */
+const formatLocalDate = (date) => {
+    if (!date) return undefined;
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
 const OwnerProfitLossReport = () => {
     const [loading, setLoading] = useState(false);
 
@@ -34,11 +44,26 @@ const OwnerProfitLossReport = () => {
         try {
             setLoading(true);
 
-            const params = {
-                period: periodType,
-                start_date: startDate?.toISOString().split("T")[0] ?? undefined,
-                end_date: endDate?.toISOString().split("T")[0] ?? undefined,
-            };
+            let params = { period: periodType };
+
+            const startAt = formatLocalDate(startDate);
+            const endAt = formatLocalDate(endDate);
+
+            /* === FIX: Gunakan start_at & end_at === */
+            if (periodType === "daily") {
+                params.start_at = startAt;
+                params.end_at = startAt; // End sama dengan start
+            }
+
+            else if (periodType === "monthly") {
+                params.start_at = startAt;
+                params.end_at = endAt;
+            }
+
+            else if (periodType === "range") {
+                params.start_at = startAt;
+                params.end_at = endAt;
+            }
 
             const res = await axios.get(
                 `${process.env.REACT_APP_API_URL}/finance-report/profit-loss`,
@@ -67,7 +92,7 @@ const OwnerProfitLossReport = () => {
                 {/* FILTER */}
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
 
-                    {/* Period */}
+                    {/* Periode */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Periode</label>
                         <select
@@ -206,10 +231,9 @@ const OwnerProfitLossReport = () => {
                                                 <MdOutlineSavings className="text-green-900 text-xl" />
                                                 Laba Bersih
                                             </td>
-                                            <td
-                                                className={`px-6 py-4 text-right font-bold ${report.net_profit >= 0 ? "text-green-700" : "text-red-700"
-                                                    }`}
-                                            >
+                                            <td className={`px-6 py-4 text-right font-bold ${
+                                                report.net_profit >= 0 ? "text-green-700" : "text-red-700"
+                                            }`}>
                                                 {formatRupiah(report.net_profit)}
                                             </td>
                                         </tr>
@@ -222,6 +246,6 @@ const OwnerProfitLossReport = () => {
             </div>
         </Layout>
     );
-}
+};
 
 export default OwnerProfitLossReport;

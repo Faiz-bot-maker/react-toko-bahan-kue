@@ -186,7 +186,10 @@ const OwnerLaporanPiutang = () => {
                     </div>
                 </div>
 
+                {/*  FILTERS  */}
                 <div className="flex flex-wrap gap-4 mb-6 bg-white p-4 rounded shadow">
+
+                    {/* Search */}
                     <input
                         type="text"
                         placeholder="Cari piutang..."
@@ -195,6 +198,7 @@ const OwnerLaporanPiutang = () => {
                         className="border px-3 py-2 rounded w-64"
                     />
 
+                    {/* Filter Cabang */}
                     <select
                         value={branchFilter}
                         onChange={(e) => { setBranchFilter(e.target.value); setCurrentPage(1); }}
@@ -204,6 +208,7 @@ const OwnerLaporanPiutang = () => {
                         {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
 
+                    {/* 🔥 Filter Status — Sudah diperbaiki */}
                     <select
                         value={statusFilter}
                         onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
@@ -211,11 +216,11 @@ const OwnerLaporanPiutang = () => {
                     >
                         <option value="">Semua Status</option>
                         <option value="PENDING">Pending</option>
-                        <option value="LUNAS">Lunas</option>
-                        <option value="VOID">Void</option>
                         <option value="PAID">Paid</option>
+                        <option value="VOID">Void</option>
                     </select>
 
+                    {/* 🔥 Filter Referensi — Sudah diperbaiki */}
                     <select
                         value={typeFilter}
                         onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
@@ -224,9 +229,9 @@ const OwnerLaporanPiutang = () => {
                         <option value="">Semua Jenis Referensi</option>
                         <option value="SALE">Penjualan</option>
                         <option value="PURCHASE">Pembelian</option>
-                        <option value="RETURN">Retur</option>
                     </select>
 
+                    {/* Filter Tanggal */}
                     <DatePicker
                         selectsRange
                         startDate={startDate}
@@ -252,6 +257,7 @@ const OwnerLaporanPiutang = () => {
                     <button onClick={resetFilters} className="bg-gray-300 px-4 py-2 rounded">Reset</button>
                 </div>
 
+                {/* TABLE */}
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
