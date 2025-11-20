@@ -83,7 +83,7 @@ const AdminDashboard = () => {
             shadow: 'shadow-green-100',
         },
         {
-            label: 'Total Kategori',
+            label: 'Total Stock',
             value: stats.totalCategories,
             icon: <HiOutlineTag className="text-3xl text-purple-500" />,
             color: 'from-purple-400/30 to-purple-100',
@@ -91,14 +91,6 @@ const AdminDashboard = () => {
         },
     ];
 
-    const chartData = [
-        { bulan: 'Jan', penjualan: 10 },
-        { bulan: 'Feb', penjualan: 15 },
-        { bulan: 'Mar', penjualan: 8 },
-        { bulan: 'Apr', penjualan: 20 },
-        { bulan: 'Mei', penjualan: 18 },
-        { bulan: 'Jun', penjualan: 25 },
-    ];
 
     return (
         <Layout
@@ -132,21 +124,6 @@ const AdminDashboard = () => {
                     ) ) }
                 </div>
 
-                {/* Grafik */ }
-                <div className="bg-white rounded-xl shadow-md p-4 mb-4">
-                    <h2 className="text-base font-bold mb-3 text-gray-800">
-                        Grafik Penjualan Cabang per Bulan
-                    </h2>
-                    <ResponsiveContainer width="100%" height={ 200 }>
-                        <LineChart data={ chartData } margin={ { top: 10, right: 30, left: 0, bottom: 0 } }>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="bulan" />
-                            <YAxis />
-                            <Tooltip />
-                            <Line type="monotone" dataKey="penjualan" stroke="#16a34a" strokeWidth={ 3 } activeDot={ { r: 8 } } />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
             </div>
         </Layout>
     );

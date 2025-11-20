@@ -21,12 +21,12 @@ const formatRupiah = ( value ) => {
     return "Rp " + intVal.toLocaleString( "id-ID" );
 };
 
-const OwnerProfitLossReport = () => {
+const AdminProfitLossReport = () => {
     const [ loading, setLoading ] = useState( false );
 
     const [ periodType, setPeriodType ] = useState( "all" );
-    const [ startDate, setStartDate ] = useState( null );
-    const [ endDate, setEndDate ] = useState( null );
+    const [ dateRange, setDateRange ] = useState( [ null, null ] );
+    const [ startDate, endDate ] = dateRange;
 
     const [ report, setReport ] = useState( null );
 
@@ -34,11 +34,21 @@ const OwnerProfitLossReport = () => {
         try {
             setLoading( true );
 
-            const params = {
+            let params = {
                 period: periodType,
-                start_date: startDate?.toISOString().split( "T" )[ 0 ] ?? undefined,
-                end_date: endDate?.toISOString().split( "T" )[ 0 ] ?? undefined,
             };
+
+            if ( startDate && endDate ) {
+                const formatDate = ( date ) => {
+                    const d = new Date( date );
+                    const year = d.getFullYear();
+                    const month = String( d.getMonth() + 1 ).padStart( 2, "0" );
+                    const day = String( d.getDate() ).padStart( 2, "0" );
+                    return `${year}-${month}-${day}`;
+                };
+                params.start_at = formatDate( startDate );
+                params.end_at = formatDate( endDate );
+            }
 
             const res = await axios.get(
                 `${process.env.REACT_APP_API_URL}/finance-report/profit-loss`,
@@ -55,7 +65,27 @@ const OwnerProfitLossReport = () => {
 
     useEffect( () => {
         fetchReport();
-    }, [] );
+    }, [ endDate ] );
+
+    const formatMonthRange = ( start, end ) => {
+        if ( !start ) return "";
+
+        const format = ( d ) =>
+            d.toLocaleDateString( "id-ID", {
+                month: "long",
+                year: "numeric",
+            } );
+
+        if ( !end ) return format( start );
+
+        return `${format( start )} - ${format( end )}`;
+    };
+
+    const resetFilters = () => {
+        setDateRange( [ null, null ] );
+        fetchReport();
+        setPeriodType( "all" )
+    };
 
     return (
         <Layout>
@@ -72,51 +102,71 @@ const OwnerProfitLossReport = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Periode</label>
                         <select
                             value={ periodType }
-                            onChange={ ( e ) => setPeriodType( e.target.value ) }
+                            onChange={ ( e ) => {
+                                setPeriodType( e.target.value );
+                                setDateRange( [ null, null ] );
+                            } }
                             className="border rounded px-3 py-2 w-60"
                         >
                             <option value="all">Semua</option>
-                            <option value="daily">Harian</option>
                             <option value="monthly">Bulanan</option>
                             <option value="range">Rentang Tanggal</option>
                         </select>
                     </div>
 
-                    {/* Start Date */ }
-                    { periodType !== "all" && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
-                            <DatePicker
-                                selected={ startDate }
-                                onChange={ ( date ) => setStartDate( date ) }
-                                dateFormat={ periodType === "monthly" ? "MM/yyyy" : "dd/MM/yyyy" }
-                                showMonthYearPicker={ periodType === "monthly" }
-                                className="border rounded px-3 py-2 w-60"
-                                placeholderText="Pilih tanggal mulai"
-                            />
-                        </div>
+                    {/* RANGE — tetap pakai Start & End Date seperti biasa */ }
+                    { ( periodType === "range" ) && (
+                        <>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Rentang Tanggal
+                                </label>
+                                <DatePicker
+                                    selectsRange={ true }
+                                    startDate={ startDate }
+                                    endDate={ endDate }
+                                    onChange={ ( update ) => setDateRange( update ) }
+                                    isClearable={ true }
+                                    dateFormat="dd/MM/yyyy"
+                                    className="border rounded px-3 py-2 text-sm w-60"
+                                    placeholderText="Pilih rentang tanggal"
+                                    maxDate={ new Date() }
+                                />
+                            </div>
+                        </>
                     ) }
 
-                    {/* End Date */ }
-                    { ( periodType === "range" || periodType === "monthly" ) && (
+                    {/* MONTHLY — 1 input saja, month range */ }
+                    { periodType === "monthly" && (
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Rentang Bulan</label>
                             <DatePicker
-                                selected={ endDate }
-                                onChange={ ( date ) => setEndDate( date ) }
-                                dateFormat={ periodType === "monthly" ? "MM/yyyy" : "dd/MM/yyyy" }
-                                showMonthYearPicker={ periodType === "monthly" }
-                                className="border rounded px-3 py-2 w-60"
-                                placeholderText="Pilih tanggal selesai"
+                                selectsRange
+                                showMonthYearPicker
+                                dateFormat="MM/yyyy"
+                                startDate={ startDate }
+                                endDate={ endDate }
+                                onChange={ ( update ) => setDateRange( update ) }
+                                customInput={
+                                    <input
+                                        className="border rounded px-3 py-2 w-60"
+                                        value={ formatMonthRange( startDate, endDate ) }
+                                        readOnly
+                                    />
+                                }
+                                placeholderText="Pilih rentang bulan"
                             />
+
+
+
                         </div>
                     ) }
 
                     <button
-                        onClick={ fetchReport }
-                        className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
+                        onClick={ resetFilters }
+                        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors"
                     >
-                        Tampilkan
+                        Reset
                     </button>
                 </div>
 
@@ -224,4 +274,4 @@ const OwnerProfitLossReport = () => {
     );
 }
 
-export default OwnerProfitLossReport;
+export default AdminProfitLossReport;

@@ -4,7 +4,7 @@ import Layout from '../../components/Layout';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios';
-import { HiOutlineDocumentReport, HiOutlineClipboardList } from 'react-icons/hi';
+import { HiOutlineDocumentReport } from 'react-icons/hi';
 
 const statusColor = {
     PENDING: 'bg-yellow-100 text-yellow-800',
@@ -34,6 +34,8 @@ const AdminLaporanPiutang = () => {
     const [ dateRange, setDateRange ] = useState( [ null, null ] );
     const [ appliedDateRange, setAppliedDateRange ] = useState( [ null, null ] );
     const [ startDate, endDate ] = dateRange;
+    const [ statusFilter, setStatusFilter ] = useState( '' );
+    const [ typeFilter, setTypeFilter ] = useState( '' );
 
     // Pagination
     const [ currentPage, setCurrentPage ] = useState( 1 );
@@ -45,7 +47,7 @@ const AdminLaporanPiutang = () => {
     useEffect( () => {
         fetchData( currentPage, searchTerm );
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ currentPage, appliedDateRange, searchTerm ] );
+    }, [ currentPage, appliedDateRange, searchTerm, statusFilter, typeFilter ] );
 
     const fetchData = async ( page = 1, search = '' ) => {
         try {
@@ -68,6 +70,8 @@ const AdminLaporanPiutang = () => {
             }
 
             if ( search ) params.append( 'search', search );
+            if ( statusFilter ) params.append( 'status', statusFilter );
+            if ( typeFilter ) params.append( 'reference_type', typeFilter );
 
             const res = await axios.get( API_URL, { headers: getHeaders(), params } );
             const result = res.data?.data || res.data;
@@ -104,6 +108,8 @@ const AdminLaporanPiutang = () => {
         setAppliedDateRange( [ null, null ] );
         setCurrentPage( 1 );
         fetchData( 1, '' );
+        setStatusFilter( '' );
+        setTypeFilter( '' );
     };
 
     const formatDate = ( timestamp ) => {
@@ -131,18 +137,37 @@ const AdminLaporanPiutang = () => {
         );
     };
 
+    const totalPiutang = data.reduce( ( acc, d ) => acc + ( d.total_amount || 0 ), 0 );
+    const totalLunas = data.filter( d => d.status === 'LUNAS' ).reduce( ( acc, d ) => acc + ( d.total_amount || 0 ), 0 );
+    const totalPending = data.filter( d => d.status === 'PENDING' ).reduce( ( acc, d ) => acc + ( d.total_amount || 0 ), 0 );
+
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
-                {/* Judul dengan Icon */}
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-green-100 rounded-lg">
-                        <HiOutlineClipboardList className="text-4xl text-green-600" />
+                {/* Judul + Icon */ }
+                <div className="mb-4 flex items-center gap-3">
+                    <HiOutlineDocumentReport className="text-3xl text-gray-700" />
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Laporan Piutang</h1>
+                        <p className="text-sm text-gray-500">Ringkasan piutang untuk periode yang dipilih</p>
                     </div>
-                    <h1 className="text-2xl font-bold">Laporan Piutang</h1>
                 </div>
 
-                {/* Filters */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-white shadow rounded-lg p-4">
+                        <p className="text-sm text-gray-500">Total Piutang</p>
+                        <p className="mt-2 text-2xl font-bold text-gray-800">{ formatRupiah( totalPiutang ) }</p>
+                    </div>
+                    <div className="bg-white shadow rounded-lg p-4">
+                        <p className="text-sm text-gray-500">Total Lunas</p>
+                        <p className="mt-2 text-2xl font-bold text-green-600">{ formatRupiah( totalLunas ) }</p>
+                    </div>
+                    <div className="bg-white shadow rounded-lg p-4">
+                        <p className="text-sm text-gray-500">Total Pending</p>
+                        <p className="mt-2 text-2xl font-bold text-yellow-600">{ formatRupiah( totalPending ) }</p>
+                    </div>
+                </div>
+
                 <div className="flex flex-wrap gap-4 mb-6 bg-white p-4 rounded shadow">
                     <input
                         type="text"
@@ -151,6 +176,30 @@ const AdminLaporanPiutang = () => {
                         onChange={ ( e ) => { setSearchTerm( e.target.value ); setCurrentPage( 1 ); } }
                         className="border px-3 py-2 rounded w-64"
                     />
+
+                    <select
+                        value={ statusFilter }
+                        onChange={ ( e ) => { setStatusFilter( e.target.value ); setCurrentPage( 1 ); } }
+                        className="border px-3 py-2 rounded w-52"
+                    >
+                        <option value="">Semua Status</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="LUNAS">Lunas</option>
+                        <option value="VOID">Void</option>
+                        <option value="PAID">Paid</option>
+                    </select>
+
+                    <select
+                        value={ typeFilter }
+                        onChange={ ( e ) => { setTypeFilter( e.target.value ); setCurrentPage( 1 ); } }
+                        className="border px-3 py-2 rounded w-52"
+                    >
+                        <option value="">Semua Jenis Referensi</option>
+                        <option value="SALE">Penjualan</option>
+                        <option value="PURCHASE">Pembelian</option>
+                        <option value="RETURN">Retur</option>
+                    </select>
+
                     <DatePicker
                         selectsRange
                         startDate={ startDate }
@@ -159,19 +208,24 @@ const AdminLaporanPiutang = () => {
                             setDateRange( range );
                             const [ start, end ] = range;
                             if ( start && end ) {
-                                setAppliedDateRange( [ start, end ] );
+                                setAppliedDateRange( range );
                                 setCurrentPage( 1 );
+                            }
+                            if ( !start && !end ) {
+                                resetFilters();
                             }
                         } }
                         isClearable
                         dateFormat="dd/MM/yyyy"
                         placeholderText="Pilih rentang tanggal"
-                        className="border px-3 py-2 rounded w-60"
+                        className="border px-3 py-2 rounded w-64"
+                        maxDate={ new Date() }
                     />
+
                     <button onClick={ resetFilters } className="bg-gray-300 px-4 py-2 rounded">Reset</button>
                 </div>
 
-                {/* Table */}
+                {/* Table */ }
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
@@ -221,13 +275,13 @@ const AdminLaporanPiutang = () => {
                         </table>
                     </div>
 
-                    {/* Pagination */}
+                    {/* Pagination */ }
                     { totalPages > 1 && (
                         <Pagination page={ currentPage } setPage={ setCurrentPage } totalPages={ totalPages } total={ totalItems } perPage={ 10 } />
                     ) }
                 </div>
 
-                {/* Modal Detail */}
+                {/* Modal Detail */ }
                 { showModal && detailData && (
                     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative">

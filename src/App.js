@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import LoginCheck from './components/LoginCheck';
 import RoleGuard from './components/RoleGuard';
@@ -45,12 +45,15 @@ import AdminLaporanPenjualan from './pages/admin/AdminLaporanPenjualan';
 import AdminModal from './pages/admin/AdminModal';
 import AdminInventory from './pages/admin/AdminInventory';
 import SizeInventory from './pages/admin/InventorySize';
-import AdminPengeluaran from './pages/admin/AdminLaporanPengeluaran';
+import AdminPengeluaran from './pages/admin/AdminPengeluaran';
 import AdminTransaksiKeluar from './pages/admin/AdminTransaksiKeluar';
+import AdminTransaksiMasuk from './pages/admin/AdminTransaksiMasuk';
 import AdminLaporanPiutang from './pages/admin/AdminLaporanPiutang';
 import AdminAlurKas from './pages/admin/AdminAlurKas';
 import AdminPergerakanStok from './pages/admin/AdminPergerakanStok';
 import AdminLaporanPembelian from './pages/admin/AdminLaporanPembelian';
+import AdminLaporanTerlaris from './pages/admin/AdminLaporanTerlaris';
+import AdminProfitLossReport from './pages/admin/AdminProfitLossReport';
 
 
 function App() {
@@ -288,6 +291,20 @@ function App() {
               </RoleGuard>
             </LoginCheck>
           } />
+          <Route path="/admin/laporan-produk-terlaris" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+                <AdminLaporanTerlaris />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/admin/report-loss" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+                <AdminProfitLossReport />
+              </RoleGuard>
+            </LoginCheck>
+          } />
           <Route path="/admin/laporan-penjualan" element={
             <LoginCheck>
               <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
@@ -316,7 +333,7 @@ function App() {
               </RoleGuard>
             </LoginCheck>
           } />
-          <Route path="/admin/out-report" element={
+          <Route path="/admin/pengeluaran" element={
             <LoginCheck>
               <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
                 <AdminPengeluaran />
@@ -327,6 +344,13 @@ function App() {
             <LoginCheck>
               <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
                 <AdminTransaksiKeluar />
+              </RoleGuard>
+            </LoginCheck>
+          } />
+          <Route path="/admin/transaksi-masuk" element={
+            <LoginCheck>
+              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
+                <AdminTransaksiMasuk />
               </RoleGuard>
             </LoginCheck>
           } />

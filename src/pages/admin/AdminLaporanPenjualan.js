@@ -6,101 +6,101 @@ import Layout from '../../components/Layout';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
-const getHeaders = () => ({
-    Authorization: localStorage.getItem('authToken'),
+const getHeaders = () => ( {
+    Authorization: localStorage.getItem( 'authToken' ),
     'ngrok-skip-browser-warning': 'true',
-});
+} );
 
-const formatRupiah = (angka) => 'Rp ' + angka.toLocaleString('id-ID');
+const formatRupiah = ( angka ) => 'Rp ' + angka.toLocaleString( 'id-ID' );
 
-const formatLocalDate = (date) => {
-    const d = new Date(date);
+const formatLocalDate = ( date ) => {
+    const d = new Date( date );
     const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
+    const month = String( d.getMonth() + 1 ).padStart( 2, "0" );
+    const day = String( d.getDate() ).padStart( 2, "0" );
     return `${year}-${month}-${day}`;
 };
 
 const AdminLaporanPenjualan = () => {
-    const [salesData, setSalesData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(0);
+    const [ salesData, setSalesData ] = useState( [] );
+    const [ loading, setLoading ] = useState( true );
+    const [ page, setPage ] = useState( 1 );
+    const [ totalPages, setTotalPages ] = useState( 1 );
+    const [ totalItems, setTotalItems ] = useState( 0 );
     const limit = 10;
 
-    const [dateRange, setDateRange] = useState([null, null]);
-    const [startDate, endDate] = dateRange;
+    const [ dateRange, setDateRange ] = useState( [ null, null ] );
+    const [ startDate, endDate ] = dateRange;
 
-    const fetchSalesData = async (pageNumber = page) => {
+    const fetchSalesData = async ( pageNumber = page ) => {
         try {
-            setLoading(true);
-            const response = await axios.get(`${process.env.REACT_APP_API_URL}/sales-reports/daily`, {
+            setLoading( true );
+            const response = await axios.get( `${process.env.REACT_APP_API_URL}/sales-reports/daily`, {
                 headers: getHeaders(),
                 params: {
                     page: pageNumber,
                     limit,
-                    start_at: startDate ? formatLocalDate(startDate) : undefined,
-                    end_at: endDate ? formatLocalDate(endDate) : undefined,
+                    start_at: startDate ? formatLocalDate( startDate ) : undefined,
+                    end_at: endDate ? formatLocalDate( endDate ) : undefined,
                 },
-            });
+            } );
             const data = response.data?.data || [];
             const paging = response.data?.paging || {};
 
-            setSalesData(data);
-            setPage(paging.page || 1);
-            setTotalPages(paging.total_page || 1);
-            setTotalItems(paging.total_item || 0);
-        } catch (err) {
-            console.error('Gagal mengambil data penjualan:', err);
-            setSalesData([]);
-            setTotalPages(1);
-            setTotalItems(0);
+            setSalesData( data );
+            setPage( paging.page || 1 );
+            setTotalPages( paging.total_page || 1 );
+            setTotalItems( paging.total_item || 0 );
+        } catch ( err ) {
+            console.error( 'Gagal mengambil data penjualan:', err );
+            setSalesData( [] );
+            setTotalPages( 1 );
+            setTotalItems( 0 );
         } finally {
-            setLoading(false);
+            setLoading( false );
         }
     };
 
-    useEffect(() => {
-        fetchSalesData(page);
+    useEffect( () => {
+        fetchSalesData( page );
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page]);
+    }, [ page ] );
 
-    useEffect(() => {
-        setPage(1);
-        fetchSalesData(1);
+    useEffect( () => {
+        setPage( 1 );
+        fetchSalesData( 1 );
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [startDate, endDate]);
+    }, [ endDate ] );
 
-    const totalTransactions = salesData.reduce((sum, item) => sum + (item.total_transactions || 0), 0);
-    const totalProductsSold = salesData.reduce((sum, item) => sum + (item.total_products_sold || 0), 0);
-    const totalRevenue = salesData.reduce((sum, item) => sum + (item.total_revenue || 0), 0);
+    const totalTransactions = salesData.reduce( ( sum, item ) => sum + ( item.total_transactions || 0 ), 0 );
+    const totalProductsSold = salesData.reduce( ( sum, item ) => sum + ( item.total_products_sold || 0 ), 0 );
+    const totalRevenue = salesData.reduce( ( sum, item ) => sum + ( item.total_revenue || 0 ), 0 );
 
-    const Pagination = ({ page, setPage, totalPages, total, perPage }) => {
-        const startIndex = (page - 1) * perPage;
-        const endIndex = Math.min(startIndex + perPage, total);
+    const Pagination = ( { page, setPage, totalPages, total, perPage } ) => {
+        const startIndex = ( page - 1 ) * perPage;
+        const endIndex = Math.min( startIndex + perPage, total );
 
         return (
             <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
                 <div className="text-xs text-gray-500">
-                    Menampilkan {total === 0 ? 0 : startIndex + 1}-{endIndex} dari {total} data
+                    Menampilkan { total === 0 ? 0 : startIndex + 1 }-{ endIndex } dari { total } data
                 </div>
                 <div className="flex items-center gap-2">
-                    <button onClick={() => setPage(1)} disabled={page === 1}
-                        className={`px-2.5 py-1.5 rounded border ${page === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                    <button onClick={ () => setPage( 1 ) } disabled={ page === 1 }
+                        className={ `px-2.5 py-1.5 rounded border ${page === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>
                         «
                     </button>
-                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                        className={`px-3 py-1.5 rounded border ${page === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                    <button onClick={ () => setPage( p => Math.max( 1, p - 1 ) ) } disabled={ page === 1 }
+                        className={ `px-3 py-1.5 rounded border ${page === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>
                         Prev
                     </button>
-                    <span className="text-sm text-gray-700">{page} / {totalPages}</span>
-                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                        className={`px-3 py-1.5 rounded border ${page === totalPages ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                    <span className="text-sm text-gray-700">{ page } / { totalPages }</span>
+                    <button onClick={ () => setPage( p => Math.min( totalPages, p + 1 ) ) } disabled={ page === totalPages }
+                        className={ `px-3 py-1.5 rounded border ${page === totalPages ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>
                         Next
                     </button>
-                    <button onClick={() => setPage(totalPages)} disabled={page === totalPages}
-                        className={`px-2.5 py-1.5 rounded border ${page === totalPages ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                    <button onClick={ () => setPage( totalPages ) } disabled={ page === totalPages }
+                        className={ `px-2.5 py-1.5 rounded border ${page === totalPages ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>
                         »
                     </button>
                 </div>
@@ -111,7 +111,7 @@ const AdminLaporanPenjualan = () => {
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
-                {/* Header */}
+                {/* Header */ }
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-blue-100 rounded-lg">
@@ -124,7 +124,7 @@ const AdminLaporanPenjualan = () => {
                     </div>
                 </div>
 
-                {/* Summary Cards */}
+                {/* Summary Cards */ }
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                     <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
                         <div className="flex items-center justify-between mb-4">
@@ -133,7 +133,7 @@ const AdminLaporanPenjualan = () => {
                             </div>
                             <span className="text-xs text-gray-500 font-medium">Total Transaksi</span>
                         </div>
-                        <div className="text-2xl font-bold text-gray-900 mb-2">{totalTransactions}</div>
+                        <div className="text-2xl font-bold text-gray-900 mb-2">{ totalTransactions }</div>
                         <p className="text-xs text-gray-600">Transaksi</p>
                     </div>
 
@@ -144,7 +144,7 @@ const AdminLaporanPenjualan = () => {
                             </div>
                             <span className="text-xs text-gray-500 font-medium">Total Produk Terjual</span>
                         </div>
-                        <div className="text-2xl font-bold text-gray-900 mb-2">{totalProductsSold}</div>
+                        <div className="text-2xl font-bold text-gray-900 mb-2">{ totalProductsSold }</div>
                         <p className="text-xs text-gray-600">Unit</p>
                     </div>
 
@@ -155,12 +155,12 @@ const AdminLaporanPenjualan = () => {
                             </div>
                             <span className="text-xs text-gray-500 font-medium">Total Pendapatan</span>
                         </div>
-                        <div className="text-2xl font-bold text-gray-900 mb-2">{formatRupiah(totalRevenue)}</div>
+                        <div className="text-2xl font-bold text-gray-900 mb-2">{ formatRupiah( totalRevenue ) }</div>
                         <p className="text-xs text-gray-600">Rupiah</p>
                     </div>
                 </div>
 
-                {/* Filter Tanggal + Reset */}
+                {/* Filter Tanggal + Reset */ }
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -168,9 +168,9 @@ const AdminLaporanPenjualan = () => {
                         </label>
                         <DatePicker
                             selectsRange
-                            startDate={startDate}
-                            endDate={endDate}
-                            onChange={(update) => setDateRange(update)}
+                            startDate={ startDate }
+                            endDate={ endDate }
+                            onChange={ ( update ) => setDateRange( update ) }
                             isClearable
                             dateFormat="dd/MM/yyyy"
                             className="border rounded px-3 py-2 text-sm w-60"
@@ -179,7 +179,7 @@ const AdminLaporanPenjualan = () => {
                     </div>
                     <div>
                         <button
-                            onClick={() => { setDateRange([null, null]); setPage(1); }}
+                            onClick={ () => { setDateRange( [ null, null ] ); setPage( 1 ); } }
                             className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm mt-5"
                         >
                             Reset
@@ -187,7 +187,7 @@ const AdminLaporanPenjualan = () => {
                     </div>
                 </div>
 
-                {/* Detail Data Table */}
+                {/* Detail Data Table */ }
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
@@ -200,13 +200,13 @@ const AdminLaporanPenjualan = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {loading ? (
+                                { loading ? (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-6 text-center">Memuat data...</td>
+                                        <td colSpan={ 4 } className="px-6 py-6 text-center">Memuat data...</td>
                                     </tr>
                                 ) : salesData.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                                        <td colSpan={ 4 } className="px-6 py-12 text-center text-gray-500">
                                             <div className="flex flex-col items-center gap-2">
                                                 <HiOutlineDocumentReport className="text-4xl text-gray-300" />
                                                 <span>Tidak ada data penjualan</span>
@@ -214,28 +214,28 @@ const AdminLaporanPenjualan = () => {
                                         </td>
                                     </tr>
                                 ) : (
-                                    salesData.map((item, index) => (
-                                        <tr key={index} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{new Date(item.date).toLocaleDateString('id-ID')}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.total_transactions}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.total_products_sold}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatRupiah(item.total_revenue)}</td>
+                                    salesData.map( ( item, index ) => (
+                                        <tr key={ index } className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ new Date( item.date ).toLocaleDateString( 'id-ID' ) }</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ item.total_transactions }</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ item.total_products_sold }</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ formatRupiah( item.total_revenue ) }</td>
                                         </tr>
-                                    ))
-                                )}
+                                    ) )
+                                ) }
                             </tbody>
                         </table>
                     </div>
 
-                    {totalPages > 1 && (
+                    { totalPages > 1 && (
                         <Pagination
-                            page={page}
-                            setPage={setPage}
-                            totalPages={totalPages}
-                            total={totalItems}
-                            perPage={limit}
+                            page={ page }
+                            setPage={ setPage }
+                            totalPages={ totalPages }
+                            total={ totalItems }
+                            perPage={ limit }
                         />
-                    )}
+                    ) }
                 </div>
             </div>
         </Layout>

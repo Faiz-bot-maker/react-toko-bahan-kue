@@ -5,14 +5,14 @@ import Layout from "../../components/Layout";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const API_URL = `${process.env.REACT_APP_API_URL}/sales`;
+const API_URL = `${process.env.REACT_APP_API_URL}/purchases`;
 
 const getHeaders = () => ( {
     Authorization: localStorage.getItem( "authToken" ),
     "ngrok-skip-browser-warning": "true",
 } );
 
-const AdminTransaksiKeluar = () => {
+const AdminTransaksiMasuk = () => {
     const [ transactions, setTransactions ] = useState( [] );
     const [ loading, setLoading ] = useState( true );
 
@@ -74,7 +74,7 @@ const AdminTransaksiKeluar = () => {
             setTotalPages( paging.total_page || 1 );
             setTotalItems( paging.total_item || 0 );
         } catch ( err ) {
-            console.error( "Failed to fetch sales transactions:", err );
+            console.error( "Failed to fetch purchases transactions:", err );
             setTransactions( [] );
         } finally {
             setLoading( false );
@@ -186,7 +186,7 @@ const AdminTransaksiKeluar = () => {
                                 Transaksi Keluar
                             </h1>
                             <p className="text-sm text-gray-600">
-                                Daftar transaksi penjualan per cabang
+                                Daftar transaksi pemebelian per cabang
                             </p>
                         </div>
                     </div>
@@ -248,7 +248,7 @@ const AdminTransaksiKeluar = () => {
                                 setSearchTerm( e.target.value );
                                 setCurrentPage( 1 );
                             } }
-                            placeholder="Cari kode / customer..."
+                            placeholder="Cari kode / sales..."
                             className="border rounded px-3 py-2 text-sm w-60"
                         />
                     </div>
@@ -268,7 +268,7 @@ const AdminTransaksiKeluar = () => {
                         <table className="min-w-full">
                             <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Customer</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Sales</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Code</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal</th>
@@ -298,7 +298,7 @@ const AdminTransaksiKeluar = () => {
                                 ) : (
                                     transactions.map( ( trx ) => (
                                         <tr key={ trx.code } className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 text-gray-600">{ trx.customer_name }</td>
+                                            <td className="px-6 py-4 text-gray-600">{ trx.sales_name }</td>
                                             <td className="px-6 py-4 font-medium text-gray-900">{ trx.code }</td>
                                             <td className={ `px-6 py-4 font-semibold ${trx.status === "COMPLETED"
                                                 ? "text-green-600"
@@ -441,4 +441,4 @@ const AdminTransaksiKeluar = () => {
     );
 };
 
-export default AdminTransaksiKeluar;
+export default AdminTransaksiMasuk;

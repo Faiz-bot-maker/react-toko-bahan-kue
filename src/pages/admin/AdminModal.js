@@ -10,135 +10,166 @@ import Layout from "../../components/Layout";
 
 const API_URL = `${process.env.REACT_APP_API_URL}/capitals`;
 
-const getHeaders = () => ({
-    Authorization: localStorage.getItem("authToken"),
+const getHeaders = () => ( {
+    Authorization: localStorage.getItem( "authToken" ),
     "ngrok-skip-browser-warning": "true",
-});
+} );
 
-const formatLocalDate = (date) => {
-    if (!date) return null;
-    const d = new Date(date);
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().split("T")[0];
+const formatLocalDate = ( date ) => {
+    if ( !date ) return null;
+    const d = new Date( date );
+    d.setMinutes( d.getMinutes() - d.getTimezoneOffset() );
+    return d.toISOString().split( "T" )[ 0 ];
 };
 
 const AdminModal = () => {
-    const [modals, setModals] = useState([]);
-    const [modal, setModal] = useState({ open: false, mode: "add", idx: null });
-    const [form, setForm] = useState({ id: null, type: "OUT", note: "", amount: "" });
-    const [loading, setLoading] = useState(true);
+    const [ modals, setModals ] = useState( [] );
+    const [ modal, setModal ] = useState( { open: false, mode: "add", idx: null } );
+    const [ form, setForm ] = useState( { id: null, type: "OUT", note: "", amount: "" } );
+    const [ loading, setLoading ] = useState( true );
 
-    const [dateRange, setDateRange] = useState([null, null]);
-    const [appliedDateRange, setAppliedDateRange] = useState([null, null]);
-    const [startDate, endDate] = dateRange;
+    const [ dateRange, setDateRange ] = useState( [ null, null ] );
+    const [ startDate, endDate ] = dateRange;
 
-    const [search, setSearch] = useState("");
-    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [ search, setSearch ] = useState( "" );
+    const [ debouncedSearch, setDebouncedSearch ] = useState( "" );
 
-    const [page, setPage] = useState(1);
-    const [size] = useState(10);
-    const [totalPage, setTotalPage] = useState(1);
-    const [totalItems, setTotalItems] = useState(0);
+    const [ page, setPage ] = useState( 1 );
+    const [ size ] = useState( 10 );
+    const [ totalPages, setTotalPages ] = useState( 1 );
+    const [ totalItems, setTotalItems ] = useState( 0 );
+    const limit = 10;
 
     // Debounce search
-    useEffect(() => {
-        const handler = setTimeout(() => setDebouncedSearch(search), 500);
-        return () => clearTimeout(handler);
-    }, [search]);
+    useEffect( () => {
+        const handler = setTimeout( () => setDebouncedSearch( search ), 500 );
+        return () => clearTimeout( handler );
+    }, [ search ] );
 
     // Fetch data dari API
-    const fetchModals = async (targetPage = 1) => {
+    const fetchModals = async ( targetPage = 1 ) => {
         try {
-            setLoading(true);
+            setLoading( true );
             let params = { page: targetPage, size };
-            const [appliedStart, appliedEnd] = appliedDateRange;
-            if (appliedStart && appliedEnd) {
-                params.start_at = formatLocalDate(appliedStart);
-                params.end_at = formatLocalDate(appliedEnd);
+            if ( startDate && endDate ) {
+                params.start_at = formatLocalDate( startDate );
+                params.end_at = formatLocalDate( endDate );
             }
-            if (debouncedSearch) params.search = debouncedSearch;
+            if ( debouncedSearch ) params.search = debouncedSearch;
 
-            const res = await axios.get(API_URL, { headers: getHeaders(), params });
-            setModals(res.data?.data || []);
-            if (res.data?.paging) {
-                setTotalPage(res.data.paging.total_page);
-                setTotalItems(res.data.paging.total_item);
+            const res = await axios.get( API_URL, { headers: getHeaders(), params } );
+            setModals( res.data?.data || [] );
+            if ( res.data?.paging ) {
+                setTotalPages( res.data.paging.total_page );
+                setTotalItems( res.data.paging.total_item );
             } else {
-                setTotalPage(1);
-                setTotalItems(res.data?.data?.length || 0);
+                setTotalPages( 1 );
+                setTotalItems( res.data?.data?.length || 0 );
             }
-        } catch (err) {
-            console.error("Gagal fetch modal:", err);
-            setModals([]);
-            setTotalPage(1);
-            setTotalItems(0);
+        } catch ( err ) {
+            console.error( "Gagal fetch modal:", err );
+            setModals( [] );
+            setTotalPages( 1 );
+            setTotalItems( 0 );
         } finally {
-            setLoading(false);
+            setLoading( false );
         }
     };
 
-    useEffect(() => {
-        fetchModals(page);
-    }, [appliedDateRange, debouncedSearch, page]);
+    useEffect( () => {
+        fetchModals( page );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ debouncedSearch, page, endDate ] );
 
     const openAdd = () => {
-        setForm({ id: null, type: "OUT", note: "", amount: "" });
-        setModal({ open: true, mode: "add", idx: null });
+        setForm( { id: null, type: "OUT", note: "", amount: "" } );
+        setModal( { open: true, mode: "add", idx: null } );
     };
 
-    const openEdit = (idx) => {
-        setForm({ ...modals[idx] });
-        setModal({ open: true, mode: "edit", idx });
+    const openEdit = ( idx ) => {
+        setForm( { ...modals[ idx ] } );
+        setModal( { open: true, mode: "edit", idx } );
     };
 
-    const closeModal = () => setModal({ open: false, mode: "add", idx: null });
+    const closeModal = () => setModal( { open: false, mode: "add", idx: null } );
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async ( e ) => {
         e.preventDefault();
-        if (!form.type || !form.note || !form.amount) return;
+        if ( !form.type || !form.note || !form.amount ) return;
         try {
-            if (modal.mode === "add") {
-                await axios.post(API_URL, { ...form, amount: Number(form.amount) }, { headers: getHeaders() });
-                alert("Modal berhasil ditambahkan");
-            } else if (form.id) {
-                await axios.put(`${API_URL}/${form.id}`, { ...form, amount: Number(form.amount) }, { headers: getHeaders() });
-                alert("Modal berhasil diperbarui");
+            if ( modal.mode === "add" ) {
+                await axios.post( API_URL, { ...form, amount: Number( form.amount ) }, { headers: getHeaders() } );
+                alert( "Modal berhasil ditambahkan" );
+            } else if ( form.id ) {
+                await axios.put( `${API_URL}/${form.id}`, { ...form, amount: Number( form.amount ) }, { headers: getHeaders() } );
+                alert( "Modal berhasil diperbarui" );
             }
-            fetchModals(page);
+            fetchModals( page );
             closeModal();
-        } catch (err) {
-            console.error("Gagal menyimpan modal:", err);
-            alert("Terjadi kesalahan saat menyimpan modal");
+        } catch ( err ) {
+            console.error( "Gagal menyimpan modal:", err );
+            alert( "Terjadi kesalahan saat menyimpan modal" );
         }
     };
 
-    const handleDelete = async (idx) => {
-        const id = modals[idx]?.id;
-        if (!id) return;
-        if (window.confirm("Yakin ingin menghapus modal ini?")) {
+    const handleDelete = async ( idx ) => {
+        const id = modals[ idx ]?.id;
+        if ( !id ) return;
+        if ( window.confirm( "Yakin ingin menghapus modal ini?" ) ) {
             try {
-                await axios.delete(`${API_URL}/${id}`, { headers: getHeaders() });
-                alert("Modal berhasil dihapus");
-                fetchModals(page);
-            } catch (err) {
-                console.error("Gagal menghapus modal:", err);
-                alert("Gagal menghapus modal");
+                await axios.delete( `${API_URL}/${id}`, { headers: getHeaders() } );
+                alert( "Modal berhasil dihapus" );
+                fetchModals( page );
+            } catch ( err ) {
+                console.error( "Gagal menghapus modal:", err );
+                alert( "Gagal menghapus modal" );
             }
         }
     };
 
     const resetFilters = () => {
-        setSearch("");
-        setDateRange([null, null]);
-        setAppliedDateRange([null, null]);
-        setPage(1);
-        fetchModals(1);
+        setSearch( "" );
+        setDateRange( [ null, null ] );
+        setPage( 1 );
+        fetchModals( 1 );
+    };
+
+    const Pagination = ( { page, setPage, totalPages, total, perPage } ) => {
+        const startIndex = ( page - 1 ) * perPage;
+        const endIndex = Math.min( startIndex + perPage, total );
+
+        return (
+            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+                <div className="text-xs text-gray-500">
+                    Menampilkan { total === 0 ? 0 : startIndex + 1 }-{ endIndex } dari { total } data
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={ () => setPage( 1 ) } disabled={ page === 1 }
+                        className={ `px-2.5 py-1.5 rounded border ${page === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>
+                        «
+                    </button>
+                    <button onClick={ () => setPage( p => Math.max( 1, p - 1 ) ) } disabled={ page === 1 }
+                        className={ `px-3 py-1.5 rounded border ${page === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>
+                        Prev
+                    </button>
+                    <span className="text-sm text-gray-700">{ page } / { totalPages }</span>
+                    <button onClick={ () => setPage( p => Math.min( totalPages, p + 1 ) ) } disabled={ page === totalPages }
+                        className={ `px-3 py-1.5 rounded border ${page === totalPages ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>
+                        Next
+                    </button>
+                    <button onClick={ () => setPage( totalPages ) } disabled={ page === totalPages }
+                        className={ `px-2.5 py-1.5 rounded border ${page === totalPages ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}` }>
+                        »
+                    </button>
+                </div>
+            </div>
+        );
     };
 
     return (
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
-                {/* Header */}
+                {/* Header */ }
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-blue-100 rounded-lg">
@@ -150,43 +181,43 @@ const AdminModal = () => {
                         </div>
                     </div>
                     <button
-                        onClick={openAdd}
+                        onClick={ openAdd }
                         className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold transition-all duration-200 hover:shadow-xl"
                     >
                         <HiOutlinePlus className="text-lg" /> Tambah Modal
                     </button>
                 </div>
 
-                {/* Filter + Search */}
+                {/* Filter + Search */ }
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
                     <input
                         type="text"
                         placeholder="Cari deskripsi / catatan..."
-                        value={search}
-                        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                        value={ search }
+                        onChange={ ( e ) => { setSearch( e.target.value ); setPage( 1 ); } }
                         className="border rounded px-3 py-2 text-sm w-64"
                     />
                     <DatePicker
                         selectsRange
-                        startDate={startDate}
-                        endDate={endDate}
-                        onChange={(range) => {
-                            setDateRange(range);
-                            const [start, end] = range;
-                            if (start && end) {
-                                setAppliedDateRange([start, end]);
-                                setPage(1);
+                        startDate={ startDate }
+                        endDate={ endDate }
+                        onChange={ ( range ) => {
+                            setDateRange( range );
+                            const [ start, end ] = range;
+                            if ( start && end ) {
+                                setDateRange( [ start, end ] );
+                                setPage( 1 );
                             }
-                        }}
+                        } }
                         isClearable
                         dateFormat="dd/MM/yyyy"
                         className="border rounded px-3 py-2 text-sm w-60"
                         placeholderText="Pilih rentang tanggal"
                     />
-                    <button onClick={resetFilters} className="bg-gray-300 px-4 py-2 rounded">Reset</button>
+                    <button onClick={ resetFilters } className="bg-gray-300 px-4 py-2 rounded">Reset</button>
                 </div>
 
-                {/* Table */}
+                {/* Table */ }
                 <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
@@ -200,11 +231,11 @@ const AdminModal = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {loading ? (
-                                    <tr><td colSpan={5} className="text-center py-8">Memuat data...</td></tr>
+                                { loading ? (
+                                    <tr><td colSpan={ 5 } className="text-center py-8">Memuat data...</td></tr>
                                 ) : modals.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="text-center py-16">
+                                        <td colSpan={ 5 } className="text-center py-16">
                                             <div className="flex flex-col items-center gap-3">
                                                 <HiOutlineDocumentReport className="text-5xl text-gray-300" />
                                                 <span className="text-lg font-semibold">Tidak ada data modal</span>
@@ -213,76 +244,71 @@ const AdminModal = () => {
                                     </tr>
                                 ) : (
                                     modals
-                                        .filter(m => m.note.toLowerCase().includes(debouncedSearch.toLowerCase()))
-                                        .map((m, idx) => (
-                                            <tr key={m.id}>
-                                                <td className="px-6 py-3 font-medium">{m.type === "IN" ? <span className="text-green-600">Deposit</span> : <span className="text-red-600">Withdraw</span>}</td>
-                                                <td className="px-6 py-3 text-gray-700">{m.note}</td>
-                                                <td className="px-6 py-3 text-gray-900 font-semibold">Rp {Number(m.amount).toLocaleString("id-ID")}</td>
-                                                <td className="px-6 py-3 text-gray-600 text-sm">{new Date(m.created_at).toLocaleDateString("id-ID")}</td>
+                                        .filter( m => m.note.toLowerCase().includes( debouncedSearch.toLowerCase() ) )
+                                        .map( ( m, idx ) => (
+                                            <tr key={ m.id }>
+                                                <td className="px-6 py-3 font-medium">{ m.type === "IN" ? <span className="text-green-600">Deposit</span> : <span className="text-red-600">Withdraw</span> }</td>
+                                                <td className="px-6 py-3 text-gray-700">{ m.note }</td>
+                                                <td className="px-6 py-3 text-gray-900 font-semibold">Rp { Number( m.amount ).toLocaleString( "id-ID" ) }</td>
+                                                <td className="px-6 py-3 text-gray-600 text-sm">{ new Date( m.created_at ).toLocaleDateString( "id-ID" ) }</td>
                                                 <td className="px-6 py-3 flex justify-end gap-2">
-                                                    <button onClick={() => openEdit(idx)} className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg" title="Edit">
-                                                        <FiEdit size={18} />
+                                                    <button onClick={ () => openEdit( idx ) } className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg" title="Edit">
+                                                        <FiEdit size={ 18 } />
                                                     </button>
-                                                    <button onClick={() => handleDelete(idx)} className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg" title="Hapus">
-                                                        <FiTrash size={18} />
+                                                    <button onClick={ () => handleDelete( idx ) } className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg" title="Hapus">
+                                                        <FiTrash size={ 18 } />
                                                     </button>
                                                 </td>
                                             </tr>
-                                        ))
-                                )}
+                                        ) )
+                                ) }
                             </tbody>
                         </table>
                     </div>
 
-                    {/* Pagination */}
-                    {modals.length > 0 && totalItems > 0 && (
-                        <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
-                            <div className="text-xs text-gray-500">
-                                Menampilkan {(page - 1) * size + 1}–{Math.min(page * size, totalItems)} dari {totalItems} data
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setPage(1)} disabled={page === 1} className={`px-2.5 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200 cursor-not-allowed" : "text-gray-700 border-gray-300"}`}>«</button>
-                                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className={`px-3 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200 cursor-not-allowed" : "text-gray-700 border-gray-300"}`}>Prev</button>
-                                <span className="text-sm text-gray-700">{page} / {totalPage}</span>
-                                <button onClick={() => setPage((p) => Math.min(totalPage, p + 1))} disabled={page === totalPage || totalPage === 0} className={`px-3 py-1.5 rounded border ${page === totalPage || totalPage === 0 ? "text-gray-400 border-gray-200 cursor-not-allowed" : "text-gray-700 border-gray-300"}`}>Next</button>
-                                <button onClick={() => setPage(totalPage)} disabled={page === totalPage || totalPage === 0} className={`px-2.5 py-1.5 rounded border ${page === totalPage || totalPage === 0 ? "text-gray-400 border-gray-200 cursor-not-allowed" : "text-gray-700 border-gray-300"}`}>»</button>
-                            </div>
-                        </div>
-                    )}
+                    {/* Pagination */ }
+                    { totalPages > 1 && (
+                        <Pagination
+                            page={ page }
+                            setPage={ setPage }
+                            totalPages={ totalPages }
+                            total={ totalItems }
+                            perPage={ limit }
+                        />
+                    ) }
                 </div>
 
-                {/* Modal Form */}
-                {modal.open && (
+                {/* Modal Form */ }
+                { modal.open && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                         <div className="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4 border border-gray-200">
                             <div className="p-6">
-                                <h2 className="text-xl font-bold mb-4">{modal.mode === "add" ? "Tambah" : "Edit"} Modal</h2>
-                                <form onSubmit={handleSubmit} className="space-y-4">
+                                <h2 className="text-xl font-bold mb-4">{ modal.mode === "add" ? "Tambah" : "Edit" } Modal</h2>
+                                <form onSubmit={ handleSubmit } className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-semibold mb-1">Jenis</label>
-                                        <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full border px-3 py-2 rounded-lg" required>
+                                        <select value={ form.type } onChange={ ( e ) => setForm( { ...form, type: e.target.value } ) } className="w-full border px-3 py-2 rounded-lg" required>
                                             <option value="IN">Deposit</option>
                                             <option value="OUT">Withdraw</option>
                                         </select>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold mb-1">Catatan</label>
-                                        <input type="text" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="w-full border px-3 py-2 rounded-lg" placeholder="Masukkan catatan modal" required />
+                                        <input type="text" value={ form.note } onChange={ ( e ) => setForm( { ...form, note: e.target.value } ) } className="w-full border px-3 py-2 rounded-lg" placeholder="Masukkan catatan modal" required />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold mb-1">Jumlah (Rp)</label>
-                                        <input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} className="w-full border px-3 py-2 rounded-lg" placeholder="Masukkan jumlah" required />
+                                        <input type="number" value={ form.amount } onChange={ ( e ) => setForm( { ...form, amount: Number( e.target.value ) } ) } className="w-full border px-3 py-2 rounded-lg" placeholder="Masukkan jumlah" required />
                                     </div>
                                     <div className="flex justify-end gap-3 pt-3 border-t">
-                                        <button type="button" onClick={closeModal} className="px-4 py-2 border rounded-lg">Batal</button>
+                                        <button type="button" onClick={ closeModal } className="px-4 py-2 border rounded-lg">Batal</button>
                                         <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg">Simpan</button>
                                     </div>
                                 </form>
                             </div>
                         </div>
                     </div>
-                )}
+                ) }
             </div>
         </Layout>
     );

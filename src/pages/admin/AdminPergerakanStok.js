@@ -34,6 +34,7 @@ const AdminPergerakanStok = () => {
     const [ totalItems, setTotalItems ] = useState( 0 );
 
     const [ search, setSearch ] = useState( "" );
+    const [ typeFilter, setTypeFilter ] = useState( "" );
 
     const adminBranchId = localStorage.getItem( "branch_id" );
 
@@ -49,6 +50,7 @@ const AdminPergerakanStok = () => {
             if ( search ) params.search = search;
             if ( startDate ) params.start_at = formatLocalDate( startDate );
             if ( endDate ) params.end_at = formatLocalDate( endDate );
+            if ( typeFilter ) params.type = typeFilter;
 
             const res = await axios.get( API_URL, { headers: getHeaders(), params } );
 
@@ -74,7 +76,7 @@ const AdminPergerakanStok = () => {
 
     useEffect( () => {
         fetchMovements();
-    }, [ page, search, startDate, endDate ] ); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [ page, search, endDate, typeFilter ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
     const formatDate = ( timestamp ) => {
         const d = new Date( timestamp );
@@ -91,6 +93,7 @@ const AdminPergerakanStok = () => {
         setDateRange( [ null, null ] );
         setSearch( "" );
         setPage( 1 );
+        setTypeFilter( "" );
     };
 
     return (
@@ -124,6 +127,25 @@ const AdminPergerakanStok = () => {
                             placeholderText="Pilih rentang tanggal"
                         />
                     </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tipe</label>
+                        <select
+                            value={ typeFilter }
+                            onChange={ ( e ) => {
+                                setPage( 1 );
+                                setTypeFilter( e.target.value );
+                            } }
+                            className="border rounded px-3 py-2 text-sm"
+                        >
+                            <option value="">ALL</option>
+                            <option value="SALE">SALE</option>
+                            <option value="PURCHASE">PURCHASE</option>
+                            <option value="DEBT">DEBT</option>
+                            <option value="STOCK_OPNAME">STOCK_OPNAME</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Cari Produk / Referensi</label>
                         <input
@@ -171,7 +193,7 @@ const AdminPergerakanStok = () => {
                                             <div className="flex flex-col items-center">
                                                 <HiOutlineSwitchHorizontal className="text-6xl text-gray-300 mb-4" />
                                                 <h3 className="text-lg font-medium text-gray-900 mb-2">Data tidak ada</h3>
-                                                {/* <p className="text-gray-500 text-sm">Tidak ditemukan pergerakan stok sesuai filter</p> */}
+                                                {/* <p className="text-gray-500 text-sm">Tidak ditemukan pergerakan stok sesuai filter</p> */ }
                                             </div>
                                         </td>
                                     </tr>
