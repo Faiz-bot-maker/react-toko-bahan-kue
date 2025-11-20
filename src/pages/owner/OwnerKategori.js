@@ -43,12 +43,10 @@ const OwnerKategori = () => {
             setTotalItems(paging.total_item || 0);
             setCurrentPage(paging.page || 1);
 
-            // 🔥 AUTO FIX KETIKA HALAMAN KOSONG TAPI TOTAL ITEM MASIH ADA
+            // Auto-fix ketika halaman kosong tapi total_item masih ada
             if (data.length === 0 && (paging.total_item || 0) > 0) {
                 setCurrentPage(1);
                 fetchCategories(search, 1);
-
-                alert("Halaman ini kosong. Mengembalikan ke halaman pertama.");
             }
 
         } catch (err) {
@@ -193,8 +191,9 @@ const OwnerKategori = () => {
                     </button>
                 </div>
 
-                {/* SEARCH */}
+                {/* SEARCH + RESET */}
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
+
                     <input
                         type="text"
                         placeholder="Cari kategori..."
@@ -205,6 +204,18 @@ const OwnerKategori = () => {
                             setCurrentPage(1);
                         }}
                     />
+
+                    {/* Reset Button */}
+                    <button
+                        onClick={() => {
+                            setSearch("");
+                            setCurrentPage(1);
+                            fetchCategories("", 1);
+                        }}
+                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm"
+                    >
+                        Reset
+                    </button>
                 </div>
 
                 {/* TABLE */}

@@ -12,7 +12,13 @@ const OwnerCabang = () => {
   const [modal, setModal] = useState({ open: false, mode: "add", idx: null });
   const [form, setForm] = useState({ id: null, name: "", address: "" });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // ⬅️ ERROR STATE
+  const [error, setError] = useState(null);
+
+  // GET HEADER FUNCTION
+  const getHeaders = () => ({
+    Authorization: localStorage.getItem("authToken"),
+    "ngrok-skip-browser-warning": "true",
+  });
 
   useEffect(() => {
     fetchBranches();
@@ -23,12 +29,7 @@ const OwnerCabang = () => {
       setLoading(true);
       setError(null);
 
-      const res = await axios.get(API_URL, {
-        headers: {
-          Authorization: localStorage.getItem("authToken"),
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
+      const res = await axios.get(API_URL, { headers: getHeaders() });
 
       const data = res.data?.data || res.data;
 
@@ -65,19 +66,9 @@ const OwnerCabang = () => {
 
     try {
       if (modal.mode === "add") {
-        await axios.post(API_URL, form, {
-          headers: {
-            Authorization: localStorage.getItem("authToken"),
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
+        await axios.post(API_URL, form, { headers: getHeaders() });
       } else {
-        await axios.put(`${API_URL}/${form.id}`, form, {
-          headers: {
-            Authorization: localStorage.getItem("authToken"),
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
+        await axios.put(`${API_URL}/${form.id}`, form, { headers: getHeaders() });
       }
 
       fetchBranches();
@@ -88,6 +79,7 @@ const OwnerCabang = () => {
     }
   };
 
+  // ✅ FIX: DELETE NOW USES AUTHORIZATION
   const handleDelete = async (idx) => {
     const id = branches[idx].id;
     if (!id) return;
@@ -95,9 +87,7 @@ const OwnerCabang = () => {
     if (window.confirm("Yakin ingin menghapus cabang ini?")) {
       try {
         await axios.delete(`${API_URL}/${id}`, {
-          headers: {
-            "ngrok-skip-browser-warning": "true",
-          },
+          headers: getHeaders(), // ← Authorization added here!
         });
 
         fetchBranches();
@@ -165,9 +155,10 @@ const OwnerCabang = () => {
                 ) : branches.length === 0 && !error ? (
                   <tr>
                     <td colSpan={3} className="px-6 py-16 text-center">
-                      <MdBusiness className="text-6xl text-gray-300 mx-auto mb-4" />
+                      <MdBusiness className="text-6xl text-gray-300 mb-4 mx-auto" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada data cabang</h3>
                       <p className="text-gray-500 mb-4 text-sm">Tambahkan cabang pertama Anda.</p>
+
                       <button
                         onClick={openAdd}
                         className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
@@ -182,18 +173,23 @@ const OwnerCabang = () => {
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{b.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-700">{b.address}</td>
                       <td className="px-6 py-4 flex justify-end gap-2">
+
+                        {/* EDIT */}
                         <button
                           onClick={() => openEdit(idx)}
-                          className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
+                          className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
                         >
                           <FiEdit size={18} />
                         </button>
+
+                        {/* DELETE */}
                         <button
                           onClick={() => handleDelete(idx)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
                         >
                           <FiTrash size={18} />
                         </button>
+
                       </td>
                     </tr>
                   ))
@@ -207,7 +203,8 @@ const OwnerCabang = () => {
         {modal.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-lg w-full max-w-md border shadow-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
+
+              <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <MdBusiness className="text-xl text-blue-600" />
                 </div>

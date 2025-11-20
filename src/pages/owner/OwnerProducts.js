@@ -67,7 +67,7 @@ const OwnerProducts = () => {
             setTotalPages(paging.total_page || 1);
             setTotalItems(paging.total_item || 0);
 
-            // Jika halaman melebihi data
+            // Jika halaman kosong tapi total ada, kembali ke page 1
             if (items.length === 0 && (paging.total_item || 0) > 0) {
                 setCurrentPage(1);
                 fetchProducts(1, searchTerm);
@@ -145,9 +145,7 @@ const OwnerProducts = () => {
         setNewProduct({ name: '', category_id: '', sku: '', sizes: [] });
     };
 
-    // =========================================
-    // PAGINATION SAME AS OWNER INVENTORY
-    // =========================================
+    // Pagination
     const pageSize = products.length || 0;
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = Math.min(startIndex + pageSize, totalItems);
@@ -159,37 +157,17 @@ const OwnerProducts = () => {
             </div>
 
             <div className="flex items-center gap-2">
-                <button
-                    onClick={() => setPage(1)}
-                    disabled={page === 1}
-                    className="px-2.5 py-1.5 border rounded"
-                >
+                <button onClick={() => setPage(1)} disabled={page === 1} className="px-3 py-1.5 border rounded">
                     «
                 </button>
-
-                <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="px-3 py-1.5 border rounded"
-                >
+                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 border rounded">
                     Prev
                 </button>
-
                 <span className="text-sm">{page} / {totalPages}</span>
-
-                <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="px-3 py-1.5 border rounded"
-                >
+                <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 border rounded">
                     Next
                 </button>
-
-                <button
-                    onClick={() => setPage(totalPages)}
-                    disabled={page === totalPages}
-                    className="px-2.5 py-1.5 border rounded"
-                >
+                <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-3 py-1.5 border rounded">
                     »
                 </button>
             </div>
@@ -220,8 +198,9 @@ const OwnerProducts = () => {
                     </button>
                 </div>
 
-                {/* Search */}
+                {/* Search + Reset Button */}
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4">
+
                     <input
                         type="text"
                         placeholder="Cari produk atau SKU..."
@@ -232,6 +211,17 @@ const OwnerProducts = () => {
                             setCurrentPage(1);
                         }}
                     />
+
+                    <button
+                        onClick={() => {
+                            setSearchTerm("");
+                            setCurrentPage(1);
+                            fetchProducts(1, "");
+                        }}
+                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm"
+                    >
+                        Reset
+                    </button>
                 </div>
 
                 {/* Table */}
@@ -329,7 +319,7 @@ const OwnerProducts = () => {
                                 {modal.mode === 'add' ? 'Tambah Produk' : 'Edit Produk'}
                             </h2>
 
-                            {/* Fields */}
+                            {/* FORM FIELDS */}
                             <div className="space-y-4">
                                 <div>
                                     <label className="text-sm">Nama Produk</label>
@@ -389,6 +379,7 @@ const OwnerProducts = () => {
                                 )}
                             </div>
 
+                            {/* Buttons */}
                             <div className="flex justify-end gap-2 mt-6">
                                 <button
                                     onClick={() => setModal({ open: false, mode: null, data: null })}
@@ -396,6 +387,7 @@ const OwnerProducts = () => {
                                 >
                                     Batal
                                 </button>
+
                                 <button
                                     onClick={
                                         modal.mode === 'add'

@@ -19,7 +19,6 @@ const OwnerOpnameDetail = () => {
 
     useEffect(() => {
         fetchDetail();
-        // eslint-disable-next-line
     }, []);
 
     const fetchDetail = async () => {
@@ -36,8 +35,8 @@ const OwnerOpnameDetail = () => {
     };
 
     const formatDate = (ts) => {
-        if (!ts) return "-";
-        return new Date(ts).toLocaleDateString("id-ID", {
+        if (!ts || ts === 0) return "-";
+        return new Date(Number(ts)).toLocaleDateString("id-ID", {
             year: "numeric",
             month: "numeric",
             day: "numeric",
@@ -57,7 +56,9 @@ const OwnerOpnameDetail = () => {
     if (!opname) {
         return (
             <Layout>
-                <div className="text-center py-20 text-gray-500">Data tidak ditemukan</div>
+                <div className="text-center py-20 text-gray-500">
+                    Data tidak ditemukan
+                </div>
             </Layout>
         );
     }
@@ -85,7 +86,7 @@ const OwnerOpnameDetail = () => {
                         <div><strong>Dibuat oleh:</strong> {opname.created_by}</div>
                         <div><strong>Diverifikasi oleh:</strong> {opname.verified_by || "-"}</div>
                         <div><strong>Status:</strong> {opname.status}</div>
-                        <div><strong>Selesai pada:</strong> {opname.completed_at ? formatDate(opname.completed_at) : "-"}</div>
+                        <div><strong>Selesai pada:</strong> {formatDate(opname.completed_at)}</div>
                     </div>
                 </div>
 
@@ -104,24 +105,61 @@ const OwnerOpnameDetail = () => {
                         </thead>
 
                         <tbody className="divide-y">
-                            {opname.details.map((d) => (
-                                <tr key={d.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4">{d.product_name}</td>
-                                    <td className="px-6 py-4">{d.size}</td>
-                                    <td className="px-6 py-4">{d.system_qty}</td>
-                                    <td className="px-6 py-4">{d.physical_qty}</td>
-                                    <td className={`px-6 py-4 font-semibold ${
-                                        d.difference < 0 ? "text-red-600" : "text-green-600"
-                                    }`}>
-                                        {d.difference}
+
+                            {/* EMPTY STATE */}
+                            {opname.details.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="py-12">
+                                        <div className="flex flex-col items-center text-gray-500">
+                                            <div className="mb-3 p-4 bg-gray-100 rounded-full">
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="h-10 w-10 text-gray-400"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth="1.5"
+                                                        d="M9 17v-6a2 2 0 012-2h2m4 0v6a2 2 0 01-2 2H9"
+                                                    />
+                                                </svg>
+                                            </div>
+
+                                            <h3 className="text-lg font-semibold">
+                                                Belum ada detail opname
+                                            </h3>
+                                            <p className="text-sm text-gray-400 mt-1">
+                                                Data detail opname tidak tersedia.
+                                            </p>
+                                        </div>
                                     </td>
-                                    <td className="px-6 py-4">{d.notes || "-"}</td>
                                 </tr>
-                            ))}
+                            ) : (
+                                opname.details.map((d) => (
+                                    <tr key={d.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4">{d.product_name}</td>
+                                        <td className="px-6 py-4">{d.size}</td>
+                                        <td className="px-6 py-4">{d.system_qty}</td>
+                                        <td className="px-6 py-4">{d.physical_qty}</td>
+                                        <td
+                                            className={`px-6 py-4 font-semibold ${
+                                                d.difference < 0
+                                                    ? "text-red-600"
+                                                    : "text-green-600"
+                                            }`}
+                                        >
+                                            {d.difference}
+                                        </td>
+                                        <td className="px-6 py-4">{d.notes || "-"}</td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
-
             </div>
         </Layout>
     );

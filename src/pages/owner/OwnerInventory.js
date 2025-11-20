@@ -112,7 +112,7 @@ const OwnerInventory = () => {
         }
     };
 
-    // Fetch Sizes hanya dropdown
+    // Fetch Sizes untuk drop-down edit
     const fetchProductSizes = async (sku) => {
         try {
             const res = await axios.get(
@@ -206,7 +206,7 @@ const OwnerInventory = () => {
 
     // Pagination index
     const pageSize = inventories.length || 0;
-    const startIndex = (currentPage - 1) * pageSize;
+    const startIndex = (currentPage - 1) * pageSize || 0;
     const endIndex = Math.min(startIndex + pageSize, totalItems);
 
     return (
@@ -224,13 +224,12 @@ const OwnerInventory = () => {
                             <p className="text-sm text-gray-600">Lihat & Kelola data inventory cabang</p>
                         </div>
                     </div>
-
-                    {/* --- ADD BUTTON HIDDEN --- */}
-                    {/* (Dihapus sesuai permintaan) */}
                 </div>
 
-                {/* Search */}
+                {/* FILTER + RESET */}
                 <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
+
+                    {/* Search Input */}
                     <input
                         type="text"
                         placeholder="Cari produk, SKU, atau cabang..."
@@ -242,6 +241,7 @@ const OwnerInventory = () => {
                         }}
                     />
 
+                    {/* Branch Filter */}
                     <select
                         value={branchFilter || ""}
                         onChange={(e) => {
@@ -257,6 +257,19 @@ const OwnerInventory = () => {
                             </option>
                         ))}
                     </select>
+
+                    {/* RESET BUTTON */}
+                    <button
+                        onClick={() => {
+                            setSearchTerm("");
+                            setBranchFilter("");
+                            setCurrentPage(1);
+                            fetchInventories(1, null, "");
+                        }}
+                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm"
+                    >
+                        Reset
+                    </button>
                 </div>
 
                 {/* TABLE */}
@@ -281,9 +294,6 @@ const OwnerInventory = () => {
                                     <tr>
                                         <td colSpan="4" className="px-6 py-20 text-center">
                                             <h3 className="text-lg font-semibold">Belum ada data inventory</h3>
-                                            
-                                            {/* --- ADD BUTTON FIRST TIME HIDDEN --- */}
-                                            {/* (Dihapus sesuai permintaan) */}
                                         </td>
                                     </tr>
                                 ) : (
@@ -349,7 +359,7 @@ const OwnerInventory = () => {
                     />
                 )}
 
-                {/* CRUD Modal (Masih aktif untuk Edit saja) */}
+                {/* CRUD Modal */}
                 {crudModal.open && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg p-6 w-full max-w-lg relative">
