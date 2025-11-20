@@ -34,17 +34,11 @@ import OwnerReportLoss from './pages/owner/OwnerProfitLossReport';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminProducts from './pages/admin/AdminProducts';
-import AdminCategories from './pages/admin/AdminCategories';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminRoles from './pages/admin/AdminRoles';
-import AdminCabang from './pages/admin/AdminCabang';
 import AdminKeuangan from './pages/admin/AdminKeuangan';
 import AdminDistributor from './pages/admin/AdminDistributor';
 import AdminLaporanPenjualan from './pages/admin/AdminLaporanPenjualan';
 import AdminModal from './pages/admin/AdminModal';
 import AdminInventory from './pages/admin/AdminInventory';
-import SizeInventory from './pages/admin/InventorySize';
 import AdminPengeluaran from './pages/admin/AdminPengeluaran';
 import AdminTransaksiKeluar from './pages/admin/AdminTransaksiKeluar';
 import AdminTransaksiMasuk from './pages/admin/AdminTransaksiMasuk';
@@ -242,41 +236,6 @@ function App() {
               </RoleGuard>
             </LoginCheck>
           } />
-          <Route path="/admin/products" element={
-            <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
-                <AdminProducts />
-              </RoleGuard>
-            </LoginCheck>
-          } />
-          <Route path="/admin/categories" element={
-            <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
-                <AdminCategories />
-              </RoleGuard>
-            </LoginCheck>
-          } />
-          <Route path="/admin/users" element={
-            <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
-                <AdminUsers />
-              </RoleGuard>
-            </LoginCheck>
-          } />
-          <Route path="/admin/roles" element={
-            <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
-                <AdminRoles />
-              </RoleGuard>
-            </LoginCheck>
-          } />
-          <Route path="/admin/cabang" element={
-            <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
-                <AdminCabang />
-              </RoleGuard>
-            </LoginCheck>
-          } />
           <Route path="/admin/keuangan" element={
             <LoginCheck>
               <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
@@ -323,13 +282,6 @@ function App() {
             <LoginCheck>
               <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
                 <AdminInventory />
-              </RoleGuard>
-            </LoginCheck>
-          } />
-          <Route path="/admin/size-inventory" element={
-            <LoginCheck>
-              <RoleGuard allowedRoles={ [ 'admin', 'super_admin' ] }>
-                <SizeInventory />
               </RoleGuard>
             </LoginCheck>
           } />
