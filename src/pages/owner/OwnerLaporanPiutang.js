@@ -21,6 +21,7 @@ const getHeaders = () => ({
 });
 
 const OwnerLaporanPiutang = () => {
+
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -45,6 +46,7 @@ const OwnerLaporanPiutang = () => {
 
     const API_URL = `${process.env.REACT_APP_API_URL}/debt`;
 
+    // FETCH CABANG
     useEffect(() => {
         const fetchBranches = async () => {
             try {
@@ -57,6 +59,7 @@ const OwnerLaporanPiutang = () => {
         fetchBranches();
     }, []);
 
+    // FETCH DATA PIUTANG
     useEffect(() => {
         if ((startDate && !endDate) || (!startDate && endDate)) return;
         fetchData(currentPage, searchTerm);
@@ -77,10 +80,7 @@ const OwnerLaporanPiutang = () => {
             if (startDate && endDate) {
                 const formatLocal = (date) => {
                     const d = new Date(date);
-                    const year = d.getFullYear();
-                    const month = String(d.getMonth() + 1).padStart(2, "0");
-                    const day = String(d.getDate()).padStart(2, "0");
-                    return `${year}-${month}-${day}`;
+                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
                 };
                 params.append("start_at", formatLocal(startDate));
                 params.append("end_at", formatLocal(endDate));
@@ -89,6 +89,7 @@ const OwnerLaporanPiutang = () => {
             if (search) params.append('search', search);
 
             const res = await axios.get(API_URL, { headers: getHeaders(), params });
+
             const result = res.data?.data || res.data;
             const paging = res.data?.paging || {};
 
@@ -96,6 +97,7 @@ const OwnerLaporanPiutang = () => {
             setCurrentPage(paging.page || 1);
             setTotalPages(paging.total_page || 1);
             setTotalItems(paging.total_item || result.length);
+
         } catch (err) {
             console.error("Gagal fetch data piutang:", err);
             setData([]);
@@ -104,6 +106,7 @@ const OwnerLaporanPiutang = () => {
         }
     };
 
+    // FETCH DETAIL
     const fetchDetail = async (id) => {
         try {
             setLoadingDetail(true);
@@ -118,6 +121,7 @@ const OwnerLaporanPiutang = () => {
         }
     };
 
+    // RESET FILTER
     const resetFilters = () => {
         setSearchTerm('');
         setBranchFilter('');
@@ -129,31 +133,71 @@ const OwnerLaporanPiutang = () => {
         fetchData(1);
     };
 
+    // FORMAT TANGGAL
     const formatDate = (timestamp) => {
         const d = new Date(timestamp);
         return d.toLocaleDateString("id-ID");
     };
 
+    // PAGINATION BARU (SAMA DENGAN SEMUA HALAMAN)
     const Pagination = ({ page, setPage, totalPages, total, perPage }) => {
-        const startIndex = (page - 1) * perPage;
-        const endIndex = Math.min(startIndex + perPage, total);
+        const startIndex = total === 0 ? 0 : (page - 1) * perPage + 1;
+        const endIndex = Math.min(page * perPage, total);
 
         return (
             <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
                 <div className="text-xs text-gray-500">
-                    Menampilkan {total === 0 ? 0 : startIndex + 1}-{endIndex} dari total {total} piutang
+                    Menampilkan {startIndex}-{endIndex} dari total {total} piutang
                 </div>
+
                 <div className="flex items-center gap-2">
-                    <button onClick={() => setPage(1)} disabled={page === 1} className="px-2.5 py-1.5 rounded border">{'«'}</button>
-                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 rounded border">Prev</button>
-                    <span className="text-sm text-gray-700">{page} / {totalPages}</span>
-                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1.5 rounded border">Next</button>
-                    <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-2.5 py-1.5 rounded border">{'»'}</button>
+
+                    {/* First */}
+                    <button
+                        onClick={() => setPage(1)}
+                        disabled={page === 1}
+                        className={`px-2.5 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}`}
+                    >
+                        «
+                    </button>
+
+                    {/* Prev */}
+                    <button
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className={`px-3 py-1.5 rounded border ${page === 1 ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}`}
+                    >
+                        Prev
+                    </button>
+
+                    <span className="text-sm text-gray-700">
+                        {page} / {totalPages}
+                    </span>
+
+                    {/* Next */}
+                    <button
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                        className={`px-3 py-1.5 rounded border ${page === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}`}
+                    >
+                        Next
+                    </button>
+
+                    {/* Last */}
+                    <button
+                        onClick={() => setPage(totalPages)}
+                        disabled={page === totalPages}
+                        className={`px-2.5 py-1.5 rounded border ${page === totalPages ? "text-gray-400 border-gray-200" : "text-gray-700 border-gray-300 hover:bg-gray-50"}`}
+                    >
+                        »
+                    </button>
+
                 </div>
             </div>
         );
     };
 
+    // SUMMARY
     const totalPiutang = data.reduce((acc, d) => acc + (d.total_amount || 0), 0);
     const totalLunas = data.filter(d => d.status === 'LUNAS').reduce((acc, d) => acc + (d.total_amount || 0), 0);
     const totalPending = data.filter(d => d.status === 'PENDING').reduce((acc, d) => acc + (d.total_amount || 0), 0);
@@ -162,7 +206,7 @@ const OwnerLaporanPiutang = () => {
         <Layout>
             <div className="w-full max-w-7xl mx-auto">
 
-                {/* Judul + Icon */}
+                {/* HEADER */}
                 <div className="mb-4 flex items-center gap-3">
                     <HiOutlineDocumentReport className="text-3xl text-gray-700" />
                     <div>
@@ -171,6 +215,7 @@ const OwnerLaporanPiutang = () => {
                     </div>
                 </div>
 
+                {/* SUMMARY BOX */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                     <div className="bg-white shadow rounded-lg p-4">
                         <p className="text-sm text-gray-500">Total Piutang</p>
@@ -186,10 +231,9 @@ const OwnerLaporanPiutang = () => {
                     </div>
                 </div>
 
-                {/*  FILTERS  */}
+                {/* FILTER SECTION */}
                 <div className="flex flex-wrap gap-4 mb-6 bg-white p-4 rounded shadow">
 
-                    {/* Search */}
                     <input
                         type="text"
                         placeholder="Cari piutang..."
@@ -198,7 +242,6 @@ const OwnerLaporanPiutang = () => {
                         className="border px-3 py-2 rounded w-64"
                     />
 
-                    {/* Filter Cabang */}
                     <select
                         value={branchFilter}
                         onChange={(e) => { setBranchFilter(e.target.value); setCurrentPage(1); }}
@@ -208,7 +251,6 @@ const OwnerLaporanPiutang = () => {
                         {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
 
-                    {/* 🔥 Filter Status — Sudah diperbaiki */}
                     <select
                         value={statusFilter}
                         onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
@@ -220,7 +262,6 @@ const OwnerLaporanPiutang = () => {
                         <option value="VOID">Void</option>
                     </select>
 
-                    {/* 🔥 Filter Referensi — Sudah diperbaiki */}
                     <select
                         value={typeFilter}
                         onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
@@ -231,7 +272,6 @@ const OwnerLaporanPiutang = () => {
                         <option value="PURCHASE">Pembelian</option>
                     </select>
 
-                    {/* Filter Tanggal */}
                     <DatePicker
                         selectsRange
                         startDate={startDate}
@@ -287,10 +327,10 @@ const OwnerLaporanPiutang = () => {
                                 ) : data.length === 0 ? (
                                     <tr>
                                         <td colSpan={8} className="px-6 py-16 text-center">
-                                            <div className="flex flex-col items-center justify-center py-10 text-gray-600">
+                                            <div className="flex flex-col items-center text-gray-600">
                                                 <HiOutlineInbox className="text-5xl mb-3 text-gray-400" />
-                                                <h3 className="text-lg font-semibold text-gray-700">Tidak ada data piutang</h3>
-                                                <p className="text-sm text-gray-500 mt-1">Silakan ubah filter atau rentang tanggal.</p>
+                                                <h3 className="text-lg font-semibold">Tidak ada data piutang</h3>
+                                                <p className="text-sm text-gray-500">Silakan ubah filter atau rentang tanggal.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -308,17 +348,13 @@ const OwnerLaporanPiutang = () => {
                                             </td>
 
                                             <td className="px-6 py-4">{d.branch_name}</td>
-                                            <td className="px-6 py-4">
-                                                {d.due_date ? formatDate(d.due_date) : '-'}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {d.created_at ? formatDate(d.created_at) : '-'}
-                                            </td>
+                                            <td className="px-6 py-4">{d.due_date ? formatDate(d.due_date) : '-'}</td>
+                                            <td className="px-6 py-4">{d.created_at ? formatDate(d.created_at) : '-'}</td>
 
                                             <td className="px-6 py-4">
                                                 <button
                                                     onClick={() => fetchDetail(d.id)}
-                                                    className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-[#11493E]"
+                                                    className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
                                                 >
                                                     Detail
                                                 </button>
@@ -329,22 +365,26 @@ const OwnerLaporanPiutang = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <Pagination
+                            page={currentPage}
+                            setPage={setCurrentPage}
+                            totalPages={totalPages}
+                            total={totalItems}
+                            perPage={10}
+                        />
+                    )}
                 </div>
 
-                {totalPages > 1 && (
-                    <Pagination
-                        page={currentPage}
-                        setPage={setCurrentPage}
-                        totalPages={totalPages}
-                        total={totalItems}
-                        perPage={10}
-                    />
-                )}
-
+                {/* MODAL DETAIL */}
                 {showModal && detailData && (
                     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative">
-                            <button onClick={() => setShowModal(false)} className="absolute top-3 right-3 text-gray-500 hover:text-gray-800">✕</button>
+                            <button onClick={() => setShowModal(false)} className="absolute top-3 right-3 text-gray-500 hover:text-gray-800">
+                                ✕
+                            </button>
 
                             {loadingDetail ? (
                                 <p>Memuat detail...</p>
@@ -358,7 +398,6 @@ const OwnerLaporanPiutang = () => {
                                         <p><span className="font-medium">Jumlah:</span> {formatRupiah(detailData.total_amount)}</p>
                                         <p><span className="font-medium">Terbayar:</span> {formatRupiah(detailData.paid_amount)}</p>
                                         <p><span className="font-medium">Jatuh Tempo:</span> {detailData.due_date ? formatDate(detailData.due_date) : '-'}</p>
-
                                         <p>
                                             <span className="font-medium">Status:</span>
                                             <span className={`ml-2 px-2 py-1 rounded text-xs ${statusColor[detailData.status]}`}>
@@ -416,7 +455,6 @@ const OwnerLaporanPiutang = () => {
                                     </div>
                                 </div>
                             )}
-
                         </div>
                     </div>
                 )}

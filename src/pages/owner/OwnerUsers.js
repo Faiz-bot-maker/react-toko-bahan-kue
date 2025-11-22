@@ -1,3 +1,4 @@
+// src/pages/owner/OwnerUsers.js
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import { HiEye, HiEyeOff, HiOutlinePlus } from 'react-icons/hi';
@@ -18,10 +19,19 @@ const OwnerUsers = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // NEW FILTER STATE
+  // FILTER
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("");
   const [filterBranch, setFilterBranch] = useState("");
+
+  // PAGINATION
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+
+  const getHeaders = () => ({
+    "Authorization": localStorage.getItem("authToken"),
+    "ngrok-skip-browser-warning": "true"
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -29,17 +39,14 @@ const OwnerUsers = () => {
     fetchBranches();
   }, []);
 
-  const getHeaders = () => ({
-    "Authorization": localStorage.getItem("authToken"),
-    "ngrok-skip-browser-warning": "true"
-  });
-
   const fetchUsers = async () => {
     try {
       setLoading(true);
       const res = await axios.get(API_URL, { headers: getHeaders() });
-      const data = res.data?.data || res.data;
+
+      const data = res.data?.data || [];
       if (Array.isArray(data)) setUsers(data);
+
     } catch (err) {
       console.error("Gagal fetch user:", err.response ? err.response.data : err.message);
     } finally {
@@ -65,12 +72,14 @@ const OwnerUsers = () => {
     }
   };
 
+  // OPEN ADD
   const openAdd = () => {
     setForm({ username: '', password: '', name: '', address: '', role_id: '', branch_id: '' });
     setModal({ open: true, mode: 'add', idx: null });
     setShowPassword(false);
   };
 
+  // OPEN EDIT
   const openEdit = (idx) => {
     const user = users[idx];
     setForm({
@@ -78,8 +87,8 @@ const OwnerUsers = () => {
       password: '',
       name: user.name,
       address: user.address,
-      role_id: user.role?.id || '',
-      branch_id: user.branch?.id || ''
+      role_id: user.role?.id || "",
+      branch_id: user.branch?.id || "",
     });
     setModal({ open: true, mode: 'edit', idx });
     setShowPassword(false);
@@ -91,7 +100,10 @@ const OwnerUsers = () => {
     e.preventDefault();
     try {
       const dataToSend = { ...form };
-      if (modal.mode === 'edit' && !form.password) delete dataToSend.password;
+
+      if (modal.mode === 'edit' && !form.password) {
+        delete dataToSend.password;
+      }
 
       dataToSend.role_id = parseInt(dataToSend.role_id, 10);
       dataToSend.branch_id = parseInt(dataToSend.branch_id, 10);
@@ -105,267 +117,341 @@ const OwnerUsers = () => {
       fetchUsers();
       closeModal();
     } catch (err) {
-      alert('Gagal simpan data user!');
+      alert("Gagal menyimpan data user!");
     }
   };
 
   const handleDelete = async (idx) => {
-    if (window.confirm('Yakin hapus user ini?')) {
+    if (window.confirm("Yakin hapus user ini?")) {
       try {
         await axios.delete(`${API_URL}/${users[idx].username}`, { headers: getHeaders() });
         fetchUsers();
       } catch (err) {
-        alert('Gagal hapus user!');
+        alert("Gagal hapus user!");
       }
     }
   };
 
-  // 🔥 FILTERING FINAL DATA
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.username.toLowerCase().includes(search.toLowerCase());
+  // FILTERED USERS
+  const filteredUsers = users.filter((u) => {
+    const matchSearch =
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.username.toLowerCase().includes(search.toLowerCase());
 
-    const matchesRole =
-      filterRole === "" || user.role?.id === parseInt(filterRole);
+    const matchRole = filterRole === "" || u.role?.id === parseInt(filterRole);
+    const matchBranch = filterBranch === "" || u.branch?.id === parseInt(filterBranch);
 
-    const matchesBranch =
-      filterBranch === "" || user.branch?.id === parseInt(filterBranch);
-
-    return matchesSearch && matchesRole && matchesBranch;
+    return matchSearch && matchRole && matchBranch;
   });
+
+  // PAGINATION LOGIC
+  const totalPages = Math.ceil(filteredUsers.length / limit);
+  const paginatedUsers = filteredUsers.slice((page - 1) * limit, page * limit);
+
+  const resetFilters = () => {
+    setSearch("");
+    setFilterRole("");
+    setFilterBranch("");
+    setPage(1);
+  };
 
   return (
     <Layout>
       <div className="w-full max-w-7xl mx-auto">
-        {/* Header */}
+
+        {/* HEADER */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-green-100 rounded-lg">
               <MdPeople className="text-2xl text-green-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Daftar Pengguna</h1>
+              <h1 className="text-2xl font-bold">Daftar Pengguna</h1>
               <p className="text-sm text-gray-600">Kelola data pengguna sistem</p>
             </div>
           </div>
+
+          {/* BUTTON ADD */}
           <button
             onClick={openAdd}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-lg font-semibold"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow"
           >
-            <HiOutlinePlus className="text-lg" /> Tambah Pengguna
+            <HiOutlinePlus /> Tambah
           </button>
         </div>
 
-        {/* Search & Filter */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap items-end gap-4">
+        {/* FILTER SECTION */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4 items-end">
 
-          {/* Search */}
           <input
             type="text"
-            placeholder="Cari nama atau username..."
-            className="w-full md:w-1/3 px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-green-300 focus:border-green-500"
+            placeholder="Cari nama atau username…"
+            className="px-3 py-2 border rounded-lg w-full md:w-1/4"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
 
-          {/* Role Filter */}
           <select
             value={filterRole}
-            onChange={(e) => setFilterRole(e.target.value)}
-            className="w-full md:w-1/4 px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-green-300 focus:border-green-500"
+            onChange={(e) => { setFilterRole(e.target.value); setPage(1); }}
+            className="px-3 py-2 border rounded-lg w-full md:w-1/4"
           >
             <option value="">Semua Jabatan</option>
-            {roles.map((role) => (
-              <option key={role.id} value={role.id}>{role.name}</option>
-            ))}
+            {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
 
-          {/* Branch Filter */}
           <select
             value={filterBranch}
-            onChange={(e) => setFilterBranch(e.target.value)}
-            className="w-full md:w-1/4 px-4 py-2 border rounded-lg shadow-sm text-sm focus:ring focus:ring-green-300 focus:border-green-500"
+            onChange={(e) => { setFilterBranch(e.target.value); setPage(1); }}
+            className="px-3 py-2 border rounded-lg w-full md:w-1/4"
           >
             <option value="">Semua Cabang</option>
-            {branches.map((branch) => (
-              <option key={branch.id} value={branch.id}>{branch.name}</option>
-            ))}
+            {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
 
+          <button
+            onClick={resetFilters}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+          >
+            Reset
+          </button>
+
         </div>
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
+
+        {/* TABLE */}
+        <div className="bg-white rounded-lg shadow border overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-800 text-white">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Nama</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Username</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Alamat</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Jabatan</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Cabang</th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Aksi</th>
+                  <th className="px-6 py-4 text-left">Nama</th>
+                  <th className="px-6 py-4 text-left">Username</th>
+                  <th className="px-6 py-4 text-left">Alamat</th>
+                  <th className="px-6 py-4 text-left">Jabatan</th>
+                  <th className="px-6 py-4 text-left">Cabang</th>
+                  <th className="px-6 py-4 text-right">Aksi</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y">
+
                 {loading ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center">
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                        <span className="ml-3 text-gray-600 text-sm">Memuat data pengguna...</span>
-                      </div>
-                    </td>
+                    <td colSpan="6" className="px-6 py-8 text-center">Memuat...</td>
                   </tr>
-                ) : filteredUsers.length === 0 ? (
+                ) : paginatedUsers.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center">
-                        <div className="p-4 bg-gray-100 rounded-full mb-4">
-                          <MdPeople className="text-6xl text-gray-400" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-800 mb-1">Tidak ada data ditemukan</h3>
-                        <p className="text-gray-500 text-sm">Coba ubah filter atau pencarian.</p>
-                      </div>
+                    <td colSpan="6" className="px-6 py-10 text-center text-gray-500">
+                      Tidak ada data
                     </td>
                   </tr>
                 ) : (
-                  filteredUsers.map((user, i) => (
+                  paginatedUsers.map((user, idx) => (
                     <tr key={user.username} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-700">{user.name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{user.username}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{user.address}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{user.role?.name || '-'}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{user.branch?.name || '-'}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => openEdit(i)} className="text-blue-600 hover:text-blue-700 mr-3 inline-flex items-center gap-1">
-                          <FiEdit /> Edit
+
+                      <td className="px-6 py-3">{user.name}</td>
+                      <td className="px-6 py-3">{user.username}</td>
+                      <td className="px-6 py-3">{user.address}</td>
+                      <td className="px-6 py-3">{user.role?.name || "-"}</td>
+                      <td className="px-6 py-3">{user.branch?.name || "-"}</td>
+
+                      <td className="px-6 py-3 text-right">
+
+                        {/* ICON EDIT */}
+                        <button
+                          onClick={() => openEdit((page - 1) * limit + idx)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded mr-2"
+                          title="Edit"
+                        >
+                          <FiEdit />
                         </button>
-                        <button onClick={() => handleDelete(i)} className="text-red-600 hover:text-red-700 inline-flex items-center gap-1">
-                          <FiTrash /> Hapus
+
+                        {/* ICON DELETE */}
+                        <button
+                          onClick={() => handleDelete((page - 1) * limit + idx)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded"
+                          title="Delete"
+                        >
+                          <FiTrash />
                         </button>
+
                       </td>
                     </tr>
                   ))
                 )}
-              </tbody>
 
+              </tbody>
             </table>
           </div>
+
+          {/* PAGINATION */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t">
+
+              <p className="text-xs text-gray-500">
+                Menampilkan {(page - 1) * limit + 1}–{Math.min(page * limit, filteredUsers.length)} dari {filteredUsers.length} pengguna
+              </p>
+
+              <div className="flex gap-2">
+
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage(1)}
+                  className={`px-3 py-1 rounded border ${page === 1 ? "opacity-40" : ""}`}
+                >
+                  «
+                </button>
+
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => p - 1)}
+                  className={`px-3 py-1 rounded border ${page === 1 ? "opacity-40" : ""}`}
+                >
+                  Prev
+                </button>
+
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i + 1)}
+                    className={`px-3 py-1 rounded border ${page === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+                <button
+                  disabled={page === totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  className={`px-3 py-1 rounded border ${page === totalPages ? "opacity-40" : ""}`}
+                >
+                  Next
+                </button>
+
+                <button
+                  disabled={page === totalPages}
+                  onClick={() => setPage(totalPages)}
+                  className={`px-3 py-1 rounded border ${page === totalPages ? "opacity-40" : ""}`}
+                >
+                  »
+                </button>
+
+              </div>
+            </div>
+          )}
+
         </div>
 
-        {/* Modal */}
+        {/* MODAL */}
         {modal.open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
 
-              {/* Modal Header */}
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-800">
+              <div className="px-6 py-4 border-b flex justify-between items-center">
+                <h3 className="text-lg font-semibold">
                   {modal.mode === 'add' ? 'Tambah Pengguna' : 'Edit Pengguna'}
                 </h3>
-                <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">✕</button>
+                <button onClick={closeModal}>✕</button>
               </div>
 
-              {/* Modal Body */}
-              <div className="p-6">
-                <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap</label>
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Nama</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full border rounded px-3 py-2"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Username</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full border rounded px-3 py-2"
+                    value={form.username}
+                    onChange={(e) => setForm({ ...form, username: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Password</label>
+                  <div className="relative">
                     <input
-                      type="text"
-                      className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      required
-                      autoFocus
+                      type={showPassword ? "text" : "password"}
+                      placeholder={modal.mode === "add" ? "Password baru" : "Kosongkan jika tidak diubah"}
+                      className="w-full border rounded px-3 py-2 pr-10"
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      required={modal.mode === "add"}
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Username</label>
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                      value={form.username}
-                      onChange={(e) => setForm({ ...form, username: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        className="w-full border border-gray-300 px-4 py-3 pr-12 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                        placeholder={modal.mode === 'add' ? "Masukkan password" : "Kosongkan jika tidak diubah"}
-                        value={form.password}
-                        onChange={(e) => setForm({ ...form, password: e.target.value })}
-                        required={modal.mode === 'add'}
-                      />
-                      <button type="button" className="absolute inset-y-0 right-0 px-3 flex items-center" onClick={() => setShowPassword(!showPassword)}>
-                        {showPassword ? <HiEyeOff /> : <HiEye />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Alamat</label>
-                    <textarea
-                      className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                      rows="3"
-                      value={form.address}
-                      onChange={(e) => setForm({ ...form, address: e.target.value })}
-                      required
-                    ></textarea>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Jabatan</label>
-                    <select
-                      className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                      value={form.role_id}
-                      onChange={(e) => setForm({ ...form, role_id: e.target.value })}
-                      required
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2 top-2 text-gray-500"
                     >
-                      <option value="">Pilih Jabatan</option>
-                      {roles.map((role) => (
-                        <option key={role.id} value={role.id}>{role.name}</option>
-                      ))}
-                    </select>
+                      {showPassword ? <HiEyeOff /> : <HiEye />}
+                    </button>
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Cabang</label>
-                    <select
-                      className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                      value={form.branch_id}
-                      onChange={(e) => setForm({ ...form, branch_id: e.target.value })}
-                      required
-                    >
-                      <option value="">Pilih Cabang</option>
-                      {branches.map((branch) => (
-                        <option key={branch.id} value={branch.id}>{branch.name}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Alamat</label>
+                  <textarea
+                    className="w-full border rounded px-3 py-2"
+                    value={form.address}
+                    onChange={(e) => setForm({ ...form, address: e.target.value })}
+                  />
+                </div>
 
-                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                    <button type="button" onClick={closeModal} className="px-6 py-2.5 border border-gray-300 rounded-lg">Batal</button>
-                    <button type="submit" className="px-6 py-2.5 bg-blue-600 text-white rounded-lg">Simpan</button>
-                  </div>
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Jabatan</label>
+                  <select
+                    className="w-full border rounded px-3 py-2"
+                    required
+                    value={form.role_id}
+                    onChange={(e) => setForm({ ...form, role_id: e.target.value })}
+                  >
+                    <option value="">Pilih Jabatan</option>
+                    {roles.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                </form>
-              </div>
+                <div>
+                  <label className="block mb-1 font-medium text-sm">Cabang</label>
+                  <select
+                    className="w-full border rounded px-3 py-2"
+                    required
+                    value={form.branch_id}
+                    onChange={(e) => setForm({ ...form, branch_id: e.target.value })}
+                  >
+                    <option value="">Pilih Cabang</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <button type="button" onClick={closeModal} className="px-4 py-2 border rounded">Batal</button>
+                  <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">
+                    Simpan
+                  </button>
+                </div>
+
+              </form>
 
             </div>
           </div>
         )}
-
       </div>
     </Layout>
   );

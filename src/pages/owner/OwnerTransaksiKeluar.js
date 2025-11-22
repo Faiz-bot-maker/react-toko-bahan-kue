@@ -20,7 +20,7 @@ const OwnerTransaksiKeluar = () => {
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const [branchFilter, setBranchFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState(""); 
+  const [statusFilter, setStatusFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
   const [branches, setBranches] = useState([]);
@@ -36,7 +36,6 @@ const OwnerTransaksiKeluar = () => {
     fetchBranches();
   }, []);
 
-  // 🔥 Tambahan — Reset page ketika filter berubah
   useEffect(() => {
     setCurrentPage(1);
   }, [startDate, endDate, branchFilter, statusFilter]);
@@ -65,10 +64,9 @@ const OwnerTransaksiKeluar = () => {
       if (startDate && endDate) {
         const formatLocal = (date) => {
           const d = new Date(date);
-          const year = d.getFullYear();
-          const month = String(d.getMonth() + 1).padStart(2, "0");
-          const day = String(d.getDate()).padStart(2, "0");
-          return `${year}-${month}-${day}`;
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+            d.getDate()
+          ).padStart(2, "0")}`;
         };
         params.start_at = formatLocal(startDate);
         params.end_at = formatLocal(endDate);
@@ -127,15 +125,17 @@ const OwnerTransaksiKeluar = () => {
     });
   };
 
+  /** PAGINATION BARU — SAMA PERSIS DENGAN HALAMAN LAIN */
   const Pagination = ({ page, setPage, totalPages, total, perPage }) => {
-    const startIndex = (page - 1) * perPage;
-    const endIndex = Math.min(startIndex + perPage, total);
+    const startIndex = total === 0 ? 0 : (page - 1) * perPage + 1;
+    const endIndex = Math.min(page * perPage, total);
 
     return (
       <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
         <div className="text-xs text-gray-500">
-          Menampilkan {total === 0 ? 0 : startIndex + 1}-{endIndex} dari total {total}
+          Menampilkan {startIndex}-{endIndex} dari total {total}
         </div>
+
         <div className="flex items-center gap-2">
           <button
             onClick={() => setPage(1)}
@@ -148,6 +148,7 @@ const OwnerTransaksiKeluar = () => {
           >
             «
           </button>
+
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
@@ -159,9 +160,9 @@ const OwnerTransaksiKeluar = () => {
           >
             Prev
           </button>
-          <span className="text-sm text-gray-700">
-            {page} / {totalPages}
-          </span>
+
+          <span className="text-sm text-gray-700">{page} / {totalPages}</span>
+
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
@@ -173,6 +174,7 @@ const OwnerTransaksiKeluar = () => {
           >
             Next
           </button>
+
           <button
             onClick={() => setPage(totalPages)}
             disabled={page === totalPages}
@@ -191,7 +193,6 @@ const OwnerTransaksiKeluar = () => {
 
   return (
     <Layout>
-      {/* ⬇️ Semua JSX di bawah ini tetap persis seperti kode Anda */}
       <div className="w-full max-w-7xl mx-auto">
 
         {/* Header */}
@@ -226,7 +227,7 @@ const OwnerTransaksiKeluar = () => {
             />
           </div>
 
-          {/* Filter Cabang */}
+          {/* Cabang */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cabang</label>
             <select
@@ -241,7 +242,7 @@ const OwnerTransaksiKeluar = () => {
             </select>
           </div>
 
-          {/* Filter Status */}
+          {/* Status */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
@@ -349,6 +350,7 @@ const OwnerTransaksiKeluar = () => {
           </div>
         </div>
 
+        {/* Pagination */}
         {totalPages > 1 && (
           <Pagination
             page={currentPage}
@@ -398,7 +400,7 @@ const OwnerTransaksiKeluar = () => {
                 <p><strong>Total Harga:</strong> Rp{selectedTransaction.total_price.toLocaleString("id-ID")}</p>
               </div>
 
-              {/* Barang */}
+              {/* Items */}
               <div className="mt-6">
                 <h3 className="font-semibold mb-2 text-gray-800">Barang Dibeli</h3>
                 <div className="border rounded-lg overflow-hidden">
